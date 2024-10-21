@@ -1,73 +1,63 @@
 <template>
-    <lightning-card title="Search">
-            <div class="slds-grid slds-grid_align-spread">
-    <div class="slds-col slds-size_8-of-12">
-        <lightning-input
-            label="Search by Name, Number, or Email"
-            value={searchKey}
-            onchange={handleSearchKeyChange}
-            onkeyup={handleKeyUp}
-            placeholder="Search...">
-        </lightning-input>
-    </div>
-    <div class="slds-col slds-size_4-of-12">
-        <lightning-button label="Search" onclick={handleSearch}></lightning-button>
-    </div>
-</div>
-<template if:true={suggestions}>
-    <ul class="suggestions-list">
-        <template for:each={suggestions} for:item="account">
-            <li key={account.Id} onclick={selectAccount} data-id={account.Id}>
-                {account.Name} - {account.Phone} - {account.Email}
-            </li>
-        </template>
-    </ul>
-</template>
-<template if:true={noResults}>
-    <div class="slds-m-top_medium">
-        <p>No accounts found. Would you like to create a new account?</p>
-        <lightning-button label="Create New Account" variant="brand" onclick={handleCreateAccount}></lightning-button>
-    </div>
-</template>
-<br>
-<template if:true={accounts}>
-    <lightning-datatable
-        key-field="Id"
-        data={accounts}
-        columns={columns}
-        hide-checkbox-column="true"
-        class="slds-m-top_medium">
-    </lightning-datatable>
-</template>
-    <br>
-    <template if:true={isCreatingAccount}>
-     <lightning-record-edit-form object-api-name="Account" onsuccess={handleSuccess} onerror={handleError}>
-                    <div class="slds-grid slds-wrap">
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name="Name"></lightning-input-field>
-                        </div>
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name="Phone"></lightning-input-field>
-                        </div>
-                      <!--  <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name="PersonEmail" onchange={handleFieldChange}></lightning-input-field>
-                        </div> -->
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name="BillingStreet"></lightning-input-field>
-                        </div>
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name="BillingCity"></lightning-input-field>
-                        </div>
-                        <div class="slds-col slds-size_1-of-2">
-                            <lightning-input-field field-name="BillingPostalCode"></lightning-input-field>
-                        </div>
-                    </div>
-                    <div class="slds-grid slds-grid_align-spread slds-p-top_medium">
-                <!-- Cancel button on the left -->
-                <lightning-button label="Cancel" onclick={closeModal} variant="neutral"></lightning-button>
-                <lightning-button label="Save" type="submit" variant="brand"></lightning-button>
+    <lightning-card title="Search" icon-name="utility:search">
+        <div class="slds-grid slds-grid_align-spread">
+            <div class="slds-col slds-size_8-of-12">
+                <lightning-input
+                    label="Search by Name, Number, or Email"
+                    value={searchKey}
+                    onchange={handleSearchKeyChange}
+                    onkeyup={handleKeyUp}
+                    placeholder="Search...">
+                </lightning-input>
             </div>
+        </div>
+        <br>
+        <template if:true={suggestions}>
+            <lightning-datatable
+                key-field="Id"
+                data={suggestions}
+                columns={suggestionColumns}
+                hide-checkbox-column="true"
+                onrowaction={selectAccount}
+                class="slds-m-top_medium">
+            </lightning-datatable>
+        </template>
+
+        <template if:true={noResults}>
+            <div class="slds-m-top_medium slds-text-align_center">
+                <h2 style="font-weight: bold; font-size: large; color: #c62828;">No Results Found</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 1rem;">
+                    Unfortunately, we couldn't find any records matching your search.
+                </p>
+            </div>
+        </template>
+
+        <!-- Details Section with some space and a heading -->
+        <template if:true={isEditing}>
+            <div class="slds-m-top_large slds-p-around_medium">
+                <h2 class="slds-text-heading_medium">Details</h2>
+                <lightning-record-edit-form
+                    object-api-name="Account"
+                    record-id={selectedAccountId}
+                    onsuccess={handleSuccess}
+                    oncancel={handleCancel}>
+                    
+                    <lightning-messages></lightning-messages>
+                    
+                    <!-- Account Fields -->
+                    <lightning-input-field field-name="Name"></lightning-input-field>
+                    <lightning-input-field field-name="Phone"></lightning-input-field>
+                    <lightning-input-field field-name="BillingStreet"></lightning-input-field>
+                    <lightning-input-field field-name="BillingCity"></lightning-input-field>
+                    <lightning-input-field field-name="BillingPostalCode"></lightning-input-field>
+                    
+                    <!-- Buttons -->
+                    <div class="slds-grid slds-grid_align-end slds-m-top_medium">
+                        <lightning-button label="Cancel" onclick={handleCancel} variant="neutral"></lightning-button>
+                        <lightning-button type="submit" label="Next" variant="brand"></lightning-button>
+                    </div>
                 </lightning-record-edit-form>
-    </template>
+            </div>
+        </template>
     </lightning-card>
 </template>

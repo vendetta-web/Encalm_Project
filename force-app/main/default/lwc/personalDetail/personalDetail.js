@@ -1,60 +1,67 @@
 import { LightningElement, track } from 'lwc';
 import searchAccounts from '@salesforce/apex/AccountController.searchAccounts';
 
-
 export default class PersonalDetail extends LightningElement {
     @track searchKey = '';
-    @track accounts;
     @track suggestions;
     @track noResults;
-    @track error;
-    isCreatingAccount = false;
+    @track selectedAccountId;
+    @track isEditing = false; 
 
-    columns = [
-        { label: 'Account Name', fieldName: 'Name' },
-        { label: 'Phone', fieldName: 'Phone' },
-        { label: 'Email', fieldName: 'PersonEmail' }
+    suggestionColumns = [
+        { label: 'Account Name', fieldName: 'Name', type: 'text' },
+        { label: 'Phone', fieldName: 'Phone', type: 'text' },
+        { label: 'Email', fieldName: 'PersonEmail', type: 'email' },
+        {
+            label: 'Action',
+            type: 'button',
+            typeAttributes: {
+                label: 'Book',
+                name: 'Book',
+                variant: 'brand',
+                title: 'Select Account',
+                disabled: false 
+            }
+        }
     ];
-    
+
     handleSearchKeyChange(event) {
         this.searchKey = event.target.value;
         if (this.searchKey.length >= 2) {
             this.getSuggestions();
         } else {
             this.suggestions = [];
-            this.accounts = undefined;
+            this.noResults = false;
         }
     }
-    
+
     async getSuggestions() {
         try {
             const result = await searchAccounts({ searchKey: this.searchKey });
             this.suggestions = result.length ? result : [];
             this.noResults = result.length === 0;
         } catch (error) {
-            this.error = error.body.message;
-            this.suggestions = [];
+            console.error('Error fetching accounts:', error);
         }
     }
 
     selectAccount(event) {
-        const accountId = event.target.dataset.id;
-        this.searchKey = event.target.innerText.split(' - ')[0];
-        this.accounts = this.suggestions.filter(account => account.Id === accountId);
-        this.suggestions = [];
+        const actionName = event.detail.action.name;
+        const accountId = event.detail.row.Id;
+
+        if (actionName === 'Book') {
+            this.selectedAccountId = accountId;
+            this.isEditing = true;  
+        }
     }
-    handleCreateAccount(event){
-        this.isCreatingAccount = true;
+
+    handleCancel() {
+        this.isEditing = false;  
     }
-    handleCancel(event){
-        this.isCreatingAccount = false;
-    }
+
     handleSuccess(event) {
+        this.isEditing = false; 
         const recordId = event.detail.id;
-        console.log('Account created with ID: ', recordId);
-        this.isCreatingAccount = false;
-    }
-    handleError(event) {
-        console.error('Error creating account: ', event.detail.message);
+        console.log('Account saved with ID:', recordId);
     }
 }
