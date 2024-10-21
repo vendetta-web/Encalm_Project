@@ -1,0 +1,25 @@
+.slds-m-around_medium {
+    padding: 1rem;
+}
+
+.slds-m-top_medium {
+    margin-top: 1rem;
+}
+
+.suggestions-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #d8dde6;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.suggestions-list li {
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.suggestions-list li:hover {
+    background-color: #f4f6f9;
+}

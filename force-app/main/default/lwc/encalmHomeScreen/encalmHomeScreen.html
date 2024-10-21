@@ -1,0 +1,40 @@
+<template>
+    <lightning-card title="Search">
+            <div class="slds-grid slds-grid_align-spread">
+                <div class="slds-col slds-size_8-of-12">
+                    <lightning-input
+                        label="Search by Name, Number, or Email"
+                        value={searchKey}
+                        onchange={handleSearchKeyChange}
+                        onkeyup={handleKeyUp}
+                         icon-name="utility:search"
+                        placeholder="Search...">
+                    </lightning-input>
+                </div>
+            </div>
+            <template if:true={suggestions}>
+                <ul class="suggestions-list">
+                    <template for:each={suggestions} for:item="account">
+                        <li key={account.Id} onclick={selectAccount} data-id={account.Id}>
+                            {account.Name} - {account.Phone} - {account.Email}
+                        </li>
+                    </template>
+                </ul>
+            </template>
+            <template if:true={noResults}>
+                <div class="slds-m-top_medium">
+                    <p>No accounts found. Would you like to create a new account?</p>
+                    <lightning-button label="Create New Account" variant="brand" onclick={handleCreateAccount}></lightning-button>
+                </div>
+            </template>
+            <template if:true={accounts}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={accounts}
+                    columns={columns}
+                    hide-checkbox-column="true"
+                    class="slds-m-top_medium">
+                </lightning-datatable>
+            </template>
+    </lightning-card>
+</template>

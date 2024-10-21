@@ -1,0 +1,22 @@
+<template>
+    <lightning-card title="Journey Details">
+        <div class="slds-p-around_medium">
+            <lightning-input label="Flight No" value={flightNo} onchange={handleInputChange} data-id="flightNo"></lightning-input>
+            <lightning-input label="Airport" value={airport} onchange={handleInputChange} data-id="airport"></lightning-input>
+            <lightning-input label="Sector" value={sector} onchange={handleInputChange} data-id="sector"></lightning-input>
+            <lightning-input type="date" label="Journey Date" value={journeyDate} onchange={handleInputChange} data-id="journeyDate"></lightning-input>
+            <lightning-input label="Flight Type" value={flightType} onchange={handleInputChange} data-id="flightType"></lightning-input>
+            <lightning-layout>
+                <lightning-layout-item padding="around-small">
+                    <lightning-card title="Pricing Info" icon-name="utility:money">
+                        <p>Pricing details will be displayed here.</p>
+                    </lightning-card>
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+        <footer>
+            <lightning-button variant="neutral" label="Previous" onclick={previous}></lightning-button>
+            <lightning-button variant="brand" label="Next" onclick={next}></lightning-button>
+        </footer>
+    </lightning-card>
+</template>

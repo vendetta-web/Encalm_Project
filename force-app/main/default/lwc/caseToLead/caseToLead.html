@@ -1,0 +1,17 @@
+<template>
+    <lightning-card title="Case Information">
+        <template if:true={caseData}>
+            <div class="slds-p-around_medium">
+                <p><strong>Case ID:</strong> {caseData.Id.value}</p>
+                <p><strong>Status:</strong> {caseData.Status.value}</p>
+                <p><strong>Description:</strong> {caseData.Description.value}</p>
+                <p><strong>Subject:</strong> {caseData.Subject.value}</p>
+            </div>
+        </template>
+        <template if:true={error}>
+            <div class="slds-p-around_medium">
+                <p>Error loading case data: {error}</p>
+            </div>
+        </template>
+    </lightning-card>
+</template>

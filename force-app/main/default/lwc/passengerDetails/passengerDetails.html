@@ -1,0 +1,16 @@
+<template>
+    <lightning-card title="Passenger Details">
+        <lightning-button label="Add Passenger" onclick={addPassenger}></lightning-button>
+        <lightning-datatable
+            data={passengers}
+            columns={columns}
+            key-field="id"
+            hide-checkbox-column="true"
+            onrowaction={handleRowAction}>
+        </lightning-datatable>
+        <footer>
+            <lightning-button variant="neutral" label="Previous" onclick={goBack}></lightning-button>
+            <lightning-button variant="brand" label="Submit (Book)" onclick={submit}></lightning-button>
+        </footer>
+    </lightning-card>
+</template>

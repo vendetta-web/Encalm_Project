@@ -1,0 +1,16 @@
+<template>
+    <lightning-card title="Services">
+        <div class="slds-p-around_medium">
+            <lightning-input label="Package" value={packageValue} onchange={handleInputChange} data-id="package"></lightning-input>
+            <lightning-input label="Add on Services" value={addOnServices} onchange={handleInputChange} data-id="addOnServices"></lightning-input>
+            <lightning-input label="No of Adults" value={noOfAdults} onchange={handleNumberOfAdults}></lightning-input>
+            <lightning-input label="No of Children" value={noOfChildren} onchange={handleInputChange} data-id="noOfChildren"></lightning-input>
+            <lightning-input label="No of Infants" value={noOfInfants} onchange={handleInputChange} data-id="noOfInfants"></lightning-input>
+        </div>
+        <footer>
+            <lightning-button variant="neutral" label="Previous" onclick={previous}></lightning-button>
+            <lightning-button variant="brand" label="Close" onclick={createLead}></lightning-button>
+            <lightning-button variant="brand" label="Next" onclick={next}></lightning-button>
+        </footer>
+    </lightning-card>
+</template>

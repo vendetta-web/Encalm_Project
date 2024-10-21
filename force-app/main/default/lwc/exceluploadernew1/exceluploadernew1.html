@@ -1,0 +1,16 @@
+<template>
+    <lightning-card title="Upload Excel for Accounts" icon-name="custom:custom63">
+        <div class="slds-p-around_medium">
+            <lightning-file-upload
+                label="Upload Excel File"
+                accept=".xlsx"
+                onuploadfinished={handleFileUpload}>
+            </lightning-file-upload>
+
+            <template if:true={fileData}>
+                <p>File Name: {fileData.filename}</p>
+                <lightning-button label="Process File" onclick={processFile}></lightning-button>
+            </template>
+        </div>
+    </lightning-card>
+</template>
