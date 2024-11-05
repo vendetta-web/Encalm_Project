@@ -1,0 +1,251 @@
+<template>
+    <lightning-card title="Flight Details Form">
+        <div slot="actions" class="slds-button-group">
+            <lightning-button label="New Lead" variant="brand" onclick={handleNewLead}></lightning-button>
+        </div>
+        <lightning-layout multiple-rows="true">
+            <!-- Added BY Saurabh -->
+            <lightning-layout-item size="12" class="slds-p-around_small">
+                <c-test-custom-lookups></c-test-custom-lookups>
+            </lightning-layout-item>
+        </lightning-layout>
+        <lightning-tabset variant="scoped">
+            <!-- Arrival -->
+            <lightning-tab label="Arrival" value="Arrival" onactive={handleTabChange}>
+                <template if:true={isTabOne}>
+                    <!-- Commented BY Saurabh -->
+                    <!-- <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="12" class="slds-p-around_small">
+                            <c-test-custom-lookups></c-test-custom-lookups>
+                        </lightning-layout-item>
+                    </lightning-layout> -->
+
+                    <!-- Flight Details Section -->
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <lightning-combobox data-id="arrivingAirportr" label="Arriving Airport"
+                                options={airportOptions} value={arrivingAirport} onchange={handleArrivingAirportChange}>
+                            </lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <lightning-combobox data-id="departureAirport" label="Departure Airport"
+                                options={airportOptions} value={departureAirport}
+                                onchange={handleDepartureAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <lightning-input type="date" label="Date of Arrival" value={arrivalDate}
+                                onchange={handleArrivalDateChange}></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6">
+                            <lightning-combobox data-id="selectSector" label="Select sector" options={sectorOption}
+                                value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
+                                value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="STA Time" value={staTime}
+                                onchange={handleStaTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
+                                onchange={handleServiceTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Adult</span>
+                                <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                                <span class="count">{adultCount}</span>
+                                <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
+                                <span class="age-range">12 years & above</span>
+                            </div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Child</span>
+                                <button onclick={decrementChild} class="btn minus">-</button>
+                                <span class="count">{childCount}</span>
+                                <button onclick={incrementChild} class="btn plus">+</button>
+                                <span class="age-range">2-11 years</span>
+                            </div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Infant</span>
+                                <button onclick={decrementInfant} class="btn minus">-</button>
+                                <span class="count">{infantCount}</span>
+                                <button onclick={incrementInfant} class="btn plus">+</button>
+                                <span class="age-range">Below 2 years</span>
+                            </div>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <div class="slds-align_absolute-center slds-m-top_medium">
+                        <lightning-button label="Next" variant="brand" onclick={handleSave}></lightning-button>
+                    </div>
+                </template>
+            </lightning-tab>
+              <!-- Depature -->
+            <lightning-tab label="Depature" value="Depature" onactive={handleTabChange}>
+
+                <template if:true={isTabTwo}>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <lightning-combobox label="Departure Airport" options={airportOptions}
+                                value={arrivingAirport} onchange={handleArrivingAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6">
+                            <lightning-combobox label="Destination Airport" options={airportOptions}
+                                value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout>
+                        <lightning-layout-item size="6">
+                            <lightning-combobox data-id="selectSector" label="Select sector" options={sectorOption}
+                                value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <lightning-input type="date" label="Date of Departure" value={departureDate}
+                                onchange={handleArrivalDateChange}></lightning-input>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
+                                value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="STD Time" value={staTime}
+                                onchange={handleStaTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
+                                onchange={handleServiceTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Adult</span>
+                                <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                                <span class="count">{adultCount}</span>
+                                <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
+                                <span class="age-range">12 years & above</span>
+                            </div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Child</span>
+                                <button onclick={decrementChild} class="btn minus">-</button>
+                                <span class="count">{childCount}</span>
+                                <button onclick={incrementChild} class="btn plus">+</button>
+                                <span class="age-range">2-11 years</span>
+                            </div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Infant</span>
+                                <button onclick={decrementInfant} class="btn minus">-</button>
+                                <span class="count">{infantCount}</span>
+                                <button onclick={incrementInfant} class="btn plus">+</button>
+                                <span class="age-range">Below 2 years</span>
+                            </div>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <div class="slds-align_absolute-center slds-m-top_medium">
+                        <lightning-button label="Next" variant="brand" onclick={handleSave}></lightning-button>
+                    </div>
+                </template>
+            </lightning-tab>
+              <!-- Transit -->
+            <lightning-tab label="Transit" value="Transit" onactive={handleTabChange} class="slds-grid slds-gutters">
+                <template if:true={isTabThree}>
+
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <lightning-combobox label="Select Transit Via" options={transitVia} value={arrivingAirport}
+                                onchange={handleArrivingAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6">
+                            <lightning-combobox label="Arriving From" options={arrivingFrom} value={departureAirport}
+                                onchange={handleDepartureAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout>
+                        <lightning-layout-item size="6">
+                            <lightning-combobox data-id="selectSector" label="Select sector" options={sectorOption}
+                                value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <lightning-combobox label="Depating To" options={airportOptions} value={departureAirport}
+                                onchange={handleDepartureAirportChange}></lightning-combobox>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
+                                value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="STA Time" value={staTime}
+                                onchange={handleStaTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
+                                onchange={handleServiceTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
+                                value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="STD Time" value={staTime}
+                                onchange={handleStaTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
+                                onchange={handleServiceTimeChange}></lightning-input>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <lightning-layout multiple-rows="true">
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Adult</span>
+                                <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                                <span class="count">{adultCount}</span>
+                                <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
+                                <span class="age-range">12 years & above</span>
+                            </div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Child</span>
+                                <button onclick={decrementChild} class="btn minus">-</button>
+                                <span class="count">{childCount}</span>
+                                <button onclick={incrementChild} class="btn plus">+</button>
+                                <span class="age-range">2-11 years</span>
+                            </div>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="4" class="slds-p-around_small">
+                            <div class="counter">
+                                <span>Infant</span>
+                                <button onclick={decrementInfant} class="btn minus">-</button>
+                                <span class="count">{infantCount}</span>
+                                <button onclick={incrementInfant} class="btn plus">+</button>
+                                <span class="age-range">Below 2 years</span>
+                            </div>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                    <div class="slds-align_absolute-center slds-m-top_medium">
+                        <lightning-button label="Next" variant="brand" onclick={handleSave}></lightning-button>
+                    </div>
+
+                </template>
+            </lightning-tab>
+        </lightning-tabset>
+    </lightning-card>
+</template>

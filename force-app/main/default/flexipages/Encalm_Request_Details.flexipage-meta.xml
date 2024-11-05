@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>allowChanges</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>linkedToDesignKit</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginBottom</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginLeft</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginRight</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginTop</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>richTextValue</name>
+                    <value>&lt;div style=&quot;text-align: center;&quot;&gt;&lt;img alt=&quot;encalm logo&quot; src=&quot;{[devName:encalm_logo]}&quot; style=&quot;max-width: 100%; width: 87px; height: 70.0333px;&quot; title=&quot;encalm logo&quot; /&gt;
+&lt;/div&gt;
+&lt;div style=&quot;text-align: center;&quot;&gt;
+ &lt;p&gt;&lt;span style=&quot;color:#f1c40f;&quot;&gt;&lt;strong&gt;﻿ENCALM HOSPITALITY PVT. LTD.&lt;/strong&gt;&lt;/span&gt;&lt;/p&gt;
+ &lt;p&gt;7th Floor, TAG Tower, Plot No. 17-18, Phase 4, Udyog Vihar, Gurugram - 122015, Haryana, India&lt;/p&gt;
+ &lt;p&gt;&lt;span style=&quot;font-size:16px;&quot;&gt;&lt;strong&gt;Regarding Reservation Information&lt;/strong&gt;&lt;/span&gt;&lt;/p&gt;
+&lt;/div&gt;</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:richText</componentName>
+                <identifier>contentbuilder_richText</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-54aec386-6c23-47d2-ae8c-48b5aea75c6c</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>columnBody</name>
+                    <value>Facet-54aec386-6c23-47d2-ae8c-48b5aea75c6c</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnCount</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnIndex</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnSpacer</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>padding</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>verticalAlign</name>
+                    <value>top</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>width</name>
+                    <value>100%</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:column</componentName>
+                <identifier>contentbuilder_column</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-f15cc95a-16af-4088-b2f7-c3d974ed2714</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>allowChanges</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>htmlValue</name>
+                    <value>&lt;div class=&quot;container&quot; style=&quot;max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;&quot;&gt;
+    &lt;p style=&quot;font-size: 16px; color: #333;&quot;&gt;Hi,&lt;/p&gt;
+
+    &lt;p style=&quot;font-size: 16px; color: #333;&quot;&gt;Please find the details for the booking request below:&lt;/p&gt;
+    
+    &lt;table style=&quot;width: 100%; border-collapse: collapse; margin-top: 10px;&quot;&gt;
+        &lt;tr&gt;
+            &lt;th style=&quot;background-color: #007BFF; color: white; padding: 10px; text-align: left;&quot;&gt;Particulars&lt;/th&gt;
+            &lt;th style=&quot;background-color: #007BFF; color: white; padding: 10px; text-align: left;&quot;&gt;Details&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Guest 1 Type of Service&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Sector of Travel&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Journey Type&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Travel Date&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Flight No.&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Flight Time&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Airline PNR&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Guest&apos;s Title&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Name of Guest&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Name to be displayed on Placard&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Contact Number of Guest&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Travel Class&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Additional Request&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Bill to (Name)&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;Billing Details&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;E-Mail ID&lt;/td&gt;
+            &lt;td style=&quot;padding: 10px; border: 1px solid #ddd;&quot;&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+
+    &lt;p style=&quot;font-size: 16px; color: #333; margin-top: 20px;&quot;&gt;Thank you for your assistance!&lt;/p&gt;
+&lt;/div&gt;</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:html</componentName>
+                <identifier>contentbuilder_html</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-e2dbd745-2f19-4da4-b796-0b857998344e</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>columnBody</name>
+                    <value>Facet-e2dbd745-2f19-4da4-b796-0b857998344e</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnCount</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnIndex</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnSpacer</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>padding</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>verticalAlign</name>
+                    <value>top</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>width</name>
+                    <value>100%</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:column</componentName>
+                <identifier>contentbuilder_column2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-d4a80564-0e63-4446-a693-a2d93fe5ed22</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>allowChanges</name>
+                    <value>true</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>linkedToDesignKit</name>
+                    <value>false</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginBottom</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginLeft</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginRight</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>marginTop</name>
+                    <value>0</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>richTextValue</name>
+                    <value>&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;div style=&quot;display: flex; align-items: flex-start; margin-bottom: 20px; justify-content: space-between; padding: 5px 20px 20px 20px;&quot;&gt;
+ &lt;div style=&quot;margin-right: 20px;&quot;&gt;
+  &lt;div style=&quot;text-align: center;&quot;&gt;
+   &lt;img alt=&quot;encalm logo&quot; src=&quot;{[devName:encalm_logo]}&quot; style=&quot;max-width: 100%; width: 76px; height: 61.0333px;&quot; title=&quot;encalm logo&quot; /&gt;
+  &lt;/div&gt;
+  &lt;div style=&quot;margin-top: 5px;&quot;&gt;
+   &lt;a href=&quot;https://www.encalm.com&quot; style=&quot;color: #467886; text-decoration: underline;&quot; target=&quot;_blank&quot;&gt;www.encalm.com&lt;/a&gt;
+  &lt;/div&gt;
+ &lt;/div&gt;
+ &lt;div style=&quot;flex-grow: 1; text-align: right;&quot;&gt;
+  &lt;div style=&quot;font-size: 12pt; line-height: 1.15; font-family: Aptos, sans-serif;&quot;&gt;
+   &lt;b style=&quot;font-size: 11pt; font-family: Georgia, serif;&quot;&gt;Saksham Chawla&lt;/b&gt;
+  &lt;/div&gt;
+  &lt;div style=&quot;font-size: 12pt; line-height: 1.15; font-family: Aptos, sans-serif;&quot;&gt;
+   &lt;span style=&quot;font-size: 11pt; font-family: Georgia, serif;&quot;&gt;Assistant Manager - Marketing&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div style=&quot;border-top: 1px solid rgb(207, 179, 83); padding-top: 15px; margin-top: 10px;&quot;&gt;
+   &lt;span style=&quot;font-size: 12pt; line-height: 1.15; font-family: Aptos, sans-serif;&quot;&gt;&lt;span style=&quot;font-size: 11pt; font-family: Georgia, serif;&quot;&gt;M: +91 9990095951&lt;br /&gt; E:&amp;nbsp;&lt;a href=&quot;mailto:saksham.chawla@encalm.com&quot; style=&quot;color:#467886; text-decoration: underline;&quot;&gt;saksham.chawla@encalm.com&lt;/a&gt;&lt;/span&gt; &lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div style=&quot;padding-top: 5px;&quot;&gt;
+   &lt;span style=&quot;font-size: 12pt; line-height: 1.15; font-family: Aptos, sans-serif;&quot;&gt;&lt;span style=&quot;font-size: 11pt; font-family: Georgia, serif;&quot;&gt;Encalm Hospitality Pvt. Ltd.&lt;br /&gt; Tag Tower, 7th Floor, 17-18, Phase IV,&lt;br /&gt; Udyog Vihar, Sector 18,&lt;br /&gt; Gurugram, Haryana 122015&lt;/span&gt; &lt;/span&gt;
+  &lt;/div&gt;
+ &lt;/div&gt;
+&lt;/div&gt;
+&lt;div style=&quot;text-align: center;&quot;&gt;
+ &lt;img alt=&quot;foo&quot; class=&quot;&quot; src=&quot;{[devName:foo]}&quot; style=&quot;max-width: 100%; width: 359.4px; height: 75px;&quot; title=&quot;foo&quot; /&gt;
+&lt;/div&gt;
+&lt;div id=&quot;&quot; style=&quot;left: 56.4333px; top: 75.4px;&quot;&gt;
+ &amp;nbsp;
+&lt;/div&gt;
+&lt;div id=&quot;&quot; style=&quot;left: 20px; top: 341.267px;&quot;&gt;
+ &amp;nbsp;
+&lt;/div&gt;</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:richText</componentName>
+                <identifier>contentbuilder_richText2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-70f1b9c8-fe1b-4ed3-af9c-57f7e0f37e69</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>columnBody</name>
+                    <value>Facet-70f1b9c8-fe1b-4ed3-af9c-57f7e0f37e69</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnCount</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnIndex</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columnSpacer</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>padding</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>verticalAlign</name>
+                    <value>top</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>width</name>
+                    <value>100%</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:column</componentName>
+                <identifier>contentbuilder_column3</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>Facet-017e7574-e9e8-4d7e-b25b-60630bc00e12</name>
+        <type>Facet</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>backgroundColor</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImagePosition</name>
+                    <value>left_top</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImageRepeat</name>
+                    <value>no-repeat</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImageSize</name>
+                    <value>cover</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImageUrl</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columns</name>
+                    <value>Facet-f15cc95a-16af-4088-b2f7-c3d974ed2714</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>verticalAlignment</name>
+                    <value>top</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:row</componentName>
+                <identifier>contentbuilder_row</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>backgroundColor</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImagePosition</name>
+                    <value>left_top</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImageRepeat</name>
+                    <value>no-repeat</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImageSize</name>
+                    <value>cover</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImageUrl</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columns</name>
+                    <value>Facet-d4a80564-0e63-4446-a693-a2d93fe5ed22</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>verticalAlignment</name>
+                    <value>top</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:row</componentName>
+                <identifier>contentbuilder_row2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentInstanceProperties>
+                    <name>backgroundColor</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>backgroundImageUrl</name>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>columns</name>
+                    <value>Facet-017e7574-e9e8-4d7e-b25b-60630bc00e12</value>
+                </componentInstanceProperties>
+                <componentInstanceProperties>
+                    <name>verticalAlignment</name>
+                    <value>top</value>
+                </componentInstanceProperties>
+                <componentName>contentbuilder:row</componentName>
+                <identifier>contentbuilder_row3</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>main</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>Encalm_Request_Details</masterLabel>
+    <template>
+        <name>contentpage:defaultEmailTemplatePageTemplate</name>
+        <properties>
+            <name>backgroundColor</name>
+            <value>#E9EAEC</value>
+        </properties>
+        <properties>
+            <name>backgroundImageUrl</name>
+        </properties>
+        <properties>
+            <name>bodyColor</name>
+            <value>#FFFFFF</value>
+        </properties>
+        <properties>
+            <name>paddingBottom</name>
+            <value>10</value>
+        </properties>
+        <properties>
+            <name>paddingLeft</name>
+            <value>10</value>
+        </properties>
+        <properties>
+            <name>paddingRight</name>
+            <value>10</value>
+        </properties>
+        <properties>
+            <name>paddingTop</name>
+            <value>10</value>
+        </properties>
+        <properties>
+            <name>preheader</name>
+        </properties>
+    </template>
+    <type>EmailTemplatePage</type>
+</FlexiPage>

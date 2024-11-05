@@ -1,0 +1,114 @@
+<template>
+    <lightning-input id="lookupInput" type="text" placeholder="Search Account" value={selectedAccount.Name}
+        onchange={handleSearchInput}></lightning-input>
+    <!-- Display the results in a dropdown -->
+    <template if:true={hasResults}>
+        <div class="slds-dropdown slds-dropdown_fluid" style="max-height: 300px; overflow: auto;">
+            <ul class="slds-listbox slds-listbox_vertical" role="listbox">
+                <template for:each={searchResults} for:item="account">
+                    <li key={account.Id} role="presentation" class="slds-listbox__item">
+                        <div class="slds-listbox__option slds-listbox__option_plain slds-media slds-media_small slds-media_center"
+                            role="option" tabindex="0" data-id={account.Id} onclick={handleSelect}>
+                            <lightning-icon icon-name="standard:account" size="small" alternative-text="Account Icon"
+                                class="slds-media__figure"></lightning-icon>
+                            <div class="slds-media__body">
+                                <p class="slds-truncate"><strong>{account.Name}</strong></p><br/>
+                                <p class="slds-truncate">{account.Phone}</p><br/>
+                                <p class="slds-truncate">{account.PersonEmail}</p>
+                            </div>
+                        </div>
+                    </li>
+                </template>
+                <div class="slds-m-top_small slds-m-left_medium">
+                    <lightning-button icon-name="utility:add" label="Add Account" icon-position="left"
+                        onclick={openModal} variant="base"></lightning-button>
+                </div>
+            </ul>
+        </div>
+    </template>
+    <template if:true={noSearchResult}>
+        <div class="slds-dropdown slds-dropdown_fluid">
+            <ul class="slds-listbox slds-listbox_vertical" role="listbox">
+                <li class="slds-listbox__item">
+                    <div
+                        class="slds-listbox__option slds-listbox__option_plain slds-media slds-media_small slds-media_center">
+                        <lightning-button icon-name="utility:add" label="Add Account" icon-position="left"
+                            onclick={openModal} variant="base">
+                        </lightning-button>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </template>
+
+    <!-- Modal for Adding Account -->
+    <template if:true={isOpenModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container slds-p-around_medium">
+                <!-- Modal Header -->
+                <div class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                <span class="slds-assistive-text">Close</span>
+            </button>
+                    <h2 class="slds-text-heading_medium">Create Account</h2>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- Account Type Radio Group -->
+                    <lightning-radio-group name="accountType" label="Account Type" options={accountTypeOptions}
+                        value={selectedAccountType} onchange={handleAccountTypeChange} class="horizontal-radio">
+                    </lightning-radio-group>
+                    <br />
+
+                    <!-- Account Information Heading and Form Fields -->
+                    <template if:true={selectedAccountType}>
+                        <p><strong>Account Information</strong></p>
+                        <lightning-record-edit-form object-api-name="Account" onsuccess={handleSuccess}
+                            onerror={handleError}>
+                            <div class="slds-grid slds-wrap slds-gutters slds-m-top_small">
+                                <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                                    <lightning-input-field field-name="Name" data-field-name="Name" required
+                                        value={accountName} onchange={handleNameChange}>
+                                    </lightning-input-field>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                                    <lightning-input-field field-name="Phone" data-field-name="Phone" required
+                                        value={accountPhone} onchange={handlePhoneChange}>
+                                    </lightning-input-field>
+                                </div>
+                                <template if:true={isBusinessAccount}>
+
+                                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                                        <lightning-input-field field-name="BillingAddress"></lightning-input-field>
+                                    </div>
+                                </template>
+                                <template if:true={isPersonalAccount}>
+
+                                    <div class="slds-col slds-size_1-of-2 slds-p-left_small">
+                                        <lightning-input-field field-name="PersonEmail" data-field-name="PersonEmail">
+                                        </lightning-input-field>
+                                    </div>
+
+                                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                                        <lightning-input-field field-name="Website"></lightning-input-field>
+                                    </div>
+                                </template>
+                            </div>
+                        </lightning-record-edit-form>
+                    </template>
+
+                    <!-- Error Message -->
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="slds-modal__footer slds-grid slds-grid_align-spread">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+                    <lightning-button variant="brand" label="Save" onclick={validateAndSave}></lightning-button>
+                </div>
+            </div>
+        </section>
+        <!-- Added BY Saurabh -->
+        <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    </template>

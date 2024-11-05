@@ -1,0 +1,15 @@
+<!-- MyVFPage.page -->
+<apex:page >
+    <apex:includeLightning />
+    <script src="/lightning/lightning.out.js"></script>
+    <script>
+        $Lightning.use("c:myApp", function() {
+            $Lightning.createComponent(
+                "c:leadForm", // Reference to the Aura component
+                {},
+                "lwcContainer"
+            );
+        });
+    </script>
+    <div id="lwcContainer"></div>
+</apex:page>

@@ -1,0 +1,24 @@
+.custom-container{
+	color : black;
+}
+
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.message {
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.custom-button {
+  color: white !important;
+  font-size: 1rem !important;
+  padding: 1.5rem 1rem !important;
+}

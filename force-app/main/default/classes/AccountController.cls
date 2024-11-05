@@ -22,4 +22,30 @@ public with sharing class AccountController {
             WHERE Name LIKE :searchPattern OR PersonEmail LIKE :searchPattern OR Phone LIKE :searchPattern
         ];
     }
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Id> getRecordTypeIds() {
+        Map<String, Id> recordTypeIds = new Map<String, Id>();
+        List<RecordType> recordTypes = [SELECT Id, Name FROM RecordType WHERE SObjectType = 'Account' AND Name IN ('Person Account', 'Business Account')];
+
+        for (RecordType rt : recordTypes) {
+            if (rt.Name == 'Business Account') {
+                recordTypeIds.put('Business', rt.Id);
+            } else if (rt.Name == 'Person Account') {
+                recordTypeIds.put('Personal', rt.Id);
+            }
+        }
+
+        return recordTypeIds;
+    }
+    @AuraEnabled(cacheable=true)
+public static List<Account> getAccounts(String searchTerm) {
+    String query = '%' + searchTerm + '%';
+    return [
+        SELECT Id, Name, Phone, PersonEmail 
+        FROM Account 
+        WHERE Name LIKE :query
+        ORDER BY Name ASC
+        LIMIT 10
+    ];
+}
 }

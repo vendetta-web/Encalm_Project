@@ -1,4 +1,4 @@
-import { LightningElement, api, wire, track } from 'lwc';
+import { LightningElement, api, wire } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
 import { NavigationMixin } from 'lightning/navigation';
 import CASE_ID from '@salesforce/schema/Case.Id';
@@ -13,12 +13,9 @@ const FIELDS = [CASE_ID, CASE_STATUS, CASE_DESCRIPTION, CASE_SUBJECT, CASE_SUPPL
 
 export default class CaseToLead extends NavigationMixin(LightningElement) {
     @api recordId;
-    @track name = '';
-    @track age = '';
-    @track gender = '';
     caseData;
 
- @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
+    @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredCase({ error, data }) {
         if (data) {
             this.caseData = data.fields;
@@ -31,15 +28,12 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
     navigateToLeadWithPrefill() {
         const description = this.caseData.Description.value || '';
         const subject = this.caseData.Subject?.value || '';
-        const nameString = this.extractValue(description, 'Name:');
+        
+        const name = this.caseData.SuppliedName?.value || '';
+        const email = this.caseData.SuppliedEmail?.value || '';
+        const phone = this.caseData.SuppliedPhone?.value || '';
 
-        const extractedEmail = this.extractValue(description, 'Email:');
-        const extractedPhone = this.extractValue(description, 'Phone:');
-
-        const email = this.caseData.SuppliedEmail?.value || extractedEmail;
-        const phone = this.caseData.SuppliedPhone?.value || extractedPhone;
-
-        const [firstName, ...lastNameParts] = nameString.split(' ');
+        const [firstName, ...lastNameParts] = name.split(' ');
         const lastName = lastNameParts.join(' ');
 
         const { Id, Status } = this.caseData;
@@ -64,12 +58,6 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
                 defaultFieldValues: this.getDefaultFieldValues(leadDefaultValues)
             }
         });
-    }
-
-    extractValue(description, label) {
-        const regex = new RegExp(`${label}\\s*([^\\n]*)`, 'i');
-        const match = description.match(regex);
-        return match ? match[1].trim() : '';
     }
 
     getDefaultFieldValues(defaultValues) {

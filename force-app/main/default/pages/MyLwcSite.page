@@ -1,0 +1,17 @@
+<apex:page standardStylesheets="true" sidebar="false" applyBodyTag="false" showHeader="false">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Add any additional metadata or stylesheets here -->
+    </head>
+    <body>
+        <!-- Load the LWC component using Lightning Out -->
+
+        <div id="lwcContainer"></div>
+        <script>
+            // Render the component after the Lightning runtime has loaded
+            $Lightning.use("c:myLwcComponentApp", function() {
+                $Lightning.createComponent("c:myLwcComponent", {}, "lwcContainer");
+            });
+        </script>
+    </body>
+</apex:page>

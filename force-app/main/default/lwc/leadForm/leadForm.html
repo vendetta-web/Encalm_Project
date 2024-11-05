@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title="Edit Lead" icon-name="custom:custom63">
+        <lightning-record-edit-form record-id={recordId} object-api-name="Lead" onsuccess={handleSuccess}>
+            <lightning-messages></lightning-messages>
+
+            <lightning-input-field field-name="FirstName"></lightning-input-field>
+            <lightning-input-field field-name="LastName"></lightning-input-field>
+            <lightning-input-field field-name="Email"></lightning-input-field>
+            <lightning-input-field field-name="Company"></lightning-input-field>
+            
+            <!-- Required Fields -->
+            <lightning-input-field field-name="Travel_Date__c" required="true"></lightning-input-field>
+            <lightning-input-field field-name="Number_of_Adult__c" required="true"></lightning-input-field>
+
+            <div class="slds-m-top_medium">
+                <lightning-button type="submit" label="Save" variant="brand"></lightning-button>
+                <lightning-button label="Cancel" variant="neutral" onclick={handleCancel}></lightning-button>
+            </div>
+        </lightning-record-edit-form>
+    </lightning-card>
+</template>
