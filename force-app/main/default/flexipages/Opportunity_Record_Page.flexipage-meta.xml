@@ -91,7 +91,7 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.Date_of_Arrival__c</fieldItem>
+                <fieldItem>Record.Jouney_Date__c</fieldItem>
                 <identifier>RecordDate_of_Arrival__cField</identifier>
             </fieldInstance>
         </itemInstances>
@@ -105,6 +105,12 @@
             <fieldInstance>
                 <fieldItem>Record.Flight_Number__c</fieldItem>
                 <identifier>RecordFlight_Number__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Flight_No__c</fieldItem>
+                <identifier>RecordFlight_No__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-6d8795f5-5cc0-4a76-afc1-b7f6f7462648</name>

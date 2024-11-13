@@ -1,9 +1,9 @@
-global class LeadConversionWrapper {
+global class MDEN_ResponseWrapper {
     
     global Boolean success; 
     global String message; 
     global Id leadId;
-    
+     public String id;
     global String email;
     global String company ;
     global String phone;
@@ -12,6 +12,12 @@ global class LeadConversionWrapper {
     global String firstName;
     global String travelDate;
     global Integer numberofAdult;
+    global String airlinePNR;
+    public MDEN_ResponseWrapper(String id, Boolean success, String message) {
+        this.id = id;
+        this.success = success;
+        this.message = message;
+    }
     global List<AddOnServices> addOnServices;
     global List<PassengerDetails> passengerDetails;  
     global class AddOnServices {

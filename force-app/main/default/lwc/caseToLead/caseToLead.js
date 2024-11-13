@@ -14,14 +14,19 @@ const FIELDS = [CASE_ID, CASE_STATUS, CASE_DESCRIPTION, CASE_SUBJECT, CASE_SUPPL
 export default class CaseToLead extends NavigationMixin(LightningElement) {
     @api recordId;
     caseData;
+    error;
+    caseStatusMessage = '';
+    actionMessage = '';
 
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredCase({ error, data }) {
         if (data) {
             this.caseData = data.fields;
+            this.caseStatusMessage = this.getStatusMessage(this.caseData.Status.value, this.caseData.Subject.value);
             this.navigateToLeadWithPrefill();
         } else if (error) {
-            console.error('Error fetching case data:', error?.body?.message || error);
+            this.error = error;
+            this.errorMessage = error?.body?.message || 'Error fetching case data';
         }
     }
 
@@ -38,7 +43,7 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
 
         const { Id, Status } = this.caseData;
         const leadDefaultValues = {
-            Case_Id__c: Id?.value,
+            Case__c: Id?.value,
             Status: Status?.value,
             Description: description,
             Subject: subject,
@@ -48,7 +53,7 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             LastName: lastName ? lastName.trim() : ''
         };
 
-        this[NavigationMixin.Navigate]({
+        this[NavigationMixin.Navigate]( {
             type: 'standard__objectPage',
             attributes: {
                 objectApiName: 'Lead',
@@ -58,11 +63,28 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
                 defaultFieldValues: this.getDefaultFieldValues(leadDefaultValues)
             }
         });
+
+          setTimeout(() => {
+        this.actionMessage = 'The lead creation form is still unfilled.';
+    }, 3000);
     }
 
     getDefaultFieldValues(defaultValues) {
         return Object.entries(defaultValues)
             .map(([field, value]) => `${field}=${encodeURIComponent(value)}`)
             .join(',');
+    }
+
+    // Function to return the status message
+    getStatusMessage(status, subject) {
+        if (status === 'New' && subject) {
+            return `Case created successfully with subject: "${subject}"`;
+        } else if (status === 'Closed') {
+            return 'Case has been closed.';
+        } else if (status === 'Escalated') {
+            return 'Case has been escalated.';
+        } else {
+            return 'Case status is unknown.';
+        }
     }
 }

@@ -1,4 +1,4 @@
-@RestResource(urlMapping='/v1/lead/*')
+@RestResource(urlMapping='/v1/leadddd/*')
 global class CreateLead {
     @HttpPost
     global static ResponseWrapper getRecord() {

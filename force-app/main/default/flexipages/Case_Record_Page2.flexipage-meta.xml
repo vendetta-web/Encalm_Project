@@ -7,7 +7,23 @@
                     <name>actionNames</name>
                     <valueList>
                         <valueListItems>
+                            <value>Case.Booking</value>
+                        </valueListItems>
+                        <valueListItems>
                             <value>Case.Case_To_Lead</value>
+                            <visibilityRule>
+                                <booleanFilter>1 OR 2</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.Inquiry_Type__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>Query</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Inquiry_Type__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>Booking</rightValue>
+                                </criteria>
+                            </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>CustomButton.Case.Send_Inquiry</value>
@@ -324,16 +340,6 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.SuppliedName</fieldItem>
-                <identifier>RecordSuppliedNameField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.Description</fieldItem>
@@ -394,18 +400,6 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection6</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>parentComponent</componentName>
-                <identifier>c_parentComponent</identifier>
-            </componentInstance>
-        </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>customLWCpage</componentName>
-                <identifier>c_customLWCpage</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>

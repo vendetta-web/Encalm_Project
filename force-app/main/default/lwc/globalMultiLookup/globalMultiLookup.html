@@ -1,0 +1,71 @@
+<template>
+	<div class="form-group mt-3 custom-dropdown item-dropdown-field item-2 closeLostDisabled" onmouseup={mouseUpBlock}>
+		<div class="multiSelectDropdown abcd autocomplete"><!-- removed autocomplete -->
+			<label for="lookup-field" style="display:none" class="lbl">{label}</label>
+			<!-- if:true={showSelectedValues} -->
+			<span class="CSTdrop dropdown-item-selected-fx st-hide st-show" data-name={label} onclick={focusField}>
+				<template iterator:it={selectedData}>
+					<span key={it.value.recId} class="drop-value-selected select-pure__selected-label" data-name={label}
+						title={it.value.label} if:true={it.first}>
+						<span if:true={showImage} class="user-pic-ico2 mr-2">
+							<img src={it.value.src} class="img-fluid">
+						</span>
+						{it.value.label} <i data-name={label} onclick={removeLookupRecord} data-id={it.value.recId}
+							class="closeDrop closeLostDisabled"></i>
+					</span>
+				</template>
+				<span if:false={singleLookup} class="clearEvery text-uppercase closeLostDisabled"
+					onclick={removeAll}>Clear</span>
+			</span>
+
+			<span>
+				<input type="text" name={label} class="form-control multiselectInputField" id={label} onclick={openPicklist}
+					placeholder={label} onfocusout={handleFocusOut} onkeyup={searchLookup} onfocus={displayTitle}>
+			</span>
+
+		</div>
+
+		<div class="more_btn st-show showcount" if:true={showCount} data-name="CSTManager" onclick={opeMultiSelectPop}>
+			+{count}
+		</div>
+		<div class="multiselectedDropValue st-hide abcd">
+			<ul>
+				<template iterator:it={selectedData}>
+				<!-- <template for:each={selectedData} for:item="items"> -->
+					<li key={it.value.recId}  if:false={it.first}> <span class="icon-Cross-2 mr-2 cursor-pointer" data-name={label}
+							data-id={it.value.recId} onclick={removeLookupRecord}></span>
+							<span if:true={showImage} class="user-pic-ico mr-2">
+								<img src={it.value.src} class="img-fluid">
+							</span>
+							<span class="cont-limit">{it.value.label}</span>
+					</li>
+				<!-- </template> -->
+				</template>
+			</ul>
+		</div>
+
+		<div if:true={showPicklist}
+			class="select-items dropdown-external item-dropdown-select-fx select-scroll single-picklist">
+			
+			<div if:true={showAddNew} onclick={addNewClicked} class="add-new-record" data-modal-trigger="" aria-controls="modal-add-contact"
+				aria-expanded="false" >
+				<span class="icon-plus font-1"></span>&nbsp;
+				<span class="addNewBtn">Add New</span>
+			</div>
+			<ul if:true={showOptions}>
+				<template for:each={searchData} for:item="serecord">
+					<li role="presentation" key={serecord} class="selecedItemtList cursor-pointer"
+						data-id={serecord.recId} data-name={label} onclick={setSelectedSubmittedByRecord}>
+						<label class="custom-checkbox">
+							<span if:true={showImage} class="user-pic-ico mr-2">
+								<img src={serecord.src} class="img-fluid"> </span> {serecord.label}
+						</label>
+					</li>
+				</template>
+			</ul>
+		</div>
+		<span class="error throw-error slds-hide">
+			This field is mandatory.
+		</span>
+	</div>	
+</template>

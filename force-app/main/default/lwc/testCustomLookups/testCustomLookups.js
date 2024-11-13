@@ -4,13 +4,12 @@ import getRecordTypeIds from '@salesforce/apex/AccountController.getRecordTypeId
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class TestCustomLookups extends LightningElement {
-    @track accountName = '';
-    @track accountPhone = '';
     @track searchResults = [];
     @track noSearchResult = false;
     @track hasResults = false;
     @track selectedAccount = {};
     @track isOpenModal = false;
+    @track showError = false;
     @track selectedAccountType = '';
     @track accountTypeOptions = [
         { label: 'Business Account', value: 'Business' },
@@ -41,7 +40,7 @@ export default class TestCustomLookups extends LightningElement {
             this.noSearchResult = false;
             return;
         }
-        if (searchTerm.length > 2) {
+        if (searchTerm.length > 0) {
             this.selectedAccount = {};
             getAccounts({ searchTerm })
                 .then((result) => {
@@ -50,14 +49,14 @@ export default class TestCustomLookups extends LightningElement {
                         Phone: account.Phone || 'No Phone',
                         PersonEmail: account.PersonEmail || 'No Email'
                     }));
-                    //  this.hasResults = this.searchResults.length > 0;
-                    if (this.searchResults.length > 0) {
-                        this.hasResults = true;
-                        this.noSearchResult = false;
-                    } else {
-                        console.log('Okay');
-                        this.noSearchResult = true;
-                    }
+                  //  this.hasResults = this.searchResults.length > 0;
+                  if (this.searchResults.length > 0) {
+                    this.hasResults = true;
+                    this.noSearchResult = false;
+                } else {
+                    console.log('Okay');
+                    this.noSearchResult = true;
+                }
                 })
                 .catch((error) => {
                     console.error('Error searching accounts:', error);
@@ -73,8 +72,6 @@ export default class TestCustomLookups extends LightningElement {
     handleSelect(event) {
         const accountId = event.currentTarget.dataset.id;
         this.selectedAccount = this.searchResults.find(account => account.Id === accountId);
-        this.accountName = this.selectedAccount.Name || '';
-        this.accountPhone = this.selectedAccount.Phone || '';
         this.hasResults = false;
 
         this.dispatchEvent(new CustomEvent('accountselect', {
@@ -84,40 +81,27 @@ export default class TestCustomLookups extends LightningElement {
 
     openModal() {
         this.isOpenModal = true;
-        // Ensure values are set to avoid reset issues
-        this.accountName = this.accountName || (this.selectedAccount.Name || '');
-        this.accountPhone = this.accountPhone || (this.selectedAccount.Phone || '');
     }
 
     closeModal() {
         this.isOpenModal = false;
+        this.showError = false;
     }
 
     handleAccountTypeChange(event) {
         this.selectedAccountType = event.detail.value;
         this.accountType = this.selectedAccountType;
-
-        // Set recordTypeId based on account type
         if (this.accountType === 'Business') {
             this.recordTypeId = this.businessRecordTypeId;
         } else if (this.accountType === 'Personal') {
             this.recordTypeId = this.personalRecordTypeId;
         }
-
-        // Assign tracked values to ensure synchronization
-        this.accountName = this.accountName || (this.selectedAccount.Name || '');
-        this.accountPhone = this.accountPhone || (this.selectedAccount.Phone || '');
-
+        setTimeout(() => {
+        const recordEditForm = this.template.querySelector('lightning-record-edit-form');
+        recordEditForm.recordTypeId = this.recordTypeId;
+        },0);
         console.log('Selected Account Type:', this.accountType);
         console.log('RecordTypeId set to:', this.recordTypeId);
-    }
-
-    handleNameChange(event) {
-        this.accountName = event.target.value;
-    }
-
-    handlePhoneChange(event) {
-        this.accountPhone = event.target.value;
     }
 
 
@@ -130,38 +114,39 @@ export default class TestCustomLookups extends LightningElement {
     }
 
     validateAndSave() {
-        console.log('accountType', this.accountType);
-        const phoneField = this.template.querySelector('lightning-input-field[data-field-name="Phone"]');
-        const emailField = this.template.querySelector('lightning-input-field[data-field-name="PersonEmail"]');
+    const phoneField = this.template.querySelector('lightning-input-field[data-field-name="Phone"]');
+const phoneValue = phoneField ? phoneField.value : null;
+    const emailField = this.template.querySelector('lightning-input-field[data-field-name="PersonEmail"]');
+    const emailValue = emailField ? emailField.value : null;
+    
+    let isValid = true;
 
-        const phoneValue = phoneField ? phoneField.value : null;
-        const emailValue = emailField ? emailField.value : null;
-        if (!phoneValue && !emailValue && this.accountType === 'Personal') {
-            this.showErrorToast('Please provide either a phone number or an email address before saving for a Person account.');
-        } else if (this.accountType === 'Business' && !phoneValue) {
-            this.showErrorToast('Please provide a phone number for a Bussiness account.');
-        }
-        else {
-            const recordEditForm = this.template.querySelector('lightning-record-edit-form');
-            recordEditForm.submit();
-        }
+    // Validate phone field for Business account
+ if (this.accountType === 'Business' && !phoneValue) {
+    console.log('ERRRRRRRRRRRR');
+       this.showError = true;
+        isValid = false;
     }
-    showErrorToast(message) {
-        const event = new ShowToastEvent({
-            title: 'Error',
-            message: message,
-            variant: 'error',
-            mode: 'dismissable'
-        });
-        this.dispatchEvent(event);
+    if (this.accountType === 'Personal' && !phoneValue && !emailValue) {
+    console.log('ERRRRRRRRRRRR');
+       this.showError = true;
+        isValid = false;
     }
+
+    // Only submit if all validations pass
+    if (isValid) {
+        const recordEditForm = this.template.querySelector('lightning-record-edit-form');
+        recordEditForm.submit();
+    }
+}
 
     handleSuccess(event) {
+        console.log('Testtttttttttttttt');
         const accountId = event.detail.id;
-        const nameField = this.template.querySelector('lightning-input-field[data-field-name="Name"]').value;
-        console.log('Newly created Account Id', accountId);
-        console.log('Newly created Account Id', nameField);
-        this.selectedAccount = { Id: accountId, Name: nameField };
+       const nameField = this.template.querySelector('lightning-input-field[data-field-name="Name"]').value;
+        console.log('Newly created Account Id',accountId);
+        console.log('Newly created Account Id',nameField);
+      this.selectedAccount = { Id: accountId, Name:nameField};
         this.dispatchEvent(new ShowToastEvent({
             title: 'Success',
             message: 'Account created successfully!',

@@ -1,17 +1,35 @@
 <template>
-    <!--lightning-card title="Case Information">
-        <template if:true={caseData}>
+    <!-- <template if:true={caseData}>
+        <lightning-card title="Case Information">
             <div class="slds-p-around_medium">
-                <p><strong>Case ID:</strong> {caseData.Id.value}</p>
-                <p><strong>Status:</strong> {caseData.Status.value}</p>
-                <p><strong>Description:</strong> {caseData.Description.value}</p>
-                <p><strong>Subject:</strong> {caseData.Subject.value}</p>
+                <p>><strong>{caseStatusMessage}></strong></p>
             </div>
-        </template>
-        <template if:true={error}>
-            <div class="slds-p-around_medium">
-                <p>Error loading case data: {error}</p>
+        </lightning-card>
+    </template>
+
+    <template if:true={error}>
+        <div class="slds-p-around_medium">
+            <p>Error loading case data: {errorMessage}</p>
+        </div>
+    </template> -->
+
+    <template if:true={actionMessage}> 
+    <!-- Lead Information card with success or error message -->
+    <lightning-card title="Lead Information" icon-name="utility:record_create">
+        <div class="slds-p-around_medium">
+            <div class="slds-text-align_center slds-text-color_success slds-text-heading_medium">
+                <!-- Use a strong message with an icon based on the outcome -->
+                <template if:true={isSuccess}>
+                    <lightning-icon icon-name="utility:success" size="large" alternative-text="Success" class="slds-m-bottom_small"></lightning-icon>
+                    <p><strong>{actionMessage}</strong></p>
+                </template>
+                <template if:false={isSuccess}>
+                    <lightning-icon icon-name="utility:error" size="large" alternative-text="Error" class="slds-m-bottom_small"></lightning-icon>
+                    <p><strong>{actionMessage}</strong></p>
+                </template>
             </div>
-        </template>
-    </lightning-card-->
+        </div>
+    </lightning-card>
+</template>
+
 </template>

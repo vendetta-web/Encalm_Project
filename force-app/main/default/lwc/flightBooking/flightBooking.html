@@ -1,14 +1,21 @@
 <template>
+    <!-- Account Search -->
+    <lightning-layout multiple-rows="true">
+        <lightning-layout-item size="6" class="slds-p-around_small">
+            <lightning-card title="Account Search">
+                <div class="slds-p-horizontal_medium">
+                    <c-test-custom-lookups></c-test-custom-lookups>
+                </div>
+            </lightning-card>
+        </lightning-layout-item>
+    </lightning-layout>
+
+    <!-- Flight Details Form -->
     <lightning-card title="Flight Details Form">
         <div slot="actions" class="slds-button-group">
             <lightning-button label="New Lead" variant="brand" onclick={handleNewLead}></lightning-button>
         </div>
-        <lightning-layout multiple-rows="true">
-            <!-- Added BY Saurabh -->
-            <lightning-layout-item size="12" class="slds-p-around_small">
-                <c-test-custom-lookups></c-test-custom-lookups>
-            </lightning-layout-item>
-        </lightning-layout>
+
         <lightning-tabset variant="scoped">
             <!-- Arrival -->
             <lightning-tab label="Arrival" value="Arrival" onactive={handleTabChange}>
@@ -89,7 +96,7 @@
                     </div>
                 </template>
             </lightning-tab>
-              <!-- Depature -->
+            <!-- Depature -->
             <lightning-tab label="Depature" value="Depature" onactive={handleTabChange}>
 
                 <template if:true={isTabTwo}>
@@ -161,7 +168,7 @@
                     </div>
                 </template>
             </lightning-tab>
-              <!-- Transit -->
+            <!-- Transit -->
             <lightning-tab label="Transit" value="Transit" onactive={handleTabChange} class="slds-grid slds-gutters">
                 <template if:true={isTabThree}>
 
