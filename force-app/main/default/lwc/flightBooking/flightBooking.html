@@ -4,7 +4,7 @@
         <lightning-layout-item size="6" class="slds-p-around_small">
             <lightning-card title="Account Search">
                 <div class="slds-p-horizontal_medium">
-                    <c-test-custom-lookups></c-test-custom-lookups>
+                    <c-test-custom-lookups onaccountselect={handleAccountRecord}></c-test-custom-lookups>
                 </div>
             </lightning-card>
         </lightning-layout-item>
@@ -12,9 +12,11 @@
 
     <!-- Flight Details Form -->
     <lightning-card title="Flight Details Form">
+        <!--
         <div slot="actions" class="slds-button-group">
             <lightning-button label="New Lead" variant="brand" onclick={handleNewLead}></lightning-button>
         </div>
+        -->
 
         <lightning-tabset variant="scoped">
             <!-- Arrival -->
@@ -30,35 +32,42 @@
                     <!-- Flight Details Section -->
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-combobox data-id="arrivingAirportr" label="Arriving Airport"
-                                options={airportOptions} value={arrivingAirport} onchange={handleArrivingAirportChange}>
+                            <label class="custom-label slds-form-element__label">Arriving Airport</label>
+                            <lightning-combobox name="name" data-id="arrivingAirportr" variant="label-hidden" onblur={handleFieldChange}
+                                options={baseAirportOptions} value={arrivingAirport} onchange={handleArrivingAirportChange}>
                             </lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-combobox data-id="departureAirport" label="Departure Airport"
-                                options={airportOptions} value={departureAirport}
+                            <label class="custom-label slds-form-element__label">Departure Airport</label>
+                            <lightning-combobox data-id="departureAirport" variant="label-hidden"
+                                options={allAirportOptions} value={departureAirport}
                                 onchange={handleDepartureAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-input type="date" label="Date of Arrival" value={arrivalDate}
-                                onchange={handleArrivalDateChange}></lightning-input>
+                            <label class="custom-label slds-form-element__label">Select Sector</label>
+                            <lightning-combobox data-id="selectSector" variant="label-hidden" disabled options={sectorOption}
+                                value={sector} ></lightning-combobox>
                         </lightning-layout-item>
-                        <lightning-layout-item size="6">
-                            <lightning-combobox data-id="selectSector" label="Select sector" options={sectorOption}
-                                value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <label class="custom-label slds-form-element__label">Date of Arrival</label>
+                            <lightning-input type="date" variant="label-hidden" value={arrivalDate}
+                                onchange={handleArrivalDateChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
-                                value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
+                            <label class="custom-label slds-form-element__label">Flight Number</label>
+                            <lightning-combobox style="font-size: 14px;" data-id="flightNumber" variant="label-hidden" options={flightNumberOptions}
+                                value={flightNumber} onchange={handleFlightNumberChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="STA Time" value={staTime}
+                            <label class="custom-label slds-form-element__label">STA Time</label>
+                            <lightning-input style="font-size: 14px;" type="time" variant="label-hidden" value={staTime}
                                 onchange={handleStaTimeChange}></lightning-input>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
+                            <label class="custom-label slds-form-element__label">Service Date-Time</label>
+                            <lightning-input style="font-size: 14px;" type="time" disabled variant="label-hidden" value={staTime}
                                 onchange={handleServiceTimeChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
@@ -102,35 +111,42 @@
                 <template if:true={isTabTwo}>
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-combobox label="Departure Airport" options={airportOptions}
+                            <label class="custom-label slds-form-element__label">Departure Airport</label>
+                            <lightning-combobox variant="label-hidden" options={baseAirportOptions}
                                 value={arrivingAirport} onchange={handleArrivingAirportChange}></lightning-combobox>
                         </lightning-layout-item>
-                        <lightning-layout-item size="6">
-                            <lightning-combobox label="Destination Airport" options={airportOptions}
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <label class="custom-label slds-form-element__label">Destination Airport</label>
+                            <lightning-combobox variant="label-hidden" options={allAirportOptions}
                                 value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout>
-                        <lightning-layout-item size="6">
-                            <lightning-combobox data-id="selectSector" label="Select sector" options={sectorOption}
-                                value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                        <lightning-layout-item size="6" class="slds-p-around_small">
+                            <label class="custom-label slds-form-element__label">Select Sector</label>
+                            <lightning-combobox data-id="selectSector" variant="label-hidden" disabled options={sectorOption}
+                                value={sector}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-input type="date" label="Date of Departure" value={departureDate}
-                                onchange={handleArrivalDateChange}></lightning-input>
+                            <label class="custom-label slds-form-element__label">Date of Departure</label>
+                            <lightning-input type="date" variant="label-hidden" value={departureDate}
+                                onchange={handleDepartureDateChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
-                                value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
+                            <label class="custom-label slds-form-element__label">Flight Number</label>
+                            <lightning-combobox data-id="flightNumber" variant="label-hidden" options={flightNumberOptions}
+                                value={flightNumber} onchange={handleFlightNumberChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="STD Time" value={staTime}
-                                onchange={handleStaTimeChange}></lightning-input>
+                            <label class="custom-label slds-form-element__label">STD Time</label>
+                            <lightning-input type="time" variant="label-hidden" value={stdTime}
+                                onchange={handleStdTimeChange}></lightning-input>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
+                            <label class="custom-label slds-form-element__label">Service Date-Time</label>
+                            <lightning-input type="time" variant="label-hidden" disabled value={stdTime}
                                 onchange={handleServiceTimeChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
@@ -177,13 +193,13 @@
                             <lightning-combobox label="Select Transit Via" options={transitVia} value={arrivingAirport}
                                 onchange={handleArrivingAirportChange}></lightning-combobox>
                         </lightning-layout-item>
-                        <lightning-layout-item size="6">
+                        <lightning-layout-item size="6" class="slds-p-around_small">
                             <lightning-combobox label="Arriving From" options={arrivingFrom} value={departureAirport}
                                 onchange={handleDepartureAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout>
-                        <lightning-layout-item size="6">
+                        <lightning-layout-item size="6" class="slds-p-around_small">
                             <lightning-combobox data-id="selectSector" label="Select sector" options={sectorOption}
                                 value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
                         </lightning-layout-item>
@@ -192,7 +208,7 @@
                                 onchange={handleDepartureAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                     </lightning-layout>
-                    <lightning-layout multiple-rows="true">
+                    <lightning-layout multiple-rows="true" class="slds-p-around_small">
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
                                 value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>

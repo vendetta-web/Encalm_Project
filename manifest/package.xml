@@ -25,24 +25,28 @@
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
+		<members>*</members>
+		<name>FlexiPage</name>
+	</types>
+	<types>
+		<members>*</members>
+		<name>Flow</name>
+	</types>
+	<types>
+		<members>*</members>
+		<name>FlowCategory</name>
+	</types>
+	<types>
+		<members>*</members>
+		<name>FlowDefinition</name>
+	</types>
+    <types>
         <members>*</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>
         <members>*</members>
         <name>StaticResource</name>
-    </types>
-     <types>
-        <members>*</members>
-        <name>Flow</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>RecordType</name>
-    </types>
-    <types>
-        <members>*</members>
-        <name>FlexiPage</name> 
     </types>
     <version>62.0</version>
 </Package>

@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Lead_Send_Email</name>
         <label>Lead Send Email</label>
-        <locationX>605</locationX>
-        <locationY>555</locationY>
+        <locationX>176</locationX>
+        <locationY>431</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -29,7 +29,7 @@
         <inputParameters>
             <name>emailTemplateId</name>
             <value>
-                <stringValue>00XQy000007z0ALMAY</stringValue>
+                <stringValue>00XSu000000aTRhMAM</stringValue>
             </value>
         </inputParameters>
         <nameSegment>emailSimple</nameSegment>
@@ -49,7 +49,7 @@
     <processMetadataValues>
         <name>CanvasMode</name>
         <value>
-            <stringValue>FREE_FORM_CANVAS</stringValue>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
         </value>
     </processMetadataValues>
     <processMetadataValues>
@@ -62,8 +62,8 @@
     <recordCreates>
         <name>createContact</name>
         <label>createContact</label>
-        <locationX>619</locationX>
-        <locationY>422</locationY>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
         <connector>
             <targetReference>Lead_Send_Email</targetReference>
         </connector>
@@ -88,33 +88,15 @@
         <object>Contact</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
-    <recordLookups>
-        <name>getLead</name>
-        <label>getLead</label>
-        <locationX>325</locationX>
-        <locationY>478</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Id</field>
-            <operator>EqualTo</operator>
-            <value>
-                <elementReference>$Record.Id</elementReference>
-            </value>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>Lead</object>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
     <start>
-        <locationX>401</locationX>
-        <locationY>48</locationY>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
         <connector>
             <targetReference>createContact</targetReference>
         </connector>
         <object>Lead</object>
-        <recordTriggerType>Create</recordTriggerType>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Draft</status>
 </Flow>

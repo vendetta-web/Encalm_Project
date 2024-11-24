@@ -96,7 +96,7 @@
             <lightning-input-field field-name="LastName" data-field-name="LastName" required></lightning-input-field>
         </div>
         <div class="slds-col slds-size_1-of-2 slds-p-left_small">
-            <lightning-input-field field-name="Phone" data-field-name="Phone" required></lightning-input-field>
+            <lightning-input-field field-name="Phone" data-field-name="Phone"></lightning-input-field>
             <template if:true={showError}>
         <div class="slds-text-color_error slds-m-top_x-small">
             Either Phone or Email is required for Person Account.
@@ -122,4 +122,5 @@
 </section>
 <!-- Added BY Saurabh -->
 <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+</template>
 </template>
