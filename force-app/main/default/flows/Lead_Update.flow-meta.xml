@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <name>Create_follow_up_notification</name>
-        <label>Create follow up notification</label>
-        <locationX>176</locationX>
-        <locationY>515</locationY>
-        <actionName>FeedItem.NewTaskFromFeedItem</actionName>
+        <name>Create_follow_up_task1</name>
+        <label>Create follow up task</label>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
+        <actionName>NewTask</actionName>
         <actionType>quickAction</actionType>
+        <connector>
+            <targetReference>Change_stage_to_Follow_up_required</targetReference>
+        </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>contextId</name>
@@ -16,14 +19,35 @@
         </inputParameters>
         <inputParameters>
             <name>Subject</name>
+            <value>
+                <stringValue>Follow up</stringValue>
+            </value>
         </inputParameters>
         <inputParameters>
             <name>ActivityDate</name>
+            <value>
+                <elementReference>$Record.Set_Follow_up_Date_and_Time__c</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>OwnerId</name>
+            <value>
+                <elementReference>$Record.CreatedBy.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>Status</name>
+            <value>
+                <stringValue>Not Started</stringValue>
+            </value>
         </inputParameters>
         <inputParameters>
             <name>Description</name>
+            <value>
+                <stringValue>Task</stringValue>
+            </value>
         </inputParameters>
-        <nameSegment>FeedItem.NewTaskFromFeedItem</nameSegment>
+        <nameSegment>NewTask</nameSegment>
         <offset>0</offset>
         <versionSegment>1</versionSegment>
     </actionCalls>
@@ -31,22 +55,23 @@
     <decisions>
         <name>Check_Follow_up_date</name>
         <label>Check Follow up date</label>
-        <locationX>176</locationX>
+        <locationX>182</locationX>
         <locationY>323</locationY>
-        <defaultConnector>
-            <targetReference>Create_follow_up_notification</targetReference>
-        </defaultConnector>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>Create_Follow_up_task</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>$Record.Set_Follow_up_Date_and_Time__c</leftValueReference>
-                <operator>NotEqualTo</operator>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
             </conditions>
             <connector>
-                <targetReference>Create_follow_up_notification</targetReference>
+                <targetReference>Create_follow_up_task1</targetReference>
             </connector>
+            <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
             <label>Create Follow up task</label>
         </rules>
     </decisions>
@@ -72,8 +97,21 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
-    <start>
+    <recordUpdates>
+        <name>Change_stage_to_Follow_up_required</name>
+        <label>Change stage to Follow up required</label>
         <locationX>50</locationX>
+        <locationY>539</locationY>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Follow up required</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>56</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Check_Follow_up_date</targetReference>

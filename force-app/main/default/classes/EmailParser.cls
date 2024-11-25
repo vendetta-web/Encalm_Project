@@ -76,6 +76,11 @@ public class EmailParser {
         System.debug('Final Service Value: ' + serviceValue);
         if (String.isNotBlank(serviceValue)) {
             caseRecord.Service__c = serviceValue;
+        }else {
+            // Set default service to 'General Inquiry' if no keywords matched
+            caseRecord.Service__c = 'General Inquiry';
+            System.debug('No matching keywords found, setting service to General Inquiry' );
         }
+        
     }
 }

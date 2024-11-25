@@ -1,5 +1,5 @@
 import { LightningElement, api, wire } from 'lwc';
-import { getRecord } from 'lightning/uiRecordApi';
+import { getRecord, updateRecord } from 'lightning/uiRecordApi';
 import { NavigationMixin } from 'lightning/navigation';
 import CASE_ID from '@salesforce/schema/Case.Id';
 import CASE_STATUS from '@salesforce/schema/Case.Status';
@@ -64,9 +64,10 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             }
         });
 
-          setTimeout(() => {
-        this.actionMessage = 'The lead creation form is still unfilled.';
-    }, 3000);
+        setTimeout(() => {
+            this.actionMessage = 'The lead creation form is still unfilled.';
+            this.closeCase();
+        }, 3000);
     }
 
     getDefaultFieldValues(defaultValues) {
@@ -75,7 +76,23 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             .join(',');
     }
 
-    // Function to return the status message
+    closeCase() {
+        const fields = {};
+        fields[CASE_ID.fieldApiName] = this.caseData.Id.value;
+        fields[CASE_STATUS.fieldApiName] = 'Closed';
+        
+        const recordInput = { fields };
+
+        updateRecord(recordInput)
+            .then(() => {
+                this.caseStatusMessage = 'Case has been closed.';
+            })
+            .catch(error => {
+                this.error = error;
+                this.errorMessage = error?.body?.message || 'Error closing the case';
+            });
+    }
+
     getStatusMessage(status, subject) {
         if (status === 'New' && subject) {
             return `Case created successfully with subject: "${subject}"`;

@@ -81,8 +81,11 @@ span {
     color: #777;
 }
 
-.active-tab {
-    background-color: #cda45e;
+.encalmbg {
+    --sds-c-button-brand-color-background: #cda45e;
+    --sds-c-button-brand-color-border: #cda45e;
+    --sds-c-button-brand-color-background-hover: #cda45e;
+    --sds-c-button-brand-color-border-hover: #cda45e;
 }
 
 .custom-label {

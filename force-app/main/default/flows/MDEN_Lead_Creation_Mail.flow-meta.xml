@@ -62,8 +62,8 @@
     <recordCreates>
         <name>createContact</name>
         <label>createContact</label>
-        <locationX>570</locationX>
-        <locationY>263</locationY>
+        <locationX>456</locationX>
+        <locationY>246</locationY>
         <connector>
             <targetReference>Lead_Send_Email</targetReference>
         </connector>
@@ -79,12 +79,6 @@
                 <elementReference>$Record.LastName</elementReference>
             </value>
         </inputAssignments>
-        <inputAssignments>
-            <field>LeadSource</field>
-            <value>
-                <elementReference>$Record.Id</elementReference>
-            </value>
-        </inputAssignments>
         <object>Contact</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
@@ -98,5 +92,5 @@
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Active</status>
 </Flow>

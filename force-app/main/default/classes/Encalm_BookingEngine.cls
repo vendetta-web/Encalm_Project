@@ -78,6 +78,53 @@ public with sharing class Encalm_BookingEngine {
         }
         return wrap;
     }
+
+    @AuraEnabled(cacheable=true)
+    public static FlightWrapper getTransitFlightDetails(Date flightDate, String departAirport, String arrivalAirport, String transitAirport) {
+        List<Map<String, String>> flightListValues = new List<Map<String, String>>();
+        Map<String, Time> flightStaMap = new Map<String, Time>();
+        Map<String, Time> flightDtaMap = new Map<String, Time>();
+        List<Flight_Schedule__c> flightScheduleList = new List<Flight_Schedule__c>();
+        FlightWrapper wrap = new FlightWrapper();
+        try {
+            if (String.isBlank(arrivalAirport)) {                
+                flightScheduleList = [
+                    SELECT Flight_Detail__r.Name,STA__c, STD__c
+                    FROM Flight_Schedule__c
+                    WHERE Flight_Date__c =:flightDate
+                    AND Flight_Detail__c
+                    IN (SELECT Main_Flight__c FROM Transit_Flight_Detail__c WHERE Transit_Airport__r.Airport_Code__c  =:transitAirport AND Main_Flight__r.Departure_Airport__r.Airport_Code__c =:departAirport)
+                    ];
+            } else if (String.isBlank(departAirport)) {                
+                flightScheduleList = [
+                    SELECT Flight_Detail__r.Name,STA__c, STD__c
+                    FROM Flight_Schedule__c
+                    WHERE Flight_Date__c =:flightDate
+                    AND Flight_Detail__c
+                    IN (SELECT Connecting_Flight__c FROM Transit_Flight_Detail__c WHERE Transit_Airport__r.Airport_Code__c  =:transitAirport AND Connecting_Flight__r.Arrival_Airport__r.Airport_Code__c =:arrivalAirport)
+                    ];
+            }
+
+             system.debug('flightScheduleList'+flightScheduleList);   
+            if(flightScheduleList!=null) {
+                for(Flight_Schedule__c fly: flightScheduleList) {
+                    Map<String, String> flightValueMap = new Map<String, String>();
+                    flightValueMap.put('label', fly.Flight_Detail__r.Name);
+                    flightValueMap.put('value', fly.Flight_Detail__r.Name);
+                    flightListValues.add(flightValueMap);
+                    flightStaMap.put(fly.Flight_Detail__r.Name, fly.STA__c);
+                    flightDtaMap.put(fly.Flight_Detail__r.Name, fly.STD__c);
+                }
+                wrap.flightPicklist = flightListValues;
+                wrap.flightNumberToStaMap = new Map<String, Time>(flightStaMap);
+                wrap.flightNumberToDtaMap = new Map<String, Time>(flightDtaMap);
+            }
+        }
+        catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+        return wrap;
+    }
     public class FlightWrapper {
         @AuraEnabled
         public List<Map<String, String>> flightPicklist {get;set;}

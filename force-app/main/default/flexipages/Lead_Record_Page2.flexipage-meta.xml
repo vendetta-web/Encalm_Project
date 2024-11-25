@@ -234,7 +234,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>none</value>
+                    <value>required</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.Flight_No__c</fieldItem>
                 <identifier>RecordFlight_No_cField</identifier>

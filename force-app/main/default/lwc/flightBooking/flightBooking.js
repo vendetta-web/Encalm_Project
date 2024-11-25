@@ -5,6 +5,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getAirportDetails from '@salesforce/apex/Encalm_BookingEngine.getAirportDetails';
 import getFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getFlightDetails';
 import getAirport from '@salesforce/apex/Flight_Booking_encalm.getAirport';
+import getTransitFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getTransitFlightDetails';
 import convertLead from '@salesforce/apex/LeadConversionController.convertLead';
 import getFlightInfo from '@salesforce/apex/Flight_Booking_encalm.getFlightInfo';
 import createOpportunity from '@salesforce/apex/Flight_Booking_encalm.createOpportunity';
@@ -16,6 +17,8 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
  baseAirportOptions;
  flightNumberOptions;
  allAirportOptions;
+ allAirportOptionsDepTo;
+ allAirportOptionsArrFrom;
  countryMap = new Map();
  flightStaMap = new Map();
  flightDtaMap = new Map();
@@ -60,7 +63,7 @@ sectorOption = [
                 };
             });
             // Map the data to an array of all airport options
-            this.allAirportOptions = data.allAirportPicklist.map(option => {
+            this.allAirportOptions = this.allAirportOptionsArrFrom = this.allAirportOptionsDepTo = data.allAirportPicklist.map(option => {
                 return {
                     label: option.label,
                     value: option.value
@@ -96,6 +99,26 @@ sectorOption = [
         });
     }
 
+    loadTransitFlightData(flightDate,firstAirport,secondAirport) {
+        this.resetFlightDetails();
+        getTransitFlightDetails({flightDate: flightDate, departAirport: firstAirport, arrivalAirport: secondAirport, transitAirport:this.transitAirport})
+        .then((result) => {
+            this.flightNumberOptions = result.flightPicklist.map(option => {
+            return {
+                label: option.label,
+                value: option.value
+                };
+            });  
+            console.log('result->> '+JSON.stringify(result));
+            this.flightStaMap = new Map(Object.entries(result.flightNumberToStaMap));
+            this.flightDtaMap = new Map(Object.entries(result.flightNumberToDtaMap));
+            
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    }
+
 
 qtyVal = 0;
     //activeTab ;
@@ -106,6 +129,7 @@ qtyVal = 0;
     // Flight details fields
     arrivingAirport = '';
     departureAirport = '';
+    transitAirport = '';
     arrivalDate ;
     departureDate;
     flightNumber = '';
@@ -306,11 +330,19 @@ handleTabChange(event) {
 
     handleArrivingAirportChange(event) {
         this.arrivingAirport = event.target.value;
-        this.setSector();
+        if(this.isTabThree){
+            this.setTransitSector();
+        } else {
+            this.setSector();
+        }
     }
     handleDepartureAirportChange(event) {
         this.departureAirport = event.target.value;
-        this.setSector();
+        if(this.isTabThree){
+            this.setTransitSector();
+        } else {
+            this.setSector();
+        }
     }
  
 
@@ -366,6 +398,9 @@ setSector(){
         this.sector = 'International';
     }
 }
+setTransitSector(){
+    //todo
+}
 
 setStaTime(){
     if (this.flightNumber !='' && this.flightStaMap.has(this.flightNumber)) {
@@ -385,6 +420,7 @@ resetFlightDetails(){
 resetOnTabChange() {
     this.arrivingAirport = '';
     this.departureAirport = '';
+    this.transitAirport='';
     this.arrivalDate;    
     this.departureDate;
     this.flightNumber = '';
@@ -437,8 +473,17 @@ handleFieldChange(event) {
 
     this.opportunityFieldValues[fieldName] = fieldValue;
 }
-
-
+handleTransitAirportChange(event){
+    this.transitAirport = event.target.value;
+}
+handleTransitArrivalDateChange(event){
+    this.arrivalDate = event.target.value;
+        this.loadTransitFlightData(this.arrivalDate, '', this.arrivingAirport);
+}
+handleTransitDepartureDateChange(event){
+    this.departureDate = event.target.value;
+        this.loadTransitFlightData(this.departureDate, this.departureAirport, '');
+}
 
 
 

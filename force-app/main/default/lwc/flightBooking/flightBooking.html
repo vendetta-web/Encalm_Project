@@ -101,7 +101,7 @@
                         </lightning-layout-item>
                     </lightning-layout>
                     <div class="slds-align_absolute-center slds-m-top_medium">
-                        <lightning-button label="Next" variant="brand" onclick={handleSave}></lightning-button>
+                        <lightning-button class="encalmbg" label="Next" variant="brand" onclick={handleSave}></lightning-button>
                     </div>
                 </template>
             </lightning-tab>
@@ -180,7 +180,7 @@
                         </lightning-layout-item>
                     </lightning-layout>
                     <div class="slds-align_absolute-center slds-m-top_medium">
-                        <lightning-button label="Next" variant="brand" onclick={handleSave}></lightning-button>
+                        <lightning-button label="Next" class="encalmbg" variant="brand" onclick={handleSave}></lightning-button>
                     </div>
                 </template>
             </lightning-tab>
@@ -190,48 +190,58 @@
 
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-combobox label="Select Transit Via" options={transitVia} value={arrivingAirport}
-                                onchange={handleArrivingAirportChange}></lightning-combobox>
+                            <label class="custom-label slds-form-element__label">Select Transit Via</label>
+                            <lightning-combobox variant="label-hidden" options={baseAirportOptions} value={transitAirport}
+                                onchange={handleTransitAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-combobox label="Arriving From" options={arrivingFrom} value={departureAirport}
+                            <label class="custom-label slds-form-element__label">Arriving From</label>
+                            <lightning-combobox variant="label-hidden" options={allAirportOptionsArrFrom} value={departureAirport}
                                 onchange={handleDepartureAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout>
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-combobox data-id="selectSector" label="Select sector" options={sectorOption}
-                                value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                            <label class="custom-label slds-form-element__label">Departing To</label>
+                            <lightning-combobox variant="label-hidden" options={allAirportOptionsDepTo} value={arrivingAirport}
+                                onchange={handleArrivingAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
-                            <lightning-combobox label="Depating To" options={airportOptions} value={departureAirport}
-                                onchange={handleDepartureAirportChange}></lightning-combobox>
+                            <label class="custom-label slds-form-element__label">Select Sector</label>
+                            <lightning-combobox data-id="selectSector" disabled variant="label-hidden"
+                                value={sector}></lightning-combobox>
                         </lightning-layout-item>
                     </lightning-layout>
-                    <lightning-layout multiple-rows="true" class="slds-p-around_small">
+                    <lightning-layout multiple-rows="true" class="slds-p-around_small">                        
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Date of Arrival</label>
+                        <lightning-input type="date" variant="label-hidden" value={arrivalDate}
+                            onchange={handleTransitArrivalDateChange}></lightning-input>
+                    </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
+                            <label class="custom-label slds-form-element__label">Flight Number</label>
+                            <lightning-combobox data-id="flightNumber" variant="label-hidden" options={flightNumberOptions}
                                 value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="STA Time" value={staTime}
+                            <label class="custom-label slds-form-element__label">STA Time</label>
+                            <lightning-input type="time" variant="label-hidden" value={staTime}
                                 onchange={handleStaTimeChange}></lightning-input>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
-                                onchange={handleServiceTimeChange}></lightning-input>
+                            <label class="custom-label slds-form-element__label">Date of Departure</label>
+                            <lightning-input type="date" variant="label-hidden" value={departureDate}
+                                onchange={handleTransitDepartureDateChange}></lightning-input>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-combobox data-id="flightNumber" label="Flight Number" options={flightNumbers}
+                            <label class="custom-label slds-form-element__label">Flight Number</label>
+                            <lightning-combobox data-id="flightNumber" variant="label-hidden" options={flightNumberOptions}
                                 value={flightNum} onchange={handleFlightNumberChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="STD Time" value={staTime}
+                            <label class="custom-label slds-form-element__label">STD Time</label>
+                            <lightning-input type="time" variant="label-hidden" value={staTime}
                                 onchange={handleStaTimeChange}></lightning-input>
-                        </lightning-layout-item>
-                        <lightning-layout-item size="4" class="slds-p-around_small">
-                            <lightning-input type="time" label="Service Date-Time" value={serviceTime}
-                                onchange={handleServiceTimeChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout multiple-rows="true">
@@ -264,7 +274,7 @@
                         </lightning-layout-item>
                     </lightning-layout>
                     <div class="slds-align_absolute-center slds-m-top_medium">
-                        <lightning-button label="Next" variant="brand" onclick={handleSave}></lightning-button>
+                        <lightning-button label="Next" class="encalmbg" variant="brand" onclick={handleSave}></lightning-button>
                     </div>
 
                 </template>
