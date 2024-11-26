@@ -10,6 +10,8 @@
                 <apex:inputField value="{!leadRecord.Travel_Date__c}"  label="Travel Date"/>
                 <apex:inputField value="{!leadRecord.Number_of_Adult__c}"  label="No of Adult"/>
                 <apex:inputField value="{!leadRecord.Flight_No__c}"  label="Fight Number"/>
+                 <apex:inputField value="{!leadRecord.Service_Airport__c}"  label="Service Airport"/>
+                 <apex:inputField value="{!leadRecord.Journey_Type__c}"  label="Journey Type"/>
             </apex:pageBlockSection>
             
             <apex:pageBlockButtons >

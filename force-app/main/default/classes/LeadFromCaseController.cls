@@ -29,10 +29,11 @@ public class LeadFromCaseController {
                     leadRecord.LastName = caseRecord.SuppliedName;
                     //leadRecord.Company = caseRecord.Subject;
                     leadRecord.phone = caseRecord.SuppliedPhone;
+                    leadRecord.Case__c = caseRecord.Id;
                 }
             }
             if (leadId != null) {
-                leadRecord = [SELECT Id, FirstName, LastName, Email, Travel_Date__c, Number_of_Adult__c, Flight_No__c FROM Lead WHERE Id = :leadId LIMIT 1];
+                leadRecord = [SELECT Id, FirstName, LastName, Email, Travel_Date__c, Number_of_Adult__c, Flight_No__c,Service_Airport__c,Journey_Type__c, Case__c FROM Lead WHERE Id = :leadId LIMIT 1];
             }
         } catch (Exception e) {
             system.debug('Error message: ' + e.getMessage() + ' at line number: ' + e.getLineNumber());

@@ -19,10 +19,16 @@
                         <valueListItems>
                             <value>Case.Convert_to_Lead</value>
                             <visibilityRule>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.Inquiry_Type__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>Booking</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Closed</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>

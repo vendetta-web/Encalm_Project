@@ -5,7 +5,7 @@ import { wire } from 'lwc';
 
 export default class FlightBookingDetails extends NavigationMixin(LightningElement) {
     @api recordId; // Opportunity record ID
-    showModal = false;
+    showModal = true;
 
     @wire(CurrentPageReference)
     pageRef;

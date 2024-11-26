@@ -16,6 +16,8 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
  flightNumbers = [];
  baseAirportOptions;
  flightNumberOptions;
+ flightNumberOptionsArrival;
+ flightNumberOptionsDeparture;
  allAirportOptions;
  allAirportOptionsDepTo;
  allAirportOptionsArrFrom;
@@ -31,7 +33,11 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
     arrivingFrom;
 sectorOption = [
     {label : 'Domestic', value : 'Domestic'},
-    {label: 'International', value : 'International'}
+    {label: 'International', value : 'International'},
+    {label: 'Domestic to International', value : 'Domestic to International'},
+    {label: 'Domestic to Domestic', value : 'Domestic to Domestic'},
+    {label: 'International to Domestic', value : 'International to Domestic'},
+    {label: 'International to International', value : 'International to International'},
 ]
   @wire(getAirport)
     wiredLocations({ error, data }) {
@@ -100,18 +106,22 @@ sectorOption = [
     }
 
     loadTransitFlightData(flightDate,firstAirport,secondAirport) {
-        this.resetFlightDetails();
+        var tempFlightNumberOptions;
         getTransitFlightDetails({flightDate: flightDate, departAirport: firstAirport, arrivalAirport: secondAirport, transitAirport:this.transitAirport})
         .then((result) => {
-            this.flightNumberOptions = result.flightPicklist.map(option => {
+            tempFlightNumberOptions = result.flightPicklist.map(option => {
             return {
                 label: option.label,
                 value: option.value
                 };
             });  
-            console.log('result->> '+JSON.stringify(result));
-            this.flightStaMap = new Map(Object.entries(result.flightNumberToStaMap));
-            this.flightDtaMap = new Map(Object.entries(result.flightNumberToDtaMap));
+            if (secondAirport == '') {
+                this.flightNumberOptionsArrival = tempFlightNumberOptions;
+                this.flightStaMap = new Map(Object.entries(result.flightNumberToStaMap));
+            } else if (firstAirport == '') {
+                this.flightNumberOptionsDeparture = tempFlightNumberOptions;
+                this.flightDtaMap = new Map(Object.entries(result.flightNumberToDtaMap));
+            }
             
         })
         .catch((error) => {
@@ -133,6 +143,8 @@ qtyVal = 0;
     arrivalDate ;
     departureDate;
     flightNumber = '';
+    flightNumberArrival='';
+    flightNumberDeparture='';
     staTime = '';
     stdTime = '';
     serviceTime = '';
@@ -266,9 +278,10 @@ handleTabChange(event) {
         console.log('------------',this.flightNumber);*/
          }
     formatTime(milliseconds,hrs,mns) {
-        const date = new Date(milliseconds);
-        const hours = String(date.getUTCHours() - hrs).padStart(2, '0');
-        const minutes = String(date.getUTCMinutes() - mns).padStart(2, '0');
+        const adjustedMillis = milliseconds - (hrs * 3600000) - (mns * 60000);
+        const date = new Date(adjustedMillis);
+        const hours = String(date.getUTCHours()).padStart(2, '0');
+        const minutes = String(date.getUTCMinutes()).padStart(2, '0');
         return `${hours}:${minutes}`; // Format as HH:MM
     }
     handleSave(event){
@@ -331,10 +344,12 @@ handleTabChange(event) {
     handleArrivingAirportChange(event) {
         this.arrivingAirport = event.target.value;
         if(this.isTabThree){
+            console.log('isTabThree->>>');
             this.setTransitSector();
         } else {
             this.setSector();
         }
+
     }
     handleDepartureAirportChange(event) {
         this.departureAirport = event.target.value;
@@ -364,6 +379,15 @@ handleTabChange(event) {
     handleLastNameChange2(event) { this.lastName2 = event.target.value; }
     handlePhoneChange2(event) { this.phone2 = event.target.value; }
     handleDobChange2(event) { this.dateOfBirth2 = event.target.value; }
+    handleFlightNumberChangeArrival(event) {
+        this.flightNumberArrival = event.target.value; 
+        this.setStaTime();
+    }
+    handleFlightNumberChangeDeparture(event) {
+        this.flightNumberDeparture = event.target.value;
+        this.setStdTime();
+    }
+
 
    
 
@@ -399,17 +423,48 @@ setSector(){
     }
 }
 setTransitSector(){
-    //todo
+    var tempCountryTransit='';
+    var tempCountryArr='';
+    var tempCountryDep='';
+    
+    if (this.transitAirport !='' && this.countryMap.has(this.transitAirport)) {
+        tempCountryTransit = this.countryMap.get(this.transitAirport);
+    }
+    if (this.arrivingAirport !='' && this.countryMap.has(this.arrivingAirport)) {
+        tempCountryArr = this.countryMap.get(this.arrivingAirport);
+    }
+    if (this.departureAirport !='' && this.countryMap.has(this.departureAirport)) {
+        tempCountryDep = this.countryMap.get(this.departureAirport);
+    }
+    if(tempCountryTransit =='') {
+        this.sector = '';
+    }else if((tempCountryDep == tempCountryTransit) && tempCountryArr == '') {
+        this.sector = 'Domestic to International';
+    }else if((tempCountryTransit == tempCountryArr) && tempCountryDep=='') {
+        this.sector = 'International to Domestic';
+    }else if((tempCountryTransit == tempCountryDep) &&  (tempCountryTransit== tempCountryArr)) {
+        this.sector = 'Domestic to Domestic';
+    } else if ((tempCountryArr != tempCountryTransit) && (tempCountryTransit == tempCountryDep)){
+        this.sector = 'International to Domestic';
+    } else {
+        this.sector = 'International to International';
+    }
 }
 
 setStaTime(){
     if (this.flightNumber !='' && this.flightStaMap.has(this.flightNumber)) {
         this.staTime = this.formatTime(this.flightStaMap.get(this.flightNumber),0,0);
     }
+    if (this.flightNumberArrival !='' && this.flightStaMap.has(this.flightNumberArrival)) {
+        this.staTime = this.formatTime(this.flightStaMap.get(this.flightNumberArrival),0,0);
+    }
 }
 setStdTime(){
     if (this.flightNumber !='' && this.flightDtaMap.has(this.flightNumber)) {
         this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumber),1,30);
+    }
+    if (this.flightNumberDeparture !='' && this.flightDtaMap.has(this.flightNumberDeparture)) {
+        this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumberDeparture),1,30);
     }
 }
 resetFlightDetails(){
@@ -421,13 +476,18 @@ resetOnTabChange() {
     this.arrivingAirport = '';
     this.departureAirport = '';
     this.transitAirport='';
-    this.arrivalDate;    
-    this.departureDate;
+    this.flightNumberArrival='';
+    this.flightNumberDeparture='';
+    this.arrivalDate;  
+    this.departureDate;  
     this.flightNumber = '';
     this.staTime = '';
     this.stdTime = '';
     this.serviceTime = '';
     this.sector='';
+    this.flightNumberOptionsArrival;
+    this.flightNumberOptionsDeparture;
+    this.flightNumberOptions;
 }
 handleAccountRecord(event){
     this.accountId = event.detail['Id'];
@@ -478,11 +538,11 @@ handleTransitAirportChange(event){
 }
 handleTransitArrivalDateChange(event){
     this.arrivalDate = event.target.value;
-        this.loadTransitFlightData(this.arrivalDate, '', this.arrivingAirport);
+        this.loadTransitFlightData(this.arrivalDate, this.departureAirport, '');
 }
 handleTransitDepartureDateChange(event){
     this.departureDate = event.target.value;
-        this.loadTransitFlightData(this.departureDate, this.departureAirport, '');
+        this.loadTransitFlightData(this.departureDate, '', this.arrivingAirport);
 }
 
 

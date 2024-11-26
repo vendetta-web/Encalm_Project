@@ -1,0 +1,11 @@
+.encalmbg {
+    --sds-c-button-brand-color-background: #cda45e;
+    --sds-c-button-brand-color-border: #cda45e;
+    --sds-c-button-brand-color-background-hover: #cda45e;
+    --sds-c-button-brand-color-border-hover: #cda45e;
+}
+
+.custom-label {
+    color: #444;
+    font-size: 14px;
+  }
