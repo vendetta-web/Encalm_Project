@@ -1,7 +1,7 @@
 import { LightningElement, api, wire } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
 import { NavigationMixin } from 'lightning/navigation';
-import getLeadsForCase from '@salesforce/apex/LeadCreationHandler.getLeadsForCase';
+import getLeadsForCase from '@salesforce/apex/LeadFromCaseController.getLeadsForCase';
 import CASE_ID from '@salesforce/schema/Case.Id';
 import CASE_STATUS from '@salesforce/schema/Case.Status';
 import CASE_DESCRIPTION from '@salesforce/schema/Case.Description';

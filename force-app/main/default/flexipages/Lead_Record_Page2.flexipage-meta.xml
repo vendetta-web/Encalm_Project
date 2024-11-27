@@ -202,6 +202,12 @@
                 <identifier>RecordDescription_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Case__r.CaseNumber</fieldItem>
+                <identifier>RecordCase_rCaseNumberField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-b7685ca5-9f0d-44c9-931b-01e5e763d814</name>
         <type>Facet</type>
     </flexiPageRegions>
