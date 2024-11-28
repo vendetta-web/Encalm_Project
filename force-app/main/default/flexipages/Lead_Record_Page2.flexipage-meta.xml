@@ -156,6 +156,13 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Sales_status__c</fieldItem>
                 <identifier>RecordSales_status__cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Status}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Sent to Sales</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <name>Facet-9d24e0bc-88fd-4606-8b1b-30f0d8767a1c</name>
@@ -260,7 +267,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>required</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.Flight_No__c</fieldItem>
                 <identifier>RecordFlight_No_cField</identifier>

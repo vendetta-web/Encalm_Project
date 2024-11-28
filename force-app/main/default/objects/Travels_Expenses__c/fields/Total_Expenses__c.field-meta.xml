@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Expenses__c</fullName>
+    <label>Total Expenses</label>
+    <summarizedField>T_E_Line_Items__c.Expense_Amount__c</summarizedField>
+    <summaryFilterItems>
+        <field>T_E_Line_Items__c.Type_Of_Expense__c</field>
+        <operation>equals</operation>
+        <value>Food Expenses, Car/Cab Expenses, Client Entertainment, Mobile &amp; WIFI Expenses, Flight Expenses, Train Expenses</value>
+    </summaryFilterItems>
+    <summaryForeignKey>T_E_Line_Items__c.Travels_Expense__c</summaryForeignKey>
+    <summaryOperation>sum</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

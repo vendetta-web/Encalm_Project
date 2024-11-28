@@ -7,7 +7,7 @@
                 <apex:inputField value="{!leadRecord.FirstName}" label="First Name" />
                 <apex:inputField value="{!leadRecord.LastName}" label="Last Name" />
                 <apex:inputField value="{!leadRecord.Email}" label="Email" />
-                <apex:inputField value="{!leadRecord.Travel_Date__c}"  label="Travel Date"/>
+                <apex:inputField value="{!leadRecord.Travel_Date__c}"  label="Travel Date" />
                 <apex:inputField value="{!leadRecord.Number_of_Adult__c}"  label="No of Adult"/>
                 <apex:inputField value="{!leadRecord.Flight_No__c}"  label="Fight Number"/>
                  <apex:inputField value="{!leadRecord.Service_Airport__c}"  label="Service Airport"/>

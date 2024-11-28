@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Type_Of_Expense__c</fullName>
+    <label>Type Of Expense</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Food Expenses</fullName>
+                <default>false</default>
+                <label>Food Expenses</label>
+            </value>
+            <value>
+                <fullName>Car/Cab Expenses</fullName>
+                <default>false</default>
+                <label>Car/Cab Expenses</label>
+            </value>
+            <value>
+                <fullName>Client Entertainment</fullName>
+                <default>false</default>
+                <label>Client Entertainment</label>
+            </value>
+            <value>
+                <fullName>Mobile &amp; WIFI Expenses</fullName>
+                <default>false</default>
+                <label>Mobile &amp; WIFI Expenses</label>
+            </value>
+            <value>
+                <fullName>Flight Expenses</fullName>
+                <default>false</default>
+                <label>Flight Expenses</label>
+            </value>
+            <value>
+                <fullName>Train Expenses</fullName>
+                <default>false</default>
+                <label>Train Expenses</label>
+            </value>
+            <value>
+                <fullName>Certification Expenses</fullName>
+                <default>false</default>
+                <label>Certification Expenses</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

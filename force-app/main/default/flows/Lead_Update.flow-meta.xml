@@ -3,7 +3,7 @@
     <actionCalls>
         <name>Create_follow_up_task1</name>
         <label>Create follow up task</label>
-        <locationX>50</locationX>
+        <locationX>336</locationX>
         <locationY>431</locationY>
         <actionName>NewTask</actionName>
         <actionType>quickAction</actionType>
@@ -51,11 +51,115 @@
         <offset>0</offset>
         <versionSegment>1</versionSegment>
     </actionCalls>
+    <actionCalls>
+        <name>Esclated_to_Supervisor</name>
+        <label>Esclated to Supervisor</label>
+        <locationX>182</locationX>
+        <locationY>755</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <connector>
+            <targetReference>Change_stage_to_Escalated</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.Email</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailTemplateId</name>
+            <value>
+                <stringValue>00XSu000000cIbqMAE</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionSegment>1</versionSegment>
+    </actionCalls>
     <apiVersion>62.0</apiVersion>
+    <decisions>
+        <name>Change_owner</name>
+        <label>Change owner</label>
+        <locationX>182</locationX>
+        <locationY>971</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Status_Check</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Sent to Sales</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Owner</targetReference>
+            </connector>
+            <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+            <label>Status Check</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_Booking_Fields</name>
+        <label>Check Booking Fields</label>
+        <locationX>336</locationX>
+        <locationY>647</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Required_Fields</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Service_Airport__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Flight_No__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Journey_Type__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Travel_Date__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Number_of_Adult__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Follow up required</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Esclated_to_Supervisor</targetReference>
+            </connector>
+            <label>Required Fields</label>
+        </rules>
+    </decisions>
     <decisions>
         <name>Check_Follow_up_date</name>
         <label>Check Follow up date</label>
-        <locationX>182</locationX>
+        <locationX>545</locationX>
         <locationY>323</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -97,11 +201,51 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Owner</name>
+        <label>Get Owner</label>
+        <locationX>50</locationX>
+        <locationY>1079</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Owner_Update</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>03gSu000000BI4rIAG</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>QueueSobject</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Change_stage_to_Escalated</name>
+        <label>Change stage to Escalated</label>
+        <locationX>182</locationX>
+        <locationY>863</locationY>
+        <connector>
+            <targetReference>Change_owner</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Escalated to supervisor</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
     <recordUpdates>
         <name>Change_stage_to_Follow_up_required</name>
         <label>Change stage to Follow up required</label>
-        <locationX>50</locationX>
+        <locationX>336</locationX>
         <locationY>539</locationY>
+        <connector>
+            <targetReference>Check_Booking_Fields</targetReference>
+        </connector>
         <inputAssignments>
             <field>Status</field>
             <value>
@@ -110,8 +254,29 @@
         </inputAssignments>
         <inputReference>$Record</inputReference>
     </recordUpdates>
+    <recordUpdates>
+        <name>Owner_Update</name>
+        <label>Owner Update</label>
+        <locationX>50</locationX>
+        <locationY>1187</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Sent to Sales</stringValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>Get_Owner.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
     <start>
-        <locationX>56</locationX>
+        <locationX>419</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Check_Follow_up_date</targetReference>
@@ -120,5 +285,5 @@
         <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
 </Flow>

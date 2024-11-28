@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Transit_Airport__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Transit Airport</label>
+    <referenceTo>Airport__c</referenceTo>
+    <relationshipLabel>Transit Flight Details</relationshipLabel>
+    <relationshipName>Transit_Flight_Details</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

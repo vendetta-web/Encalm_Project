@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Arival__c</fullName>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Arriving Airport</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Delhi</fullName>
+                <default>true</default>
+                <label>Delhi</label>
+            </value>
+            <value>
+                <fullName>Goa</fullName>
+                <default>false</default>
+                <label>Goa</label>
+            </value>
+            <value>
+                <fullName>Hyderabad</fullName>
+                <default>false</default>
+                <label>Hyderabad</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

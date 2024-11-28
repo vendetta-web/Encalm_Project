@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>International_Billable_Travel_Requests</fullName>
+    <active>true</active>
+    <label>International Billable Travel Requests</label>
+    <picklistValues>
+        <picklist>Purpose_Of_Travel__c</picklist>
+        <values>
+            <fullName>Consulting %26 Implementation Engagement</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Customer Meeting%2FWorkshops</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Customer Production Support</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Sales%2FPre-Sales Meetings</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>T%26M Engagement</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Status__c</picklist>
+        <values>
+            <fullName>Draft</fullName>
+            <default>true</default>
+        </values>
+        <values>
+            <fullName>Pending Management Approvals</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Referred Back for Changes</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Request Approved</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Request Rejected</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+</RecordType>

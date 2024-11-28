@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Service_Airport__c</fullName>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Service Airport</label>
+    <referenceTo>Service_Airport__mdt</referenceTo>
+    <relationshipLabel>Packages</relationshipLabel>
+    <relationshipName>Packages</relationshipName>
+    <required>false</required>
+    <type>MetadataRelationship</type>
+    <unique>false</unique>
+</CustomField>

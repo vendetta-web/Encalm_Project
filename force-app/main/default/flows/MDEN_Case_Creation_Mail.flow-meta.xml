@@ -4,7 +4,7 @@
         <name>Case_Closed</name>
         <label>Case Closed</label>
         <locationX>50</locationX>
-        <locationY>431</locationY>
+        <locationY>647</locationY>
         <actionName>Case.Case_Creation_and_Closed</actionName>
         <actionType>emailAlert</actionType>
         <connector>
@@ -24,10 +24,13 @@
     <actionCalls>
         <name>Case_Creation_Mail</name>
         <label>Case Creation Mail</label>
-        <locationX>314</locationX>
+        <locationX>446</locationX>
         <locationY>431</locationY>
         <actionName>Case.Case_Creation_Email</actionName>
         <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>Check_Email_Exits</targetReference>
+        </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>SObjectRowId</name>
@@ -39,11 +42,87 @@
         <offset>0</offset>
         <versionSegment>1</versionSegment>
     </actionCalls>
+    <actionCalls>
+        <name>Send_Email_Action_1</name>
+        <label>Send Email Action 1</label>
+        <locationX>50</locationX>
+        <locationY>539</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
+        <connector>
+            <targetReference>Case_Closed</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>emailAddresses</name>
+            <value>
+                <elementReference>$Record.ContactEmail</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>senderType</name>
+        </inputParameters>
+        <inputParameters>
+            <name>senderAddress</name>
+            <value>
+                <stringValue>saurabh.dixit@11rwsds5ulf74drv1xq2xp70677eochm87a59dk77axbhrpjna.su-1dm5pmaa.usa534s.case.sandbox.salesforce.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Enquiry Email</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>relatedRecordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientId</name>
+            <value>
+                <elementReference>ReceipienID.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailTemplateId</name>
+            <value>
+                <stringValue>00XSu000000aTWXMA2</stringValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
+        <versionSegment>1</versionSegment>
+    </actionCalls>
     <apiVersion>62.0</apiVersion>
+    <decisions>
+        <name>Check_Email_Exits</name>
+        <label>Check Email Exits</label>
+        <locationX>446</locationX>
+        <locationY>539</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>create_Contact12</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.SuppliedEmail</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Create_Contact</targetReference>
+            </connector>
+            <label>create Contact</label>
+        </rules>
+    </decisions>
     <decisions>
         <name>Email_Decision</name>
         <label>Email Decision</label>
-        <locationX>314</locationX>
+        <locationX>402</locationX>
         <locationY>323</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -63,15 +142,8 @@
                     <booleanValue>false</booleanValue>
                 </rightValue>
             </conditions>
-            <conditions>
-                <leftValueReference>$Record.Email_Alert_Send__c</leftValueReference>
-                <operator>NotEqualTo</operator>
-                <rightValue>
-                    <booleanValue>true</booleanValue>
-                </rightValue>
-            </conditions>
             <connector>
-                <targetReference>Case_Closed</targetReference>
+                <targetReference>ReceipienID</targetReference>
             </connector>
             <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
             <label>Inquiry Type</label>
@@ -119,11 +191,55 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
+    <recordCreates>
+        <name>Create_Contact</name>
+        <label>Create Contact</label>
+        <locationX>314</locationX>
+        <locationY>647</locationY>
+        <connector>
+            <targetReference>Update_Case</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Email</field>
+            <value>
+                <elementReference>$Record.SuppliedEmail</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>LastName</field>
+            <value>
+                <elementReference>$Record.SuppliedName</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Contact</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <recordLookups>
+        <name>ReceipienID</name>
+        <label>ReceipienID</label>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Send_Email_Action_1</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Email</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.SuppliedEmail</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Contact</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <recordUpdates>
         <name>Case_Update_Records</name>
         <label>Case Update Records</label>
         <locationX>50</locationX>
-        <locationY>539</locationY>
+        <locationY>755</locationY>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Inquiry_Type__c</field>
@@ -140,8 +256,21 @@
         </inputAssignments>
         <inputReference>$Record</inputReference>
     </recordUpdates>
+    <recordUpdates>
+        <name>Update_Case</name>
+        <label>Update Case</label>
+        <locationX>314</locationX>
+        <locationY>755</locationY>
+        <inputAssignments>
+            <field>ContactId</field>
+            <value>
+                <elementReference>Create_Contact</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
     <start>
-        <locationX>188</locationX>
+        <locationX>276</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Email_Decision</targetReference>
@@ -150,5 +279,5 @@
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
 </Flow>
