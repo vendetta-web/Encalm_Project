@@ -215,17 +215,20 @@ handleTabChange(event) {
              this.isTabOne = true;
               this.isTabTwo = false;
                this.isTabThree  = false;
+               this.opportunityFieldValues['Service_Type__c'] = 'Arrival';
                this.resetOnTabChange();
         } if(event.target.value== 'Depature'){
             this.isTabOne = false;
               this.isTabTwo = true;
                this.isTabThree  = false;
+               this.opportunityFieldValues['Service_Type__c'] = 'Depature';
                this.resetOnTabChange();
         }
         if(event.target.value== 'Transit'){
             this.isTabOne = false;
               this.isTabTwo = false;
                this.isTabThree  = true;
+               this.opportunityFieldValues['Service_Type__c'] = 'Transit';
                this.resetOnTabChange();
         }
     }
@@ -418,8 +421,10 @@ setSector(){
         this.sector = '';
     }else if(tempCountryArr == tempCountryDep) {
         this.sector = 'Domestic';
+        this.opportunityFieldValues['Flight_Type__c'] = 'Domestic';
     } else {
         this.sector = 'International';
+        this.opportunityFieldValues['Flight_Type__c'] = 'International';
     }
 }
 setTransitSector(){

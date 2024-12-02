@@ -3,7 +3,7 @@
     <actionCalls>
         <name>Create_follow_up_task1</name>
         <label>Create follow up task</label>
-        <locationX>336</locationX>
+        <locationX>380</locationX>
         <locationY>431</locationY>
         <actionName>NewTask</actionName>
         <actionType>quickAction</actionType>
@@ -104,7 +104,7 @@
                 <leftValueReference>$Record.Status</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
-                    <stringValue>Sent to Sales</stringValue>
+                    <stringValue>Escalated to supervisor</stringValue>
                 </rightValue>
             </conditions>
             <connector>
@@ -117,7 +117,7 @@
     <decisions>
         <name>Check_Booking_Fields</name>
         <label>Check Booking Fields</label>
-        <locationX>336</locationX>
+        <locationX>380</locationX>
         <locationY>647</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -159,7 +159,7 @@
     <decisions>
         <name>Check_Follow_up_date</name>
         <label>Check Follow up date</label>
-        <locationX>545</locationX>
+        <locationX>611</locationX>
         <locationY>323</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -167,7 +167,7 @@
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>$Record.Set_Follow_up_Date_and_Time__c</leftValueReference>
-                <operator>IsBlank</operator>
+                <operator>IsNull</operator>
                 <rightValue>
                     <booleanValue>false</booleanValue>
                 </rightValue>
@@ -212,10 +212,10 @@
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>Id</field>
+            <field>QueueId</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>03gSu000000BI4rIAG</stringValue>
+                <stringValue>00GSu000001A86zMAC</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -241,7 +241,7 @@
     <recordUpdates>
         <name>Change_stage_to_Follow_up_required</name>
         <label>Change stage to Follow up required</label>
-        <locationX>336</locationX>
+        <locationX>380</locationX>
         <locationY>539</locationY>
         <connector>
             <targetReference>Check_Booking_Fields</targetReference>
@@ -259,14 +259,6 @@
         <label>Owner Update</label>
         <locationX>50</locationX>
         <locationY>1187</locationY>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Status</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>Sent to Sales</stringValue>
-            </value>
-        </filters>
         <inputAssignments>
             <field>OwnerId</field>
             <value>
@@ -276,7 +268,7 @@
         <inputReference>$Record</inputReference>
     </recordUpdates>
     <start>
-        <locationX>419</locationX>
+        <locationX>485</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Check_Follow_up_date</targetReference>
@@ -285,5 +277,5 @@
         <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Draft</status>
 </Flow>

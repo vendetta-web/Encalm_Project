@@ -33,32 +33,32 @@
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Arriving Airport</label>
-                            <lightning-combobox name="name" data-id="arrivingAirportr" variant="label-hidden" onblur={handleFieldChange}
+                            <lightning-combobox name="Arriving_Airport__c" data-id="arrivingAirportr" variant="label-hidden" onblur={handleFieldChange}
                                 options={baseAirportOptions} value={arrivingAirport} onchange={handleArrivingAirportChange}>
                             </lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Departure Airport</label>
-                            <lightning-combobox data-id="departureAirport" variant="label-hidden"
+                            <lightning-combobox name="Departure_Airport__c" data-id="departureAirport" variant="label-hidden" onblur={handleFieldChange}
                                 options={allAirportOptions} value={departureAirport}
                                 onchange={handleDepartureAirportChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Select Sector</label>
-                            <lightning-combobox data-id="selectSector" variant="label-hidden" disabled options={sectorOption}
-                                value={sector} ></lightning-combobox>
+                            <lightning-combobox name="Sector__c" data-id="selectSector" variant="label-hidden" disabled options={sectorOption}
+                                onblur={handleFieldChange} value={sector} ></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Date of Arrival</label>
-                            <lightning-input type="date" variant="label-hidden" value={arrivalDate}
-                                onchange={handleArrivalDateChange}></lightning-input>
+                            <lightning-input type="date" name="Date_of_Arrival__c" variant="label-hidden" value={arrivalDate}
+                            onblur={handleFieldChange} onchange={handleArrivalDateChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Flight Number</label>
                             <lightning-combobox style="font-size: 14px;" data-id="flightNumber" variant="label-hidden" options={flightNumberOptions}
-                                value={flightNumber} onchange={handleFlightNumberChange}></lightning-combobox>
+                            onblur={handleFieldChange} name="Flight_Number__c" value={flightNumber} onchange={handleFlightNumberChange}></lightning-combobox>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">STA Time</label>

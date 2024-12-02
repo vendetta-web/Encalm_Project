@@ -4,8 +4,8 @@
     <assignments>
         <name>Assignment_to_Store_Account</name>
         <label>Assignment to Store Account</label>
-        <locationX>527</locationX>
-        <locationY>830</locationY>
+        <locationX>226</locationX>
+        <locationY>782</locationY>
         <assignmentItems>
             <assignToReference>newAccount.Name</assignToReference>
             <operator>Assign</operator>
@@ -31,8 +31,8 @@
     <assignments>
         <name>Copy_1_of_Set_OppId_to_Pass_Details</name>
         <label>Copy 1 of Set OppId to Pass Details</label>
-        <locationX>439</locationX>
-        <locationY>1478</locationY>
+        <locationX>138</locationX>
+        <locationY>1430</locationY>
         <assignmentItems>
             <assignToReference>Iterate_through_pass_details.Opportunity_ID__c</assignToReference>
             <operator>Assign</operator>
@@ -47,8 +47,8 @@
     <assignments>
         <name>Set_OppId_to_Pass_Details</name>
         <label>Set OppId to Pass Details</label>
-        <locationX>791</locationX>
-        <locationY>1370</locationY>
+        <locationX>490</locationX>
+        <locationY>1322</locationY>
         <assignmentItems>
             <assignToReference>Iterate_through_pass_details.Opportunity_ID__c</assignToReference>
             <operator>Assign</operator>
@@ -63,8 +63,8 @@
     <decisions>
         <name>Check_for_Type</name>
         <label>Check for Type</label>
-        <locationX>527</locationX>
-        <locationY>938</locationY>
+        <locationX>226</locationX>
+        <locationY>890</locationY>
         <defaultConnector>
             <targetReference>Create_Business_Account</targetReference>
         </defaultConnector>
@@ -96,8 +96,8 @@
     <loops>
         <name>Copy_1_of_Iterate_Through_Addons</name>
         <label>Copy 1 of Iterate Through Addons</label>
-        <locationX>351</locationX>
-        <locationY>1670</locationY>
+        <locationX>50</locationX>
+        <locationY>1622</locationY>
         <collectionReference>Get_Addons</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
@@ -110,8 +110,8 @@
     <loops>
         <name>Copy_1_of_Iterate_through_pass_details</name>
         <label>Copy 1 of Iterate through pass details</label>
-        <locationX>351</locationX>
-        <locationY>1370</locationY>
+        <locationX>50</locationX>
+        <locationY>1322</locationY>
         <collectionReference>Passanger_Details</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
@@ -124,8 +124,8 @@
     <loops>
         <name>Iterate_Through_Addons</name>
         <label>Iterate Through Addons</label>
-        <locationX>703</locationX>
-        <locationY>1670</locationY>
+        <locationX>402</locationX>
+        <locationY>1622</locationY>
         <collectionReference>Get_Addons</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
@@ -138,8 +138,8 @@
     <loops>
         <name>Iterate_through_pass_details</name>
         <label>Iterate through pass details</label>
-        <locationX>703</locationX>
-        <locationY>1262</locationY>
+        <locationX>402</locationX>
+        <locationY>1214</locationY>
         <collectionReference>Passanger_Details</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
@@ -158,7 +158,7 @@
     <processMetadataValues>
         <name>CanvasMode</name>
         <value>
-            <stringValue>FREE_FORM_CANVAS</stringValue>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
         </value>
     </processMetadataValues>
     <processMetadataValues>
@@ -171,8 +171,8 @@
     <recordCreates>
         <name>Copy_1_of_Create_Contact</name>
         <label>Copy 1 of Create Contact</label>
-        <locationX>791</locationX>
-        <locationY>1478</locationY>
+        <locationX>490</locationX>
+        <locationY>1430</locationY>
         <connector>
             <targetReference>Iterate_through_pass_details</targetReference>
         </connector>
@@ -206,8 +206,8 @@
     <recordCreates>
         <name>Copy_1_of_Create_Opportunity</name>
         <label>Copy 1 of Create Opportunity</label>
-        <locationX>703</locationX>
-        <locationY>1154</locationY>
+        <locationX>402</locationX>
+        <locationY>1106</locationY>
         <connector>
             <targetReference>Iterate_through_pass_details</targetReference>
         </connector>
@@ -241,8 +241,8 @@
     <recordCreates>
         <name>Copy_2_of_Create_Opp_LineItem</name>
         <label>Copy 2 of Create Opp LineItem</label>
-        <locationX>439</locationX>
-        <locationY>1778</locationY>
+        <locationX>138</locationX>
+        <locationY>1730</locationY>
         <connector>
             <targetReference>Copy_1_of_Iterate_Through_Addons</targetReference>
         </connector>
@@ -282,8 +282,8 @@
     <recordCreates>
         <name>Create_Business_Account</name>
         <label>Create Business Account</label>
-        <locationX>703</locationX>
-        <locationY>1046</locationY>
+        <locationX>402</locationX>
+        <locationY>998</locationY>
         <connector>
             <targetReference>Copy_1_of_Create_Opportunity</targetReference>
         </connector>
@@ -305,8 +305,8 @@
     <recordCreates>
         <name>Create_Contact</name>
         <label>Create Contact</label>
-        <locationX>351</locationX>
-        <locationY>1262</locationY>
+        <locationX>50</locationX>
+        <locationY>1214</locationY>
         <connector>
             <targetReference>Copy_1_of_Iterate_through_pass_details</targetReference>
         </connector>
@@ -340,8 +340,8 @@
     <recordCreates>
         <name>Create_Opp_LineItem</name>
         <label>Create Opp LineItem</label>
-        <locationX>791</locationX>
-        <locationY>1778</locationY>
+        <locationX>490</locationX>
+        <locationY>1730</locationY>
         <connector>
             <targetReference>Iterate_Through_Addons</targetReference>
         </connector>
@@ -381,8 +381,8 @@
     <recordCreates>
         <name>Create_Opportunity</name>
         <label>Create Opportunity</label>
-        <locationX>351</locationX>
-        <locationY>1154</locationY>
+        <locationX>50</locationX>
+        <locationY>1106</locationY>
         <connector>
             <targetReference>Create_Contact</targetReference>
         </connector>
@@ -416,8 +416,8 @@
     <recordCreates>
         <name>Create_Person_Account</name>
         <label>Create Person Account</label>
-        <locationX>351</locationX>
-        <locationY>1046</locationY>
+        <locationX>50</locationX>
+        <locationY>998</locationY>
         <connector>
             <targetReference>Create_Opportunity</targetReference>
         </connector>
@@ -439,8 +439,8 @@
     <recordLookups>
         <name>Get_Addons</name>
         <label>Get Addons</label>
-        <locationX>527</locationX>
-        <locationY>290</locationY>
+        <locationX>226</locationX>
+        <locationY>242</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Passanger_Details</targetReference>
@@ -460,8 +460,8 @@
     <recordLookups>
         <name>Get_Airport</name>
         <label>Get Airport</label>
-        <locationX>527</locationX>
-        <locationY>506</locationY>
+        <locationX>226</locationX>
+        <locationY>458</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Get_Product</targetReference>
@@ -481,8 +481,8 @@
     <recordLookups>
         <name>Get_Lead</name>
         <label>Get Lead</label>
-        <locationX>527</locationX>
-        <locationY>182</locationY>
+        <locationX>226</locationX>
+        <locationY>134</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Get_Addons</targetReference>
@@ -502,8 +502,8 @@
     <recordLookups>
         <name>Get_Product</name>
         <label>Get Product</label>
-        <locationX>527</locationX>
-        <locationY>614</locationY>
+        <locationX>226</locationX>
+        <locationY>566</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Get_Records_5</targetReference>
@@ -544,8 +544,8 @@
     <recordLookups>
         <name>Get_Records_5</name>
         <label>Get PriceBookEntry</label>
-        <locationX>527</locationX>
-        <locationY>722</locationY>
+        <locationX>226</locationX>
+        <locationY>674</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Assignment_to_Store_Account</targetReference>
@@ -565,8 +565,8 @@
     <recordLookups>
         <name>Passanger_Details</name>
         <label>Passanger Details</label>
-        <locationX>527</locationX>
-        <locationY>398</locationY>
+        <locationX>226</locationX>
+        <locationY>350</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Get_Airport</targetReference>
@@ -586,8 +586,8 @@
     <recordUpdates>
         <name>Copy_1_of_Update_oppId_as_parent_on_Pass_Details</name>
         <label>Copy 1 of Update oppId as parent on Pass Details</label>
-        <locationX>351</locationX>
-        <locationY>1970</locationY>
+        <locationX>50</locationX>
+        <locationY>1922</locationY>
         <connector>
             <targetReference>Update_Lead_as_Converted</targetReference>
         </connector>
@@ -596,8 +596,8 @@
     <recordUpdates>
         <name>Update_Lead_as_Converted</name>
         <label>Update Lead as Converted</label>
-        <locationX>533</locationX>
-        <locationY>2140</locationY>
+        <locationX>226</locationX>
+        <locationY>2114</locationY>
         <connector>
             <targetReference>Success_Message</targetReference>
         </connector>
@@ -620,8 +620,8 @@
     <recordUpdates>
         <name>Update_oppId_as_parent_on_Pass_Details</name>
         <label>Update oppId as parent on Pass Details</label>
-        <locationX>703</locationX>
-        <locationY>1970</locationY>
+        <locationX>402</locationX>
+        <locationY>1922</locationY>
         <connector>
             <targetReference>Update_Lead_as_Converted</targetReference>
         </connector>
@@ -630,8 +630,8 @@
     <screens>
         <name>Success_Message</name>
         <label>Success Message</label>
-        <locationX>532</locationX>
-        <locationY>2284</locationY>
+        <locationX>226</locationX>
+        <locationY>2222</locationY>
         <allowBack>true</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>true</allowPause>
@@ -644,8 +644,8 @@
         <showHeader>false</showHeader>
     </screens>
     <start>
-        <locationX>401</locationX>
-        <locationY>48</locationY>
+        <locationX>100</locationX>
+        <locationY>0</locationY>
         <connector>
             <targetReference>Get_Lead</targetReference>
         </connector>

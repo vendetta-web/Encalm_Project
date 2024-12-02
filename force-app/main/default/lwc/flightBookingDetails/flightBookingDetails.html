@@ -1,5 +1,5 @@
 <template>
-        <template if:true={showModal}>
+    <template if:true={showModal}>
         <lightning-card title="Flight Details">
             <div class="header-fields">
                 <div class="field">
@@ -24,9 +24,106 @@
                 </div>
             </div>
         </lightning-card>
+    </template>
+    <div class="demo-only demo-only--sizing slds-grid slds-wrap">
+    <lightning-card title="Select Package" class="slds-size_3-of-4">
+        <div class="slds-card__body">
+            <div class="slds-grid slds-wrap"  style="margin-left: 15px;" slot="actions">
+                <template for:each={getPackage} for:item="pack" for:index="index">
+                    <div key={pack.packageName} class="slds-col slds-size_1-of-3 column">
+                        <div class="package">
+                            <!-- Apply the class to package name -->
+                            <div class="slds-text-heading_medium package-name" style="padding-left: 10px;">{pack.packageName}</div>
+                            
+                            <div class="slds-m-top_medium">
+                                <!-- Apply the class to price tag -->
+                                <div class="slds-text-heading_small price-tag" style="padding-left: 10px;">{currency} {pack.priceTag}</div>
+        
+                                <!-- Iterate through services and display each row -->
+                                <ul class="slds-list_dotted">
+                                    <template for:each={pack.services} for:item="row">
+                                        <li key={row} class="slds-item">{row}</li>
+                                    </template>
+                                </ul>
+        
+                                <!-- Select Button -->
+                                <lightning-button 
+                                    label={pack.buttonLabel} 
+                                    data-index={index} 
+                                    onclick={handleSelect}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </br>
+    </br>
+    <div style="font-weight: bold;font-size: 16px;margin-left: 16px;">Select Add Ons</div>
+        <div class="slds-card__body">
+            <div class="slds-grid slds-wrap"  style="margin-left: 15px;" slot="actions">
+                <template for:each={getAddonDetail} for:item="pack"  for:index="index">
+                    <div key={pack.packageName} class="slds-col slds-size_1-of-3 column">
+                        <div class="package">
+                            <!-- Apply the class to package name -->
+                            <div class="slds-text-heading_small package-name" style="padding-left: 10px;">{pack.addOnName}</div>
+                            
+                            <div class="slds-m-top_medium">
+                                <!-- Apply the class to price tag -->
+                            <div class="slds-text-heading_small price-tag" style="padding-left: 10px;">{currency} {pack.addOnTag}</div>
+                        </br>
+                            <div class="counter">
+                                <span>Qty</span>
+                                <button data-id="decrementAddOn" data-index={index}  onclick={decrementAddOn} class="btn minus">-</button>
+                                <span class="count">{pack.adddOnCount}</span>
+                                <button data-id="incrementAddOn" data-index={index} onclick={incrementAddOn} class="btn plus">+</button>
+                            </div>
+                        </br>
+                                <lightning-button 
+                                    label={pack.buttonLabel} 
+                                    data-index={index} 
+                                    onclick={handleAddOnSelect}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+    <lightning-card title="Order Summary" class="slds-size_1-of-4">
+        <div class="slds-card__body">
+            <template if:true={orderSummary}>
+                <div class="param2-container">
+                    <div class="param2-box">
+                        <template for:each={orderSummary} for:item="value">
+                            <div key={value} style="font-family: Brandon !important;font-size: 16px;">
+                                <lightning-layout multiple-rows="true">
+                                    <lightning-layout-item size="9" class="slds-p-around_small">
+                                        {value.name}
+                                    </lightning-layout-item>
+                                    <lightning-layout-item size="3" class="slds-p-around_small">
+                                        <p>INR {value.amount}</p> <!-- Show the param2 of the selected row -->
+                                    </lightning-layout-item>
+                                </lightning-layout>  
+                            </div>
+                        </template>
+                        
+                        <strong>Final Amount : INR {totalAmount}</strong> <!-- Show the param2 of the selected row --> 
+                    </div>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+    
+    
+    
+        
+        </div>
                 <footer class="slds-modal__footer">
                     <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={closeModal} style="margin-right: 10px;"></lightning-button>
                     <lightning-button label="Next" class="encalmbg" variant="brand" onclick={closeModal}></lightning-button>
                 </footer>
-        </template>
+        
 </template>

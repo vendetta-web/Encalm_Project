@@ -8,4 +8,146 @@
 .custom-label {
     color: #444;
     font-size: 14px;
-  }
+}
+/* Container for the box */
+.param2-container {
+    display: flex;
+    justify-content: center;  /* Center horizontally */
+    align-items: center;  /* Center vertically */
+    margin-top: 20px;
+}
+
+/* Style for the box that shows the selected param2 */
+.param2-box {
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    max-width: 400px;  /* Set a max width for the box */
+    width: 100%;  /* Allow box to be responsive */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);  /* Add a slight shadow for better visual effect */
+    text-align: center;  /* Center the text inside the box */
+}
+
+/* Header style inside the box */
+.param2-box strong {
+    font-weight: bold;
+    color: #0070d2; /* Salesforce blue */
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Paragraph style for the param2 content */
+.param2-box p {
+    font-size: 16px;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Ensuring that grid items fit properly */
+.slds-grid {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping when necessary */
+}
+
+/* Style for individual columns */
+.column {
+    width: 32%; /* Roughly 1/3 of the container width */
+    margin: 10px 0; /* Vertical margin for spacing */
+    padding: 0.5rem;
+    border: 1px solid #cda45e; /* Border around each column */
+    box-sizing: border-box; /* Ensure padding is included in the width */
+}
+
+/* Add a border under the package name */
+.package-name {
+    border-bottom: 2px solid #cda45e; /* Line under package name */
+    padding-bottom: 10px; /* Add some space between the package name and the next element */
+}
+
+/* Add a border under the price tag */
+.price-tag {
+    border-bottom: 2px solid #cda45e; /* Line under price tag */
+    padding-bottom: 10px; /* Add space between price tag and services list */
+}
+
+/* Style for the individual items in the list */
+.slds-item {
+    border-bottom: 1px solid #cda45e; /* Border between service items */
+    padding: 5px 0;
+}
+
+/* Remove border for the last service item */
+.slds-item:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Layout: Adjust the number of columns on smaller screens */
+@media (max-width: 768px) {
+    .column {
+        width: 48%; /* 2 columns on medium screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .column {
+        width: 100%; /* 1 column on small screens */
+    }
+}
+
+/* Consistent spacing around the button */
+lightning-button {
+    margin-top: 10px;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-width: 300px;
+}
+
+span {
+    font-size: 16px;
+}
+
+.count {
+    padding: 5px 10px;
+    font-weight: bold;
+}
+
+.btn {
+    padding: 5px 10px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    background-color: #eee;
+    border-radius: 3px;
+}
+
+.plus {
+    color: #28a745; /* Green color for + icon */
+    font-weight: bold;
+}
+
+.minus {
+    color: #dc3545; /* Red color for - icon */
+    font-weight: bold;
+}
+
+.age-range {
+    font-size: 12px;
+    color: #777;
+}
