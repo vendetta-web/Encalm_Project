@@ -24,12 +24,8 @@ export default class TestCustomLookups extends LightningElement {
         getRecordTypeIds()
             .then((result) => {
                 console.log('Record Type IDs:', result);
-                // Check if record types are returned and set defaults if not
-                this.businessRecordTypeId = result?.Business || null;
-                this.personalRecordTypeId = result?.Personal || null;
-                if (!this.businessRecordTypeId || !this.personalRecordTypeId) {
-                    console.error('Record Type IDs are missing or incorrect');
-                }
+                this.businessRecordTypeId = result.Business;
+                this.personalRecordTypeId = result.Personal;
             })
             .catch((error) => {
                 console.error('Error fetching record type IDs:', error);
@@ -37,13 +33,41 @@ export default class TestCustomLookups extends LightningElement {
     }
 
     handleSearchInput(event) {
-        const searchTerm = event.target.value?.trim();
+        const searchTerm = event.target.value;
         if (!searchTerm) {
             this.searchResults = [];
             this.hasResults = false;
             this.noSearchResult = false;
             return;
         }
+        if (searchTerm.length > 0) {
+            this.selectedAccount = {};
+            getAccounts({ searchTerm })
+                .then((result) => {
+                    this.searchResults = result.map(account => ({
+                        ...account,
+                        Phone: account.Phone || 'No Phone',
+                        PersonEmail: account.PersonEmail || 'No Email'
+                    }));
+                    //  this.hasResults = this.searchResults.length > 0;
+                    if (this.searchResults.length > 0) {
+                        this.hasResults = true;
+                        this.noSearchResult = false;
+                    } else {
+                        console.log('Okay');
+                        this.noSearchResult = true;
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error searching accounts:', error);
+                    this.searchResults = [];
+                    this.hasResults = false;
+                });
+        } else {
+            this.searchResults = [];
+            this.hasResults = false;
+        }
+
 
         getAccounts({ searchTerm })
             .then((result) => {
@@ -68,7 +92,7 @@ export default class TestCustomLookups extends LightningElement {
                 this.noSearchResult = false;
             });
     }
-
+    
     handleSelect(event) {
         const accountId = event.currentTarget.dataset.id;
         this.selectedAccount = this.searchResults.find(account => account.Id === accountId);
@@ -92,7 +116,7 @@ export default class TestCustomLookups extends LightningElement {
     handleAccountTypeChange(event) {
         this.selectedAccountType = event.detail.value;
         this.accountType = this.selectedAccountType;
-        
+
         if (this.accountType === 'Business') {
             this.recordTypeId = this.businessRecordTypeId;
         } else if (this.accountType === 'Personal') {
@@ -102,11 +126,11 @@ export default class TestCustomLookups extends LightningElement {
         // Set record type dynamically
         setTimeout(() => {
             const recordEditForm = this.template.querySelector('lightning-record-edit-form');
-            if (recordEditForm) {
-                recordEditForm.recordTypeId = this.recordTypeId;
-            }
+            recordEditForm.recordTypeId = this.recordTypeId;
         }, 0);
-        
+        console.log('Selected Account Type:', this.accountType);
+        console.log('RecordTypeId set to:', this.recordTypeId);
+
         console.log('Selected Account Type:', this.accountType);
         console.log('RecordTypeId set to:', this.recordTypeId);
     }
@@ -150,6 +174,7 @@ export default class TestCustomLookups extends LightningElement {
         }
     }
 
+   
     handleSuccess(event) {
         console.log('Account created successfully');
         const accountId = event.detail.id;
@@ -172,7 +197,19 @@ export default class TestCustomLookups extends LightningElement {
         this.closeModal();
     }
 
+     showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(evt);
+    }
+
     handleError(event) {
         console.error('Error creating account:', event.detail);
+        
+        // Show error toast
+        this.showToast('Error', 'Failed to create account: ' + JSON.stringify(event.detail.detail), 'error');
     }
 }
