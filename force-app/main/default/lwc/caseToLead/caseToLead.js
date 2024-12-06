@@ -9,9 +9,11 @@ import CASE_SUBJECT from '@salesforce/schema/Case.Subject';
 import CASE_SUPPLIED_EMAIL from '@salesforce/schema/Case.SuppliedEmail';
 import CASE_SUPPLIED_NAME from '@salesforce/schema/Case.SuppliedName';
 import CASE_SUPPLIED_PHONE from '@salesforce/schema/Case.SuppliedPhone';
+import CASE_NUMBER from '@salesforce/schema/Case.CaseNumber';
 
 const FIELDS = [
     CASE_ID,
+    CASE_NUMBER,
     CASE_STATUS,
     CASE_DESCRIPTION,
     CASE_SUBJECT,
@@ -73,9 +75,21 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         const name = this.caseData.SuppliedName?.value || '';
         const email = this.caseData.SuppliedEmail?.value || '';
         const phone = this.caseData.SuppliedPhone?.value || '';
+        const caseId = this.caseData?.Id?.value;
+        const caseNumber = this.caseData?.CaseNumber?.value;
+
+         console.log('Navigating to Lead with Case ID:', caseId);
+        console.log('Case Number:', caseNumber);
+
 
         const [firstName, ...lastNameParts] = name.split(' ');
         const lastName = lastNameParts.join(' ') || 'Unknown';
+
+        if (!caseId) {
+        this.actionMessage = 'Case ID is missing or invalid.';
+        this.isSuccess = false;
+        return;
+    }
 
         const leadDefaultValues = {
             Description__c: description,
@@ -84,7 +98,8 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             Email: email,
             FirstName: firstName?.trim() || 'Unknown',
             LastName: lastName?.trim(),
-            Case__c: this.caseData.Id?.value
+            Case__c: caseId,
+            Case_Number__c: caseNumber
         };
 
         this[NavigationMixin.Navigate]({

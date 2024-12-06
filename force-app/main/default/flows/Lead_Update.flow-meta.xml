@@ -59,7 +59,7 @@
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <connector>
-            <targetReference>Change_stage_to_Escalated</targetReference>
+            <targetReference>Update_Status</targetReference>
         </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -92,14 +92,49 @@
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <decisions>
-        <name>Change_owner</name>
-        <label>Change owner</label>
+        <name>Check_Booking_Fields</name>
+        <label>Check Booking Fields</label>
         <locationX>182</locationX>
         <locationY>971</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>Status_Check</name>
+            <name>Required_Fields</name>
             <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Service_Airport__c</leftValueReference>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Flight_No__c</leftValueReference>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Journey_Type__c</leftValueReference>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Travel_Date__c</leftValueReference>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Number_of_Adult__c</leftValueReference>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
             <conditions>
                 <leftValueReference>$Record.Status</leftValueReference>
                 <operator>EqualTo</operator>
@@ -108,41 +143,58 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Get_Owner</targetReference>
+                <targetReference>Change_stage_to_Sales</targetReference>
             </connector>
-            <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
-            <label>Status Check</label>
+            <label>Required Fields</label>
         </rules>
     </decisions>
     <decisions>
-        <name>Check_Booking_Fields</name>
-        <label>Check Booking Fields</label>
+        <name>Check_Follow_up_date</name>
+        <label>Check Follow up date</label>
+        <locationX>743</locationX>
+        <locationY>323</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Create_Follow_up_task</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Set_Follow_up_Date_and_Time__c</leftValueReference>
+                <operator>IsBlank</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Create_follow_up_task1</targetReference>
+            </connector>
+            <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+            <label>Create Follow up task</label>
+        </rules>
+        <rules>
+            <name>check_stage</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Sent to Sales</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SalesRecordType</targetReference>
+            </connector>
+            <label>check stage</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Escalated_Status</name>
+        <label>Escalated Status</label>
         <locationX>380</locationX>
         <locationY>647</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>Required_Fields</name>
+            <name>checkEscalated</name>
             <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>$Record.Service_Airport__c</leftValueReference>
-                <operator>NotEqualTo</operator>
-            </conditions>
-            <conditions>
-                <leftValueReference>$Record.Flight_No__c</leftValueReference>
-                <operator>NotEqualTo</operator>
-            </conditions>
-            <conditions>
-                <leftValueReference>$Record.Journey_Type__c</leftValueReference>
-                <operator>NotEqualTo</operator>
-            </conditions>
-            <conditions>
-                <leftValueReference>$Record.Travel_Date__c</leftValueReference>
-                <operator>NotEqualTo</operator>
-            </conditions>
-            <conditions>
-                <leftValueReference>$Record.Number_of_Adult__c</leftValueReference>
-                <operator>NotEqualTo</operator>
-            </conditions>
             <conditions>
                 <leftValueReference>$Record.Status</leftValueReference>
                 <operator>EqualTo</operator>
@@ -153,30 +205,7 @@
             <connector>
                 <targetReference>Esclated_to_Supervisor</targetReference>
             </connector>
-            <label>Required Fields</label>
-        </rules>
-    </decisions>
-    <decisions>
-        <name>Check_Follow_up_date</name>
-        <label>Check Follow up date</label>
-        <locationX>611</locationX>
-        <locationY>323</locationY>
-        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
-        <rules>
-            <name>Create_Follow_up_task</name>
-            <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>$Record.Set_Follow_up_Date_and_Time__c</leftValueReference>
-                <operator>IsNull</operator>
-                <rightValue>
-                    <booleanValue>false</booleanValue>
-                </rightValue>
-            </conditions>
-            <connector>
-                <targetReference>Create_follow_up_task1</targetReference>
-            </connector>
-            <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
-            <label>Create Follow up task</label>
+            <label>checkEscalated</label>
         </rules>
     </decisions>
     <environments>Default</environments>
@@ -202,49 +231,33 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordLookups>
-        <name>Get_Owner</name>
-        <label>Get Owner</label>
-        <locationX>50</locationX>
-        <locationY>1079</locationY>
+        <name>SalesRecordType</name>
+        <label>SalesRecordType</label>
+        <locationX>842</locationX>
+        <locationY>431</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Owner_Update</targetReference>
+            <targetReference>change_stage_to_Sales1</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>QueueId</field>
+            <field>DeveloperName</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>00GSu000001A86zMAC</stringValue>
+                <stringValue>Sales</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>QueueSobject</object>
+        <object>RecordType</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
-    <recordUpdates>
-        <name>Change_stage_to_Escalated</name>
-        <label>Change stage to Escalated</label>
-        <locationX>182</locationX>
-        <locationY>863</locationY>
-        <connector>
-            <targetReference>Change_owner</targetReference>
-        </connector>
-        <inputAssignments>
-            <field>Status</field>
-            <value>
-                <stringValue>Escalated to supervisor</stringValue>
-            </value>
-        </inputAssignments>
-        <inputReference>$Record</inputReference>
-    </recordUpdates>
     <recordUpdates>
         <name>Change_stage_to_Follow_up_required</name>
         <label>Change stage to Follow up required</label>
         <locationX>380</locationX>
         <locationY>539</locationY>
         <connector>
-            <targetReference>Check_Booking_Fields</targetReference>
+            <targetReference>Escalated_Status</targetReference>
         </connector>
         <inputAssignments>
             <field>Status</field>
@@ -255,20 +268,55 @@
         <inputReference>$Record</inputReference>
     </recordUpdates>
     <recordUpdates>
-        <name>Owner_Update</name>
-        <label>Owner Update</label>
+        <name>Change_stage_to_Sales</name>
+        <label>Change stage to Sales</label>
         <locationX>50</locationX>
-        <locationY>1187</locationY>
+        <locationY>1079</locationY>
         <inputAssignments>
-            <field>OwnerId</field>
+            <field>RecordTypeId</field>
             <value>
-                <elementReference>Get_Owner.Id</elementReference>
+                <elementReference>SalesRecordType.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Sent to Sales</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>change_stage_to_Sales1</name>
+        <label>Change record Type to Sales</label>
+        <locationX>842</locationX>
+        <locationY>539</locationY>
+        <inputAssignments>
+            <field>RecordTypeId</field>
+            <value>
+                <elementReference>SalesRecordType.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Status</name>
+        <label>Update Status</label>
+        <locationX>182</locationX>
+        <locationY>863</locationY>
+        <connector>
+            <targetReference>Check_Booking_Fields</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Escalated to supervisor</stringValue>
             </value>
         </inputAssignments>
         <inputReference>$Record</inputReference>
     </recordUpdates>
     <start>
-        <locationX>485</locationX>
+        <locationX>617</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Check_Follow_up_date</targetReference>
@@ -277,5 +325,12 @@
         <recordTriggerType>Update</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
+    <status>Active</status>
+    <variables>
+        <name>ReservationRecordType</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
 </Flow>

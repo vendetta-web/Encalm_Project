@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Lead_Send_Email</name>
         <label>Lead Send Email</label>
-        <locationX>182</locationX>
-        <locationY>1163</locationY>
+        <locationX>314</locationX>
+        <locationY>863</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -33,32 +33,43 @@
             </value>
         </inputParameters>
         <nameSegment>emailSimple</nameSegment>
+        <offset>0</offset>
         <versionSegment>1</versionSegment>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
+    <customErrors>
+        <name>Account_Exist</name>
+        <label>Account Exist</label>
+        <locationX>50</locationX>
+        <locationY>647</locationY>
+        <customErrorMessages>
+            <errorMessage>Lead already exist! for the Account {!Existing_Account_Email.Id}</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
     <decisions>
-        <name>Check_Duplicate_Values</name>
-        <label>Check Duplicate Values</label>
+        <name>Decision_1</name>
+        <label>Decision 1</label>
         <locationX>182</locationX>
         <locationY>539</locationY>
         <defaultConnector>
-            <targetReference>Get_Accounts</targetReference>
+            <targetReference>Create_Person_Account</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>isTrue</name>
+            <name>Not_Existing_Account</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>Get_Contacts.Id</leftValueReference>
+                <leftValueReference>Existing_Account_Email</leftValueReference>
                 <operator>IsNull</operator>
                 <rightValue>
-                    <booleanValue>true</booleanValue>
+                    <booleanValue>false</booleanValue>
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Create_Account</targetReference>
+                <targetReference>Account_Exist</targetReference>
             </connector>
-            <label>isTrue</label>
+            <label>Not Existing Account</label>
         </rules>
     </decisions>
     <environments>Default</environments>
@@ -84,42 +95,13 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordCreates>
-        <name>Create_Account</name>
-        <label>Create Account</label>
-        <locationX>50</locationX>
+        <name>Create_Person_Account</name>
+        <label>Create Person Account</label>
+        <locationX>314</locationX>
         <locationY>647</locationY>
         <connector>
-            <targetReference>createContact</targetReference>
+            <targetReference>Update_Case</targetReference>
         </connector>
-        <inputAssignments>
-            <field>Name</field>
-            <value>
-                <elementReference>$Record.LastName</elementReference>
-            </value>
-        </inputAssignments>
-        <object>Account</object>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordCreates>
-    <recordCreates>
-        <name>createContact</name>
-        <label>createContact</label>
-        <locationX>50</locationX>
-        <locationY>755</locationY>
-        <connector>
-            <targetReference>update_lead</targetReference>
-        </connector>
-        <inputAssignments>
-            <field>AccountId</field>
-            <value>
-                <elementReference>Create_Account</elementReference>
-            </value>
-        </inputAssignments>
-        <inputAssignments>
-            <field>Email</field>
-            <value>
-                <elementReference>$Record.Email</elementReference>
-            </value>
-        </inputAssignments>
         <inputAssignments>
             <field>FirstName</field>
             <value>
@@ -133,29 +115,29 @@
             </value>
         </inputAssignments>
         <inputAssignments>
-            <field>LeadLookup__c</field>
+            <field>PersonEmail</field>
             <value>
-                <elementReference>$Record.Id18__c</elementReference>
+                <elementReference>$Record.Email</elementReference>
             </value>
         </inputAssignments>
-        <object>Contact</object>
+        <object>Account</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
     <recordLookups>
-        <name>Get_Accounts</name>
-        <label>Get Accounts</label>
-        <locationX>314</locationX>
-        <locationY>647</locationY>
+        <name>Existing_Account_Email</name>
+        <label>Existing Account Email</label>
+        <locationX>182</locationX>
+        <locationY>431</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Update_Leads</targetReference>
+            <targetReference>Decision_1</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>Id</field>
+            <field>PersonEmail</field>
             <operator>EqualTo</operator>
             <value>
-                <elementReference>Get_Contacts.Account.Id</elementReference>
+                <elementReference>$Record.Email</elementReference>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -169,7 +151,7 @@
         <locationY>323</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Get_Contacts</targetReference>
+            <targetReference>Existing_Account_Email</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -183,106 +165,29 @@
         <object>Case</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
-    <recordLookups>
-        <name>Get_Contacts</name>
-        <label>Get Contacts</label>
-        <locationX>182</locationX>
-        <locationY>431</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>Check_Duplicate_Values</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Email</field>
-            <operator>EqualTo</operator>
-            <value>
-                <elementReference>$Record.Email</elementReference>
-            </value>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>Contact</object>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
     <recordUpdates>
         <name>Update_Case</name>
         <label>Update Case</label>
-        <locationX>50</locationX>
-        <locationY>971</locationY>
-        <connector>
-            <targetReference>Lead_Send_Email</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Id</field>
-            <operator>EqualTo</operator>
-            <value>
-                <elementReference>Get_Case.Id</elementReference>
-            </value>
-        </filters>
-        <inputAssignments>
-            <field>AccountId</field>
-            <value>
-                <elementReference>Create_Account</elementReference>
-            </value>
-        </inputAssignments>
-        <object>Case</object>
-    </recordUpdates>
-    <recordUpdates>
-        <name>Update_Cases</name>
-        <label>Update Cases</label>
-        <locationX>314</locationX>
-        <locationY>863</locationY>
-        <connector>
-            <targetReference>Lead_Send_Email</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Id</field>
-            <operator>EqualTo</operator>
-            <value>
-                <elementReference>Get_Case.Id</elementReference>
-            </value>
-        </filters>
-        <inputAssignments>
-            <field>AccountId</field>
-            <value>
-                <elementReference>Get_Accounts.Id</elementReference>
-            </value>
-        </inputAssignments>
-        <object>Case</object>
-    </recordUpdates>
-    <recordUpdates>
-        <name>update_lead</name>
-        <label>update lead</label>
-        <locationX>50</locationX>
-        <locationY>863</locationY>
-        <connector>
-            <targetReference>Update_Case</targetReference>
-        </connector>
-        <inputAssignments>
-            <field>Account__c</field>
-            <value>
-                <elementReference>Create_Account</elementReference>
-            </value>
-        </inputAssignments>
-        <inputReference>$Record</inputReference>
-    </recordUpdates>
-    <recordUpdates>
-        <name>Update_Leads</name>
-        <label>Update Leads</label>
         <locationX>314</locationX>
         <locationY>755</locationY>
         <connector>
-            <targetReference>Update_Cases</targetReference>
+            <targetReference>Lead_Send_Email</targetReference>
         </connector>
-        <inputAssignments>
-            <field>Account__c</field>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
             <value>
-                <elementReference>Get_Accounts.Id</elementReference>
+                <elementReference>Get_Case.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>AccountId</field>
+            <value>
+                <elementReference>Create_Person_Account</elementReference>
             </value>
         </inputAssignments>
-        <inputReference>$Record</inputReference>
+        <object>Case</object>
     </recordUpdates>
     <start>
         <locationX>56</locationX>
@@ -294,12 +199,27 @@
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
     <variables>
         <name>emailStored</name>
         <dataType>String</dataType>
         <isCollection>false</isCollection>
         <isInput>true</isInput>
         <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <name>newAccount</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Account</objectType>
+    </variables>
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
     </variables>
 </Flow>

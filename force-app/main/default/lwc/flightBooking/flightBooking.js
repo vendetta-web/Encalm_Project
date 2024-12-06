@@ -499,7 +499,9 @@ handleAccountRecord(event){
 }
 
 handleConvertLead() {
-    
+    this.opportunityFieldValues['Number_of_Adults__c'] = this.adultCount;
+    this.opportunityFieldValues['Number_of_Children__c'] = this.childCount;
+    this.opportunityFieldValues['Number_of_Infants__c'] = this.infantCount;
     convertLead({ leadId: this.recordId, accId: this.accountId, opportunityFieldValues: this.opportunityFieldValues })
         .then((opportunityId) => {
             this.showToast('Success', 'Lead converted successfully!', 'success');

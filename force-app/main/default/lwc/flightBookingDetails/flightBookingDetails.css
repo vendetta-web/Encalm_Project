@@ -151,3 +151,90 @@ span {
     font-size: 12px;
     color: #777;
 }
+
+.row {
+    display: flex;
+    justify-content: space-between; /* This pushes the items to opposite sides */
+    padding: 10px;
+}
+
+.left-value {
+    font-size: x-large; /* You can change this as needed */
+    text-align: left;
+    align-content: end;
+
+}
+
+.right-value {
+    font-size: 15px; /* You can change this as needed */
+    text-align: right;
+    align-content: end;
+}
+
+.left-value-addon {
+    font-size: large; /* You can change this as needed */
+    text-align: left;
+    align-content: end;
+
+}
+
+.right-value-addon {
+    font-size: 15px; /* You can change this as needed */
+    text-align: right;
+    align-content: end;
+}
+.box {
+    width: 200px;
+    height: 200px;
+    background-color: lightgrey;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.btns {
+    padding: 5px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    border: black;
+    background-color: #FFFFFF;
+    border-radius: 3px;
+    color: #0176D3;
+    border: 0.5px solid #000000a1;
+}
+
+.remove {
+    color: black; /* red color for remove */
+    background-color: red;
+}
+
+.select {
+    color: #2857a7; /* blue color for select */
+}
+
+.guest-row {
+    display: flex;
+    flex-wrap: wrap;  /* Allow fields to wrap if they overflow */
+    gap: 15px;  /* Adds space between the fields */
+    margin-bottom: 15px; /* Adds     space between rows */
+    margin-left: 10px; /* Adds space from first rows */
+    margin-right: 10px; /* Adds space from   last rows */
+}
+
+.input-field {
+    flex: 1 1 180px;  /* Ensures each field is flexible and has a minimum width */
+}
+
+.field-container {
+    display: flex;
+    justify-content: space-between; /* Distribute the fields evenly */
+    gap: 10px; /* Space between fields */
+}
+
+.field {
+    flex: 1;
+    max-width: 150px; /* Limit width of each field */
+    word-wrap: break-word; /* Ensure text wraps within the container */
+    margin-left: 10px; /* Adds space from first rows */
+}

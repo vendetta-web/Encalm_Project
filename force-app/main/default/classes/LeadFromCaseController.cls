@@ -60,8 +60,8 @@ public with sharing class LeadFromCaseController {
 
             if (leadId != null) {
                 leadRecord = [
-                    SELECT Id, FirstName, LastName, Email, Travel_Date__c, Number_of_Adult__c, Flight_No__c, 
-                           Service_Airport__c, Journey_Type__c, Case__c 
+                    SELECT Id, FirstName, LastName, Email, Phone, Travel_Date__c, Number_of_Adult__c, Flight_No__c, 
+                           Service_Airport__c, Journey_Type__c, Case__c, Service_Package__c,  Sector_of_Travel__c,Airline_PNR__c, Guest_Name__c,Travel_Class__c, Registered_Address__c,Additional_Request__c     
                     FROM Lead 
                     WHERE Id = :leadId 
                     LIMIT 1
@@ -86,8 +86,8 @@ public with sharing class LeadFromCaseController {
                     closeAssociatedCase(caseId);
                 }
             }
-            String leadRecordUrl = '/lightning/r/Lead/' + (leadId != null ? leadId : leadRecord.Id) + '/view';
-            return new PageReference(leadRecordUrl);
+            /*String leadRecordUrl = '/lightning/r/Lead/' + (leadId != null ? leadId : leadRecord.Id) + '/view';
+            return new PageReference(leadRecordUrl);*/
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error: ' + e.getMessage()));
         }

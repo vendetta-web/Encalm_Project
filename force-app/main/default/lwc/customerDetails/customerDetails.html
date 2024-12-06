@@ -1,22 +1,20 @@
 <template>
-    <div class="slds-card">
-        <header class="slds-card__header">
-            <h2>Customer Details</h2>
-        </header>
-        <div class="slds-card__body slds-grid slds-wrap">
-            <div class="slds-col slds-size_1-of-1">
-                <lightning-avatar alternative-text={customerName} size="large"></lightning-avatar>
-                <h1>{customerName}</h1>
-                <p>{rating} ★</p>
-                <p><lightning-icon icon-name="utility:phone" alternative-text="Phone"></lightning-icon> {phone}</p>
-                <p><lightning-icon icon-name="utility:email" alternative-text="Email"></lightning-icon> {email}</p>
+
+	<lightning-card title="Customer Details">
+		<div class="customer-details">
+			<div class="profile-picture">
+                <!-- Use lightning-avatar for displaying profile picture -->
+                  <lightning-avatar variant="circle" size="large"   src="https://www.lightningdesignsystem.com/assets/images/avatar2.jpg" initials="CR" fallback-icon-name="standard:person_account" alternative-text="Cindy Rice" class="slds-m-right_large"></lightning-avatar>
+
             </div>
-            <div class="slds-col slds-size_1-of-1">
-                <p>Type of Traveller: {customerType}</p>
-                <p>Total No. of Bookings: {totalBookings}</p>
-                <p>Total Baggage Reports: {totalBaggageReports}</p>
-                <p>Total Feedback Reports: {totalFeedbackReports}</p>
-            </div>
-        </div>
-    </div>
+
+			<div class="details">
+				<p>Total No. of Bookings: {totalBookings}</p>
+				<p>Total Case Reports: {totalBaggageReports}</p>
+				<p>Total Lead Reports: {totalFeedbackReports}</p>
+			</div>
+		</div>
+
+
+	</lightning-card>
 </template>

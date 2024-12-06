@@ -44,7 +44,7 @@ public static List<Account> getAccounts(String searchTerm) {
     return [
         SELECT Id, Name, Phone, PersonEmail 
         FROM Account 
-        WHERE Name LIKE :query
+        WHERE Name LIKE :query OR PersonEmail LIKE :query OR Phone LIKE :query
         ORDER BY Name ASC
         LIMIT 10
     ];

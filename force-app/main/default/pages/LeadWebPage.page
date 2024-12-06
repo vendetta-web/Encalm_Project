@@ -7,11 +7,21 @@
                 <apex:inputField value="{!leadRecord.FirstName}" label="First Name" />
                 <apex:inputField value="{!leadRecord.LastName}" label="Last Name" />
                 <apex:inputField value="{!leadRecord.Email}" label="Email" required="true" />
+                 <apex:inputField value="{!leadRecord.Phone}" label="Phone" required="true" />
                 <apex:inputField value="{!leadRecord.Travel_Date__c}"  label="Travel Date" />
                 <apex:inputField value="{!leadRecord.Number_of_Adult__c}"  label="No of Adult"/>
                 <apex:inputField value="{!leadRecord.Flight_No__c}"  label="Fight Number"/>
                  <apex:inputField value="{!leadRecord.Service_Airport__c}"  label="Service Airport"/>
                  <apex:inputField value="{!leadRecord.Journey_Type__c}"  label="Journey Type"/>
+                
+                 <apex:inputField value="{!leadRecord.Service_Package__c}"  label="Service Package"/>
+                 <apex:inputField value="{!leadRecord.Sector_of_Travel__c}"  label="Sector of Travel"/>
+                 <apex:inputField value="{!leadRecord.Airline_PNR__c}"  label="PNR"/>
+                 <apex:inputField value="{!leadRecord.Guest_Name__c}"  label="Guest Name"/>
+                 <apex:inputField value="{!leadRecord.Travel_Class__c}"  label="Travel Class"/>
+                  <apex:inputField value="{!leadRecord.Registered_Address__c}"  label="Registered Address"/>
+                 <apex:inputField value="{!leadRecord.Additional_Request__c}"  label="Additional Request"/>
+               
             </apex:pageBlockSection>
             
             <apex:pageBlockButtons >

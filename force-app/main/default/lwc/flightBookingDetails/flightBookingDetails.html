@@ -1,30 +1,35 @@
 <template>
-    <template if:true={showModal}>
-        <lightning-card title="Flight Details">
-            <div class="header-fields">
-                <div class="field">
-                    <label class="field-label">Service At Airport </label>
-                    <span class="field-value">DEL</span>
-                </div>
-                <div class="field">
-                    <label class="field-label">Airline and Flight Number </label>
-                    <span class="field-value">UK 554</span>
-                </div>
-                <div class="field">
-                    <label class="field-label">Flight Date And Time </label>
-                    <span class="field-value">30-Nov-2024, 10:00 PM</span>
-                </div>
-                <div class="field">
-                    <label class="field-label">Service Date And Time </label>
-                    <span class="field-value">30-Nov-2024, 09:00 PM</span>
-                </div>
-                <div class="field">
-                    <label class="field-label">Number of Guests </label>
-                    <span class="field-value">Adult 1</span>
-                </div>
+    <lightning-card title="Flight Details">
+        <div class="field-container">
+            <div class="field">
+                <strong>Service At Airport: </strong> 
+                <lightning-formatted-text value={serviceAirport}></lightning-formatted-text>
             </div>
-        </lightning-card>
-    </template>
+            <div class="field">
+                <strong>Flight Number: </strong> 
+                <lightning-formatted-text value={flightNumber}></lightning-formatted-text>
+            </div>
+            <div class="field">
+                <strong>Flight Date: </strong> 
+                <lightning-formatted-text value={flightDate}></lightning-formatted-text>
+            </div>
+            <div class="field">
+                <strong>Number of Adults: </strong> 
+                <lightning-formatted-number value={numberOfAdults}></lightning-formatted-number>
+            </div>
+            <div class="field">
+                <strong>Number of Childs: </strong> 
+                <lightning-formatted-number value={numberOfChildren}></lightning-formatted-number>
+            </div>
+            <div class="field">
+                <strong>Number of Infants: </strong> 
+                <lightning-formatted-number value={numberOfInfants}></lightning-formatted-number>
+            </div>
+        </div>
+    </lightning-card>
+    <template if:true={showModal}>
+        
+    
     <div class="demo-only demo-only--sizing slds-grid slds-wrap">
     <lightning-card title="Select Package" class="slds-size_3-of-4">
         <div class="slds-card__body">
@@ -33,11 +38,11 @@
                     <div key={pack.packageName} class="slds-col slds-size_1-of-3 column">
                         <div class="package">
                             <!-- Apply the class to package name -->
-                            <div class="slds-text-heading_medium package-name" style="padding-left: 10px;">{pack.packageName}</div>
-                            
+                            <div class="slds-text-heading_medium package-name row" style="padding-left: 10px;">
+                                <span class="left-value" style="font-size: x-large;">{pack.packageName}</span>
+                                <span class="right-value" style="text-align: right;">{currency} {pack.priceTag}</span>
+                            </div>                            
                             <div class="slds-m-top_medium">
-                                <!-- Apply the class to price tag -->
-                                <div class="slds-text-heading_small price-tag" style="padding-left: 10px;">{currency} {pack.priceTag}</div>
         
                                 <!-- Iterate through services and display each row -->
                                 <ul class="slds-list_dotted">
@@ -66,12 +71,14 @@
                 <template for:each={getAddonDetail} for:item="pack"  for:index="index">
                     <div key={pack.packageName} class="slds-col slds-size_1-of-3 column">
                         <div class="package">
-                            <!-- Apply the class to package name -->
-                            <div class="slds-text-heading_small package-name" style="padding-left: 10px;">{pack.addOnName}</div>
-                            
+                             
+                            <div class="slds-text-heading_small package-name row" style="padding-left: 10px;">
+                            <!-- Apply the class to package name
+                            <div class="slds-text-heading_small package-name row" style="padding-left: 10px;">{currency} {pack.addOnTag}</div>-->
+                            <span class="left-value-addon">{pack.addOnName}</span>
+                            <span class="right-value-addon">{currency} {pack.addOnTag}</span>
+                            </div>
                             <div class="slds-m-top_medium">
-                                <!-- Apply the class to price tag -->
-                            <div class="slds-text-heading_small price-tag" style="padding-left: 10px;">{currency} {pack.addOnTag}</div>
                         </br>
                             <div class="counter">
                                 <span>Qty</span>
@@ -80,11 +87,7 @@
                                 <button data-id="incrementAddOn" data-index={index} onclick={incrementAddOn} class="btn plus">+</button>
                             </div>
                         </br>
-                                <lightning-button 
-                                    label={pack.buttonLabel} 
-                                    data-index={index} 
-                                    onclick={handleAddOnSelect}>
-                                </lightning-button>
+                        <button onclick={handleAddOnSelect} data-index={index} class={pack.class}>{pack.buttonLabel}</button> 
                             </div>
                         </div>
                     </div>
@@ -100,17 +103,17 @@
                         <template for:each={orderSummary} for:item="value">
                             <div key={value} style="font-family: Brandon !important;font-size: 16px;">
                                 <lightning-layout multiple-rows="true">
-                                    <lightning-layout-item size="9" class="slds-p-around_small">
+                                    <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
                                         {value.name}
                                     </lightning-layout-item>
                                     <lightning-layout-item size="3" class="slds-p-around_small">
-                                        <p>INR {value.amount}</p> <!-- Show the param2 of the selected row -->
+                                        <p>&#8377; {value.amount}</p> <!-- Show the param2 of the selected row -->
                                     </lightning-layout-item>
                                 </lightning-layout>  
                             </div>
                         </template>
                         
-                        <strong>Final Amount : INR {totalAmount}</strong> <!-- Show the param2 of the selected row --> 
+                        <strong>Final Amount : &#8377; {totalAmount}</strong> <!-- Show the param2 of the selected row --> 
                     </div>
                 </div>
             </template>
@@ -122,8 +125,74 @@
         
         </div>
                 <footer class="slds-modal__footer">
-                    <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={closeModal} style="margin-right: 10px;"></lightning-button>
-                    <lightning-button label="Next" class="encalmbg" variant="brand" onclick={closeModal}></lightning-button>
+                    <!--<lightning-button label="Previous" class="encalmbg" variant="brand" onclick={closeModal} style="margin-right: 10px;"></lightning-button> -->
+                    <lightning-button label="Next" class="encalmbg" variant="brand" onclick={openPassengerPage}></lightning-button>
                 </footer>
+            </template>
+
+                <template if:true={passengerDetailPage}>
+                        <lightning-card title="Guest Details">
+                            <template for:each={guestRows} for:item="guest">
+                                <div key={guest.id} class="guest-row">
+                                    <lightning-input class="input-field" label="Passenger" value={guest.pass} disabled></lightning-input>
+                                    <!-- Title field (disabled for display purpose) -->
+                                    <lightning-combobox class="input-field" 
+                                        label="Title" 
+                                        value={guest.title} 
+                                        options={titleOptions} 
+                                        onchange={handleChange}>
+                                    </lightning-combobox>
+                                    
+                                    <!-- First Name field -->
+                                    <lightning-input class="input-field" label="First Name" value={guest.firstName} onchange={handleChange}></lightning-input>
+                                    
+                                    <!-- Last Name field -->
+                                    <lightning-input class="input-field" label="Last Name" value={guest.lastName} onchange={handleChange}></lightning-input>
+                                    
+                                    <!-- Gender field (Picklist) -->
+                                    <lightning-combobox class="input-field" label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
+                                    
+                                    <!-- Age field -->
+                                    <lightning-input class="input-field" label="Age" value={guest.age} onchange={handleChange}></lightning-input>
+                                    
+                                    <!-- Designation field -->
+                                    <lightning-input class="input-field" label="Designation" value={guest.designation} onchange={handleChange}></lightning-input>
+                                    
+                                    <!-- Travel Class field (Picklist) -->
+                                    <lightning-combobox class="input-field" label="Travel Class" value={guest.travelClass} options={travelClassOptions} onchange={handleChange}></lightning-combobox>
+                                    
+                                    <!-- Travel PNR No field -->
+                                    <lightning-input class="input-field" label="Travel PNR No" value={guest.pnrNo} onchange={handleChange}></lightning-input>
+                                </div>
+                            </template>
+                        </lightning-card>
+
+                        <lightning-card title="Placard Details">
+                            <div class="guest-row">
+                                    <!-- Title field (disabled for display purpose) -->
+                                    <lightning-combobox class="input-field" 
+                                        name="Title__c"
+                                        label="Title" 
+                                        value={title} 
+                                        options={titleOptions} 
+                                        onchange={handleChange}>
+                                    </lightning-combobox>
+                                    
+                                    <!-- First Name field -->
+                                    <lightning-input class="input-field" name="First_Name__c" label="First Name" value={firstName} onchange={handleFieldChange}></lightning-input>
+                                    
+                                    <!-- Last Name field -->
+                                    <lightning-input class="input-field" name="Last_Name__c"  label="Last name" value={lastName} onchange={handleFieldChange}></lightning-input>
+                                                                        
+                                    <!-- Mobile field -->
+                                    <lightning-input class="input-field" name="Mobile__c" label="Mobile" value={mobile} onchange={handleFieldChange}></lightning-input>
+                                    
+                                </div>           
+                        </lightning-card>
+                        <footer class="slds-modal__footer">
+                            <lightning-button label="Proceed to Checkout" class="encalmbg" variant="brand" onclick={handleSave} style="margin-right: 10px;"></lightning-button>
+                        </footer>
+                    
+                </template>
         
 </template>

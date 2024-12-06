@@ -1,60 +1,45 @@
 import { LightningElement, api, wire } from 'lwc';
-import { getRecord } from 'lightning/uiRecordApi';
+import { getRecord, updateRecord  } from 'lightning/uiRecordApi';
+import getRelatedCounts from '@salesforce/apex/AccountHelper.getRelatedCounts';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
-// Fields to fetch from the Account record
-const FIELDS = [
-    'Account.Name',
-    'Account.Phone',
-    'Account.Email',
-    'Account.Rating',
-    'Account.Customer_Type__c',
-    'Account.Total_Bookings__c',
-    'Account.Baggage_Reports__c', 
-    'Account.Feedback_Reports__c' 
-];
+const FIELDS = ['Account.Name', 'Account.Phone', 'Account.Email', 'Account.Profile_Picture__c'];
 
 export default class CustomerDetails extends LightningElement {
-    @api recordId; 
-    account;
+    @api recordId; // Account ID passed to the component
+    name;
+    phone;
+    accountEmail;
+       profilePictureUrl = '/docs/component-library/app/images/examples/avatar1.jpg';
+    travelClass;
+    totalBookings = 0;
+    totalBaggageReports = 0;
+    totalFeedbackReports = 0;
+
+    acceptedFormats = ['.png', '.jpg', '.jpeg'];
 
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredAccount({ error, data }) {
         if (data) {
-            this.account = data.fields;
+            this.name = data.fields.Name.value;
+            this.phone = data.fields.Phone.value;
+            this.accountEmail = data.fields.Email.value;
+            this.profilePictureUrl = data.fields.Profile_Picture__c.value || this.profilePictureUrl;
         } else if (error) {
-            console.error('Error fetching Account record:', error);
+            console.error(error);
         }
     }
 
-    get customerName() {
-        return this.account?.Name?.value;
+    @wire(getRelatedCounts, { accountId: '$recordId' })
+    wiredCounts({ error, data }) {
+        if (data) {
+            this.totalBookings = data.totalBookings;
+            this.totalBaggageReports = data.totalBaggageReports;
+            this.totalFeedbackReports = data.totalFeedbackReports;
+            this.travelClass = data.travelClass;
+        } else if (error) {
+            console.error(error);
+        }
     }
 
-    get phone() {
-        return this.account?.Phone?.value;
-    }
-
-    get email() {
-        return this.account?.Email?.value;
-    }
-
-    get rating() {
-        return this.account?.Rating?.value;
-    }
-
-    get customerType() {
-        return this.account?.Customer_Type__c?.value;
-    }
-
-    get totalBookings() {
-        return this.account?.Total_Bookings__c?.value;
-    }
-
-    get totalBaggageReports() {
-        return this.account?.Baggage_Reports__c?.value;
-    }
-
-    get totalFeedbackReports() {
-        return this.account?.Feedback_Reports__c?.value;
-    }
 }
