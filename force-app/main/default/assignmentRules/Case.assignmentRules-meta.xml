@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <AssignmentRules xmlns="http://soap.sforce.com/2006/04/metadata">
     <assignmentRule>
-        <fullName>Case Creation</fullName>
+        <fullName>Assign to Reservation Queue</fullName>
         <active>false</active>
         <ruleEntry>
             <assignedTo>Reservation_Queue</assignedTo>
             <assignedToType>Queue</assignedToType>
             <criteriaItems>
-                <field>Contact.CreatedDate</field>
-                <operation>notEqual</operation>
+                <field>Case.Origin</field>
+                <operation>equals</operation>
+                <value>Email,Phone,Web</value>
             </criteriaItems>
         </ruleEntry>
     </assignmentRule>

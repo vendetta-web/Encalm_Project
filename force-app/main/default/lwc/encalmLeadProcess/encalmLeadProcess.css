@@ -1,0 +1,32 @@
+.custom-container {
+	color: black;
+}
+
+/* Ensure lightning-card takes full width */
+.full-width-card {
+	width: 100%;
+	max-width: 100%;
+}
+
+/* Make sure progress indicator takes full width */
+.full-width .slds-progress-indicator {
+	width: 100% !important;
+}
+
+/* Optional: To ensure grid container takes full width */
+.slds-grid {
+	width: 100%;
+	display: flex;
+}
+
+/* Adjust the layout of the button */
+.slds-grid_align-spread {
+	width: 100%;
+	justify-content: space-between;
+}
+
+/* popupWithPicklist.css */
+.booking-modal {
+	width: 60%;
+	max-width: 70%;
+}

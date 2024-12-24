@@ -1,6 +1,6 @@
 public class EmailParser {
     
-    public static void parseAndSetPicklistFromEmail(Case caseRecord, String emailBody) {
+    public static void parseAndSetPicklistFromEmail(Case caseRecord, String emailBody, String emailSubject) {
         // Query custom metadata for both Priority and Service
         List<Keyword__mdt> customerMetadataList = [
             SELECT DeveloperName, MasterLabel, KeywordList__c, Type__c 
@@ -8,9 +8,10 @@ public class EmailParser {
             WHERE Type__c IN ('Priority', 'Service')
         ];
         
-        // Normalize the email body to lowercase
-        String emailBodyLower = emailBody != null ? emailBody.toLowerCase() : '';
-        System.debug('emailBody ==> ' + emailBodyLower);
+        // Normalize the email body and subject to lowercase
+        String emailContentLower = (emailBody != null ? emailBody.toLowerCase() : '') + 
+                                   (emailSubject != null ? ' ' + emailSubject.toLowerCase() : '');
+        System.debug('emailContent ==> ' + emailContentLower);
         
         // Initialize maps for Priority and Service
         Map<String, List<String>> priorityKeywordsMap = new Map<String, List<String>>();
@@ -34,7 +35,7 @@ public class EmailParser {
         
         // Initialize variables to store matched values
         String priorityValue = '';
-        String serviceValue = '';
+        List<String> serviceValues = new List<String>();
         
         // Check for Priority matches
         for (String key : priorityKeywordsMap.keySet()) {
@@ -42,12 +43,13 @@ public class EmailParser {
             System.debug('Checking Priority Key: ' + key + ' with keywords: ' + keywords);
             for (String keyword : keywords) {
                 System.debug('Priority Keyword: ' + keyword);
-                if (emailBodyLower.contains(keyword.toLowerCase().trim())) {
+                if (emailContentLower.contains(keyword.toLowerCase().trim())) {
                     priorityValue = key;
                     System.debug('Matched Priority Value: ' + priorityValue);
                     break;
                 }
-            }        }
+            }
+        }
         
         // Check for Service matches
         for (String key : serviceKeywordsMap.keySet()) {
@@ -55,13 +57,16 @@ public class EmailParser {
             System.debug('Checking Service Key: ' + key + ' with keywords: ' + keywords);
             for (String keyword : keywords) {
                 System.debug('Service Keyword: ' + keyword);
-                if (emailBodyLower.contains(keyword.toLowerCase().trim())) {
-                    serviceValue = key;
-                    System.debug('Matched Service Value: ' + serviceValue);
+                if (emailContentLower.contains(keyword.toLowerCase().trim())) {
+                    serviceValues.add(key);
+                    System.debug('Matched Service Value: ' + key);
                     break;
                 }
             }
         }
+
+        // Extract phone number from email content
+        String phoneNumber = extractPhoneNumber(emailContentLower);
         
         // Set values in the Case record
         System.debug('Final Priority Value: ' + priorityValue);
@@ -70,17 +75,30 @@ public class EmailParser {
         } else {
             // Set default priority to 'Regular' if no keywords matched
             caseRecord.Priority = 'Regular';
-            System.debug('No matching keywords found, setting priority to Regular' );
+            System.debug('No matching keywords found, setting priority to Regular');
         }
         
-        System.debug('Final Service Value: ' + serviceValue);
-        if (String.isNotBlank(serviceValue)) {
-            caseRecord.Service__c = serviceValue;
-        }else {
-            // Set default service to 'General Inquiry' if no keywords matched
-            caseRecord.Service__c = 'General Inquiry';
-            System.debug('No matching keywords found, setting service to General Inquiry' );
+        System.debug('Final Service Values: ' + serviceValues);
+        if (!serviceValues.isEmpty()) {
+            caseRecord.Services__c = String.join(serviceValues, ';');
+        } else if (String.isBlank(caseRecord.Services__c) || caseRecord.Services__c == 'General Inquiry') {
+            // Set default service to 'General Inquiry' if no keywords matched and Services__c is not manually set to something else
+            caseRecord.Services__c = 'General Inquiry';
+            System.debug('No matching keywords found, setting service to General Inquiry');
         }
         
+        if (phoneNumber != null) {
+            caseRecord.SuppliedPhone = phoneNumber;
+            System.debug('Extracted Phone Number: ' + phoneNumber);
+        }
+    }
+    
+    private static String extractPhoneNumber(String text) {
+        Pattern phonePattern = Pattern.compile('(?:\\+\\d{1,3}[-.\\s]?)?\\(?\\d{1,4}\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}');
+        Matcher matcher = phonePattern.matcher(text);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
     }
 }

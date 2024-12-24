@@ -1,7 +1,7 @@
 public with sharing class PackageSelectionController {
 
     // Get products from the PricebookEntry for the Standard Pricebook (Gold, Silver, Elite, and Add-Ons)
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<PackageWrapper> getPackages(String oppId) {
         Map<String,List<String>> packageToServiceMap = new Map<String,List<String>>();
         if (String.isBlank(oppId)) {
@@ -38,7 +38,7 @@ public with sharing class PackageSelectionController {
             FROM PricebookEntry
             WHERE Pricebook2.IsActive = TRUE
             AND Pricebook2.IsStandard = TRUE
-            AND Product2.Family IN ('Gold', 'Silver', 'Elite')
+            AND Product2.Family IN ('Gold', 'Silver', 'Elite','Transit')
             AND product2.Airport__r.Airport_Code__c =:opp.Service_Airport__c
             AND product2.Flight_Type__c =:opp.Flight_Type__c
             AND Product2.Service_Type__c =:opp.Service_Type__c
@@ -64,7 +64,7 @@ public with sharing class PackageSelectionController {
         return packageColumns;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<AddonWrapper> getAddons(String oppId) {
         Map<String,List<String>> packageToServiceMap = new Map<String,List<String>>();
         if (String.isBlank(oppId)) {
@@ -89,6 +89,9 @@ public with sharing class PackageSelectionController {
             AND Product2.Service_Type__c =:opp.Service_Type__c
             ORDER BY UnitPrice
         ];
+        if(pricebookAddonEntries.size()<1){
+            return null;
+        }
         
         for (PricebookEntry pbEntry : pricebookAddonEntries) {
             AddonWrapper pckg = new AddonWrapper();
@@ -103,7 +106,7 @@ public with sharing class PackageSelectionController {
         return addOnColumns;
     }
 
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static passengerWrapper getOpportunityDetails(Id opportunityId) {
         // Fetch Opportunity record with related fields for adults, children, and infants
         Opportunity opp =  [SELECT Id, 
@@ -111,8 +114,10 @@ public with sharing class PackageSelectionController {
                        Number_of_Children__c, 
                        Number_of_Infants__c,
                        Date_of_Arrival__c,
+                       Date_of_Departure__c,
                        Service_Airport__c,
-                       Flight_Number__c
+                       Flight_Number_Arrival__c,
+                       Flight_Number_Departure__c
                 FROM Opportunity 
                 WHERE Id = :opportunityId 
                 LIMIT 1];
@@ -121,8 +126,15 @@ public with sharing class PackageSelectionController {
         pasWrp.NoOfChild = opp.Number_of_Children__c;
         pasWrp.NoOfInfant = opp.Number_of_Infants__c;
         pasWrp.serviceAirport = opp.Service_Airport__c;
-        pasWrp.flightNumber = opp.Flight_Number__c;
-        pasWrp.flightDate = opp.Date_of_Arrival__c;
+        pasWrp.flightNumber = opp.Flight_Number_Arrival__c != null ? 
+                                opp.Flight_Number_Arrival__c : 
+                                opp.Flight_Number_Departure__c != null ?
+                                opp.Flight_Number_Departure__c : 
+                                opp.Flight_Number_Arrival__c + ' / '+ opp.Flight_Number_Departure__c;
+        pasWrp.flightDate = opp.Date_of_Arrival__c != null ? 
+                                opp.Date_of_Arrival__c : 
+                                opp.Date_of_Departure__c != null ?
+                                opp.Date_of_Departure__c : opp.Date_of_Arrival__c + ' / '+ opp.Date_of_Departure__c;
         return pasWrp;
     }
 

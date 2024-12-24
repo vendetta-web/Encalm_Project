@@ -24,6 +24,26 @@
                 <default>false</default>
                 <label>Both</label>
             </value>
+            <value>
+                <fullName>Domestic to International</fullName>
+                <default>false</default>
+                <label>Domestic to International</label>
+            </value>
+            <value>
+                <fullName>International to Domestic</fullName>
+                <default>false</default>
+                <label>International to Domestic</label>
+            </value>
+            <value>
+                <fullName>Domestic to Domestic</fullName>
+                <default>false</default>
+                <label>Domestic to Domestic</label>
+            </value>
+            <value>
+                <fullName>International to International</fullName>
+                <default>false</default>
+                <label>International to International</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

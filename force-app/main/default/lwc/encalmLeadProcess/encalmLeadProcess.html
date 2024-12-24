@@ -1,0 +1,85 @@
+<template>
+
+    <lightning-card variant="Narrow" if:true={showcustompath}>
+        <div class="slds-path">
+            <div class="slds-grid slds-grid_align-spread">
+                <div class="slds-col slds-size_11-of-12">
+                    <lightning-progress-indicator current-step={currentStage} type={pathType} has-error="false"
+                        variant="shaded">
+                        <template if:true={finalpathvalue} for:each={finalpathvalue} for:item="step" for:index="index">
+                            <lightning-progress-step data-index={index} data-value={step.value} key={step.value}
+                                label={step.label} value={step.value}>
+                            </lightning-progress-step>
+                        </template>
+                    </lightning-progress-indicator>
+                </div>
+
+                <div class="slds-col slds-size_2-of-12" style="margin-left: -1rem;" if:true={showMarkStatusButton}>
+                    <lightning-button label="Mark Status" onclick={handleMarkStatus} variant="brand"></lightning-button>
+                </div>
+            </div>
+        </div>
+        <!-- Add the "Mark Status" button -->
+    </lightning-card>
+
+    <template if:true={isModalOpen}>
+        <section class="slds-modal slds-fade-in-open" aria-hidden="false">
+            <div class="slds-modal__container">
+                <!-- Modal Header -->
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Choose</h2>
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse"></lightning-icon>
+                        </button>
+                </header>
+
+                <!-- Modal Body -->
+                <template if:true={isStageClosed}>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-combobox name="picklist" label="What you want to do?" placeholder="Select an option"
+                        options={finalStageOptions} value={selectedValue} onchange={handlePicklistChange}>
+                    </lightning-combobox>
+                </div>
+                </template>
+                <template if:true={isStageFollowup}>
+                    <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input
+                type="datetime-local"
+                label="Follow-up Date and Time"
+                value={followUpDateTime}
+                onchange={handleDateTimeChange}
+            ></lightning-input>
+                </div>
+                </template>
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+                    &nbsp;&nbsp;
+                    <lightning-button variant="brand" label="Submit" onclick={handleSubmit}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isBookingOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container slds-size_large booking-modal">
+                <!-- Close button moved to the top-right corner of the modal -->
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse slds-position_absolute slds-top_medium slds-right_medium"
+                    title="Close" onclick={closeModal}>
+                <lightning-icon icon-name="utility:close" size="small" alternative-text="close"></lightning-icon>
+                <span class="slds-assistive-text">Close</span>
+            </button>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <c-flight-booking record-id={recordId}></c-flight-booking>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>

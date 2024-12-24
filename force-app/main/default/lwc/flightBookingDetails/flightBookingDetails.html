@@ -1,35 +1,41 @@
 <template>
-    <lightning-card title="Flight Details">
-        <div class="field-container">
-            <div class="field">
-                <strong>Service At Airport: </strong> 
-                <lightning-formatted-text value={serviceAirport}></lightning-formatted-text>
+    <template if:true={showHeader}>
+        <lightning-card title="Flight Details">
+            <div class="field-container">
+                <div class="field">
+                    <strong>Service At Airport: </strong> 
+                    <lightning-formatted-text value={serviceAirport}></lightning-formatted-text>
+                </div>
+                <div class="field">
+                    <strong>Flight Number: </strong> 
+                    <lightning-formatted-text value={flightNumber}></lightning-formatted-text>
+                </div>
+                <div class="field">
+                    <strong>Flight Date: </strong> 
+                    <lightning-formatted-text value={flightDate}></lightning-formatted-text>
+                </div>
+                <div class="field">
+                    <strong>Number of Adults: </strong> 
+                    <lightning-formatted-number value={numberOfAdults}></lightning-formatted-number>
+                </div>
+                <div class="field">
+                    <strong>Number of Childs: </strong> 
+                    <lightning-formatted-number value={numberOfChildren}></lightning-formatted-number>
+                </div>
+                <div class="field">
+                    <strong>Number of Infants: </strong> 
+                    <lightning-formatted-number value={numberOfInfants}></lightning-formatted-number>
+                </div>
             </div>
-            <div class="field">
-                <strong>Flight Number: </strong> 
-                <lightning-formatted-text value={flightNumber}></lightning-formatted-text>
-            </div>
-            <div class="field">
-                <strong>Flight Date: </strong> 
-                <lightning-formatted-text value={flightDate}></lightning-formatted-text>
-            </div>
-            <div class="field">
-                <strong>Number of Adults: </strong> 
-                <lightning-formatted-number value={numberOfAdults}></lightning-formatted-number>
-            </div>
-            <div class="field">
-                <strong>Number of Childs: </strong> 
-                <lightning-formatted-number value={numberOfChildren}></lightning-formatted-number>
-            </div>
-            <div class="field">
-                <strong>Number of Infants: </strong> 
-                <lightning-formatted-number value={numberOfInfants}></lightning-formatted-number>
-            </div>
-        </div>
-    </lightning-card>
-    <template if:true={showModal}>
-        
-    
+        </lightning-card>
+    </template>
+
+    <!-- previous button click show first page details in disabled mode -->
+    <template if:true={showChild}>
+    <c-flight-booking-preview onbuttonclick={loadDetailsAfterUpdate} opp={recordId}></c-flight-booking-preview>
+    </template>
+
+    <template if:true={showModal}>    
     <div class="demo-only demo-only--sizing slds-grid slds-wrap">
     <lightning-card title="Select Package" class="slds-size_3-of-4">
         <div class="slds-card__body">
@@ -65,6 +71,7 @@
         </div>
     </br>
     </br>
+    <template if:true={getAddonDetail}>
     <div style="font-weight: bold;font-size: 16px;margin-left: 16px;">Select Add Ons</div>
         <div class="slds-card__body">
             <div class="slds-grid slds-wrap"  style="margin-left: 15px;" slot="actions">
@@ -94,6 +101,8 @@
                 </template>
             </div>
         </div>
+    </template>
+    
     </lightning-card>
     <lightning-card title="Order Summary" class="slds-size_1-of-4">
         <div class="slds-card__body">
@@ -125,7 +134,7 @@
         
         </div>
                 <footer class="slds-modal__footer">
-                    <!--<lightning-button label="Previous" class="encalmbg" variant="brand" onclick={closeModal} style="margin-right: 10px;"></lightning-button> -->
+                    <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={closeModal} style="margin-right: 10px;"></lightning-button>
                     <lightning-button label="Next" class="encalmbg" variant="brand" onclick={openPassengerPage}></lightning-button>
                 </footer>
             </template>
@@ -134,35 +143,49 @@
                         <lightning-card title="Guest Details">
                             <template for:each={guestRows} for:item="guest">
                                 <div key={guest.id} class="guest-row">
-                                    <lightning-input class="input-field" label="Passenger" value={guest.pass} disabled></lightning-input>
-                                    <!-- Title field (disabled for display purpose) -->
-                                    <lightning-combobox class="input-field" 
-                                        label="Title" 
-                                        value={guest.title} 
-                                        options={titleOptions} 
-                                        onchange={handleChange}>
-                                    </lightning-combobox>
-                                    
-                                    <!-- First Name field -->
-                                    <lightning-input class="input-field" label="First Name" value={guest.firstName} onchange={handleChange}></lightning-input>
-                                    
-                                    <!-- Last Name field -->
-                                    <lightning-input class="input-field" label="Last Name" value={guest.lastName} onchange={handleChange}></lightning-input>
-                                    
-                                    <!-- Gender field (Picklist) -->
-                                    <lightning-combobox class="input-field" label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
-                                    
-                                    <!-- Age field -->
-                                    <lightning-input class="input-field" label="Age" value={guest.age} onchange={handleChange}></lightning-input>
-                                    
-                                    <!-- Designation field -->
-                                    <lightning-input class="input-field" label="Designation" value={guest.designation} onchange={handleChange}></lightning-input>
-                                    
-                                    <!-- Travel Class field (Picklist) -->
-                                    <lightning-combobox class="input-field" label="Travel Class" value={guest.travelClass} options={travelClassOptions} onchange={handleChange}></lightning-combobox>
-                                    
-                                    <!-- Travel PNR No field -->
-                                    <lightning-input class="input-field" label="Travel PNR No" value={guest.pnrNo} onchange={handleChange}></lightning-input>
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="1" class="slds-p-around_small">
+                                            <lightning-input class="input-field" label="Passenger" value={guest.pass} disabled></lightning-input>
+                                        </lightning-layout-item>
+                                        <!-- Title field (disabled for display purpose) -->
+                                        <lightning-layout-item size="1" class="slds-p-around_small">
+                                        <lightning-combobox class="input-field" 
+                                            label="Title" 
+                                            value={guest.title} 
+                                            options={titleOptions} 
+                                            onchange={handleChange}>
+                                        </lightning-combobox>
+                                        </lightning-layout-item>
+                                        
+                                        <!-- First Name field -->
+                                        <lightning-layout-item size="1" class="slds-p-around_small">
+                                        <lightning-input class="input-field" label="First Name" value={guest.firstName} onchange={handleChange}></lightning-input>
+                                        </lightning-layout-item>
+                                        <!-- Last Name field -->
+                                        <lightning-layout-item size="1" class="slds-p-around_small">
+                                        <lightning-input class="input-field" label="Last Name" value={guest.lastName} onchange={handleChange}></lightning-input>
+                                        </lightning-layout-item>
+                                        <!-- Gender field (Picklist) -->
+                                        <lightning-layout-item size="2" class="slds-p-around_small">
+                                        <lightning-combobox class="input-field" label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
+                                        </lightning-layout-item>
+                                        <!-- Age field -->
+                                        <lightning-layout-item size="1" class="slds-p-around_small">
+                                        <lightning-input class="input-field" label="Age" value={guest.age} onchange={handleChange}></lightning-input>
+                                        </lightning-layout-item>
+                                        <!-- Designation field -->
+                                        <lightning-layout-item size="1" class="slds-p-around_small">
+                                        <lightning-input class="input-field" label="Designation" value={guest.designation} onchange={handleChange}></lightning-input>
+                                        </lightning-layout-item>
+                                        <!-- Travel Class field (Picklist) -->
+                                        <lightning-layout-item size="2" class="slds-p-around_small">
+                                        <lightning-combobox class="input-field" label="Travel Class" value={guest.travelClass} options={travelClassOptions} onchange={handleChange}></lightning-combobox>
+                                        </lightning-layout-item>
+                                        <!-- Travel PNR No field -->
+                                        <lightning-layout-item size="2" class="slds-p-around_small">
+                                        <lightning-input class="input-field" label="Travel PNR No" value={guest.pnrNo} onchange={handleChange}></lightning-input>
+                                        </lightning-layout-item>
+                                </lightning-layout>
                                 </div>
                             </template>
                         </lightning-card>
@@ -190,6 +213,7 @@
                                 </div>           
                         </lightning-card>
                         <footer class="slds-modal__footer">
+                            <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openDetailPage} style="margin-right: 10px;"></lightning-button>
                             <lightning-button label="Proceed to Checkout" class="encalmbg" variant="brand" onclick={handleSave} style="margin-right: 10px;"></lightning-button>
                         </footer>
                     

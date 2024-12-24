@@ -1,20 +1,79 @@
 <template>
 
 	<lightning-card title="Customer Details">
-		<div class="customer-details">
-			<div class="profile-picture">
-                <!-- Use lightning-avatar for displaying profile picture -->
-                  <lightning-avatar variant="circle" size="large"   src="https://www.lightningdesignsystem.com/assets/images/avatar2.jpg" initials="CR" fallback-icon-name="standard:person_account" alternative-text="Cindy Rice" class="slds-m-right_large"></lightning-avatar>
-
-            </div>
-
-			<div class="details">
-				<p>Total No. of Bookings: {totalBookings}</p>
-				<p>Total Case Reports: {totalBaggageReports}</p>
-				<p>Total Lead Reports: {totalFeedbackReports}</p>
+		<div class="slds-grid slds-wrap">
+			<div class="slds-size_2-of-2">
+				<div class="slds-box_x-small slds-text-align_center slds-m-around_x-small">
+					<img src={userPic} class="profile-pic">
+					<div class="name">{accountName}</div> 
+					<div class="designation">{accountPhone}</div> 
+					<span class="custNameCSS">{accountEmail}</span>
+				</div>
 			</div>
 		</div>
 
 
+		<div class="slds-grid slds-wrap">
+			<div class="slds-size_2-of-2">
+				<div class="slds-box_x-small slds-text-align_center slds-m-around_x-small">
+					<div class="rate slds-p-top_xx-small">
+						<input type="radio" class="ratingCls" id="star5" value="5" />
+						<label for="star5" title="5 stars">5 stars</label>
+
+						<input type="radio" class="ratingCls" id="star4" value="4" />
+						<label for="star4" title="4 stars">4 stars</label>
+
+						<input type="radio" class="ratingCls" id="star3" value="3" />
+						<label for="star3" title="3 stars">3 stars</label>
+
+						<input type="radio" class="ratingCls" id="star2" value="2" />
+						<label for="star2" title="2 stars">2 stars</label>
+
+						<input type="radio" class="ratingCls" id="star1" value="1" />
+						<label for="star1" title="1 star">1 star</label>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="slds-grid slds-wrap custNameMarginCSS">
+			<div class="slds-size_2-of-2">
+				<div class="slds-box_x-small slds-text-align_center slds-m-around_x-small">
+					Total No. of Bookings: <span class="custNameCSS">3</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="slds-grid slds-wrap custNameMarginCSS">
+			<div class="slds-size_2-of-2">
+				<div class="slds-box_x-small slds-text-align_center slds-m-around_x-small">
+					Total Cases Reports: <span class="custNameCSS">1</span>
+				</div>
+			</div>
+		</div>
+		<div class="slds-grid slds-wrap custNameMarginCSS">
+			<div class="slds-size_2-of-2">
+				<div class="slds-box_x-small slds-text-align_center slds-m-around_x-small">
+					Total Leads Reports: <span class="custNameCSS">2</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="slds-grid slds-wrap custNameMarginCSS">
+			<div class="slds-size_2-of-2">
+				<div class="slds-box_x-small slds-text-align_center slds-m-around_x-small">
+					Preferred Route: <span class="custNameCSS">DEL-BOM</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="slds-grid slds-wrap custNameMarginCSS">
+			<div class="slds-size_2-of-2">
+				<div class="slds-box_x-small slds-text-align_center slds-m-around_x-small">
+					<img src={cert_logo} class="social-icon">
+					<img src={badge} class="social-icon">
+				</div>
+			</div>
+		</div>
 	</lightning-card>
 </template>

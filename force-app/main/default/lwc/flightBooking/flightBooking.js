@@ -21,9 +21,12 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
  allAirportOptions;
  allAirportOptionsDepTo;
  allAirportOptionsArrFrom;
+ flightSchedule = new Map();;
  countryMap = new Map();
  flightStaMap = new Map();
  flightDtaMap = new Map();
+ arrivalFlighId;
+ departureFlightId;
  @track opportunityFieldValues = {};
  myMap = new Map();
   @track adultCount = 1;
@@ -94,7 +97,8 @@ sectorOption = [
                 label: option.label,
                 value: option.value
                 };
-            });  
+            }); 
+            this.flightSchedule = new Map(Object.entries(result.flightPicklist));
             console.log('result->> '+JSON.stringify(result));
             this.flightStaMap = new Map(Object.entries(result.flightNumberToStaMap));
             this.flightDtaMap = new Map(Object.entries(result.flightNumberToDtaMap));
@@ -217,11 +221,11 @@ handleTabChange(event) {
                this.isTabThree  = false;
                this.opportunityFieldValues['Service_Type__c'] = 'Arrival';
                this.resetOnTabChange();
-        } if(event.target.value== 'Depature'){
+        } if(event.target.value== 'Departure'){
             this.isTabOne = false;
               this.isTabTwo = true;
                this.isTabThree  = false;
-               this.opportunityFieldValues['Service_Type__c'] = 'Depature';
+               this.opportunityFieldValues['Service_Type__c'] = 'Departure';
                this.resetOnTabChange();
         }
         if(event.target.value== 'Transit'){
@@ -265,10 +269,17 @@ handleTabChange(event) {
 
     handleFlightNumberChange(event) { 
         this.flightNumber = event.target.value;
+        
         if(this.isTabOne){
             this.setStaTime();
+            if (this.flightNumber !='' && this.flightSchedule.has(this.flightNumber)) {
+                this.opportunityFieldValues['Arriving_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumber);
+            }
         }else if(this.isTabTwo) {
             this.setStdTime();
+            if (this.flightNumber !='' && this.flightSchedule.has(this.flightNumber)) {
+                this.opportunityFieldValues['Departure_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumber);
+            }
         }
         /*if( this.myMap.has(event.target.value)){
               
@@ -385,10 +396,16 @@ handleTabChange(event) {
     handleFlightNumberChangeArrival(event) {
         this.flightNumberArrival = event.target.value; 
         this.setStaTime();
+        if (this.flightNumberArrival !='' && this.flightSchedule.has(this.flightNumberArrival)) {
+            this.opportunityFieldValues['Arriving_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumberArrival);
+        }
     }
     handleFlightNumberChangeDeparture(event) {
         this.flightNumberDeparture = event.target.value;
         this.setStdTime();
+        if (this.flightNumberDeparture !='' && this.flightSchedule.has(this.flightNumberDeparture)) {
+            this.opportunityFieldValues['Departure_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumberDeparture);
+        }
     }
 
 
@@ -454,6 +471,7 @@ setTransitSector(){
     } else {
         this.sector = 'International to International';
     }
+    this.opportunityFieldValues['Flight_Type__c'] = this.sector;
 }
 
 setStaTime(){
@@ -502,6 +520,7 @@ handleConvertLead() {
     this.opportunityFieldValues['Number_of_Adults__c'] = this.adultCount;
     this.opportunityFieldValues['Number_of_Children__c'] = this.childCount;
     this.opportunityFieldValues['Number_of_Infants__c'] = this.infantCount;
+    //this.opportunityFieldValues[''] = this.flightSchedule;
     convertLead({ leadId: this.recordId, accId: this.accountId, opportunityFieldValues: this.opportunityFieldValues })
         .then((opportunityId) => {
             this.showToast('Success', 'Lead converted successfully!', 'success');
@@ -513,9 +532,6 @@ handleConvertLead() {
                     recordId: opportunityId,
                     objectApiName: 'Opportunity',
                     actionName: 'view',
-                },
-                state: {
-                    c__openModal: true, // Pass a custom parameter to reopen the modal
                 },
             });
         })

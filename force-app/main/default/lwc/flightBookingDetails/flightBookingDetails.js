@@ -11,6 +11,8 @@ import savePassengerDetails from '@salesforce/apex/PackageSelectionController.sa
 export default class FlightBookingDetails extends NavigationMixin(LightningElement) {
     @api recordId; // Opportunity record ID
     showModal = true;
+    showHeader = true;
+    showChild = false;
     passengerDetailPage=false;
     getPackage;
     getAddonDetail;
@@ -64,14 +66,24 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     title='';
     @track opportunityFieldValues = {};
 
-    @wire(CurrentPageReference)
-    pageRef;
 
     connectedCallback() {
-        const queryParams = this.pageRef?.state;
-        if (queryParams && queryParams.c__openModal) {
-            this.showModal = true; // Open modal if the parameter is set
-        }
+        this.showModal = true;
+        this.showHeader = true;
+        this.showChild = false;
+        this.loadPackageData();
+        this.loadAddonData();
+        this.loadPssengerData();
+    }
+
+    loadDetailsAfterUpdate() {
+        this.showModal = true;
+        this.showHeader = true;
+        this.showChild = false;
+        this.orderSummaryPackage=[];
+        this.orderSummaryAddon=[];
+        this.orderSummary=[];
+        this.totalAmount=0;
         this.loadPackageData();
         this.loadAddonData();
         this.loadPssengerData();
@@ -146,18 +158,37 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.selectedAmount = this.getPackage[index].priceTag;
         this.updateButtonPackageLabels(); // Recompute the button labels after selection
         this.orderSummaryPackage = this.getPackage
-            .filter(wrapper => wrapper.buttonLabel === 'Selected') // Filter condition
-            .map(wrapper => {
-                return {
-                    name: wrapper.packageName,        // Copy the 'name' value
-                    amount: wrapper.priceTag,  // Copy the 'amount' value
-                    totalAmount: wrapper.priceTag,
+        .filter(wrapper => wrapper.buttonLabel === 'Selected') // Filter condition
+        .map(wrapper => {
+            const numberOfRecords = this.numberOfAdults > this.numberOfChildren ? this.numberOfAdults : this.numberOfChildren; // or any other condition to determine number of records
+
+            // Create an array of records based on the number of adults
+            const records = [];
+                records.push({
+                    name: wrapper.packageName + ' (' + this.numberOfAdults + ' Adult)', // Copy the 'name' value for adult
+                    amount: wrapper.priceTag * this.numberOfAdults, // Calculate the amount 
+                    totalAmount: wrapper.priceTag * this.numberOfAdults,
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.priceTag,
-                    count: 1 //todo have to update this with the number of adults or childs
-                };
-            });
+                    count: 1 // Set the count, potentially modify later based on adults/children
+                });
+                if (this.numberOfChildren > 0) {                    
+                records.push({
+                    name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
+                    amount: (wrapper.priceTag -  wrapper.priceTag * (30 / 100))*this.numberOfChildren, // Calculate the amount
+                    totalAmount: (wrapper.priceTag -  wrapper.priceTag * (30 / 100))*this.numberOfChildren,
+                    productId: wrapper.productId,
+                    pricebookEntryId: wrapper.pricebookEntryId,
+                    unitPrice: wrapper.priceTag,
+                    count: 1 // Set the count, potentially modify later based on adults/children
+                });
+            }            
+
+            return records; // Return the array of records
+        })
+        .flat(); // Flatten the array to combine all the records into a single array
+
             this.orderSummary = [...this.orderSummaryPackage, ...this.orderSummaryAddon];
             this.calculateTotalPackage();
         //this.orderSummary = [...this.orderSummary, (this.selectedPackage + ' '+ this.selectedAmount)];
@@ -214,7 +245,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         });
     }
     closeModal() {
-        //this.showModal = false; // Close the modal
+        this.showModal = false; // Close the modal
+        this.passengerDetailPage = false;
+        this.showHeader = false;
+        this.showChild =true;
     }
     calculateTotalPackage() {
         this.totalAmount = this.orderSummary.reduce((sum, currentItem) => {
@@ -322,5 +356,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 // Handle error
                 console.error('Error saving passenger details:', error);
             });
+    }
+    openDetailPage(){
+        this.showModal=true;
+        this.passengerDetailPage = false;
+
     }
 }

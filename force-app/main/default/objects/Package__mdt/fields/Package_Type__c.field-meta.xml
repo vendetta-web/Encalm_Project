@@ -29,6 +29,11 @@
                 <default>false</default>
                 <label>All</label>
             </value>
+            <value>
+                <fullName>Transit</fullName>
+                <default>false</default>
+                <label>Transit</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

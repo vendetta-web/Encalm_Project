@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <name>CaseCreation</name>
-        <label>CaseCreation</label>
-        <locationX>176</locationX>
-        <locationY>323</locationY>
-        <actionName>Case.Case_Creation</actionName>
+        <name>New_Case_Creation</name>
+        <label>New Case Creation</label>
+        <locationX>314</locationX>
+        <locationY>431</locationY>
+        <actionName>Case.Case_Creation_Email</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -14,11 +14,109 @@
                 <elementReference>$Record.Id</elementReference>
             </value>
         </inputParameters>
-        <nameSegment>Case.Case_Creation</nameSegment>
+        <nameSegment>Case.Case_Creation_Email</nameSegment>
+        <offset>0</offset>
         <versionSegment>1</versionSegment>
     </actionCalls>
-    <apiVersion>61.0</apiVersion>
+    <actionCalls>
+        <name>Send_shopping_email</name>
+        <label>Send shopping email</label>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
+        <actionName>EmailUtility</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Case_Update_Records</targetReference>
+        </connector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>recordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>templateName</name>
+            <value>
+                <stringValue>Shopping Email on Case Creation</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>toAddresses</name>
+            <value>
+                <elementReference>$Record.SuppliedEmail</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>EmailUtility</nameSegment>
+        <offset>0</offset>
+        <versionSegment>1</versionSegment>
+    </actionCalls>
+    <apiVersion>62.0</apiVersion>
+    <decisions>
+        <name>Email_Decision</name>
+        <label>Email Decision</label>
+        <locationX>314</locationX>
+        <locationY>323</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Inquiry_Type</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Booking</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>isNew</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Email_Alert_Send__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Services__c</leftValueReference>
+                <operator>Contains</operator>
+                <rightValue>
+                    <stringValue>Meet &amp; Greet</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_shopping_email</targetReference>
+            </connector>
+            <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+            <label>Inquiry Type</label>
+        </rules>
+        <rules>
+            <name>New_Case</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record__Prior.Id</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>New_Case_Creation</targetReference>
+            </connector>
+            <label>New Case</label>
+        </rules>
+    </decisions>
     <environments>Default</environments>
+    <formulas>
+        <name>isNew</name>
+        <dataType>Boolean</dataType>
+        <expression>ISNEW()</expression>
+    </formulas>
     <interviewLabel>Case Creation Mail {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Case Creation Mail</label>
     <processMetadataValues>
@@ -40,15 +138,36 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
-    <start>
+    <recordUpdates>
+        <name>Case_Update_Records</name>
+        <label>Case Update Records</label>
         <locationX>50</locationX>
+        <locationY>539</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Inquiry_Type__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Booking</stringValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Email_Alert_Send__c</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>188</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>CaseCreation</targetReference>
+            <targetReference>Email_Decision</targetReference>
         </connector>
         <object>Case</object>
-        <recordTriggerType>Create</recordTriggerType>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
+    <status>Active</status>
 </Flow>

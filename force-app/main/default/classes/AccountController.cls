@@ -27,7 +27,7 @@ public with sharing class AccountController {
     public static Map<String, Id> getRecordTypeIds() {
         Map<String, Id> recordTypeIds = new Map<String, Id>();
         List<RecordType> recordTypes = [SELECT Id, Name FROM RecordType WHERE SObjectType = 'Account' AND Name IN ('Person Account', 'Business Account')];
-
+        
         for (RecordType rt : recordTypes) {
             if (rt.Name == 'Business Account') {
                 recordTypeIds.put('Business', rt.Id);
@@ -35,18 +35,18 @@ public with sharing class AccountController {
                 recordTypeIds.put('Personal', rt.Id);
             }
         }
-
+        
         return recordTypeIds;
     }
     @AuraEnabled(cacheable=true)
-public static List<Account> getAccounts(String searchTerm) {
-    String query = '%' + searchTerm + '%';
-    return [
-        SELECT Id, Name, Phone, PersonEmail 
-        FROM Account 
-        WHERE Name LIKE :query OR PersonEmail LIKE :query OR Phone LIKE :query
-        ORDER BY Name ASC
-        LIMIT 10
-    ];
-}
+    public static List<Account> getAccounts(String searchTerm) {
+        String query = '%' + searchTerm + '%';
+        return [
+            SELECT Id, Name, Phone, PersonEmail 
+            FROM Account 
+            WHERE Name LIKE :query OR PersonEmail LIKE :query OR Phone LIKE :query
+            ORDER BY Name ASC
+            LIMIT 10
+        ];
+    }
 }

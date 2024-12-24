@@ -64,6 +64,7 @@ public with sharing class Encalm_BookingEngine {
                     Map<String, String> flightValueMap = new Map<String, String>();
                     flightValueMap.put('label', fly.Flight_Detail__r.Name);
                     flightValueMap.put('value', fly.Flight_Detail__r.Name);
+                    flightValueMap.put(fly.Flight_Detail__r.Name,fly.Id);
                     flightListValues.add(flightValueMap);
                     flightStaMap.put(fly.Flight_Detail__r.Name, fly.STA__c);
                     flightDtaMap.put(fly.Flight_Detail__r.Name, fly.STD__c);
@@ -103,9 +104,7 @@ public with sharing class Encalm_BookingEngine {
                     AND Flight_Detail__c
                     IN (SELECT Connecting_Flight__c FROM Transit_Flight_Detail__c WHERE Transit_Airport__r.Airport_Code__c  =:transitAirport AND Connecting_Flight__r.Arrival_Airport__r.Airport_Code__c =:arrivalAirport)
                     ];
-            }
-
-             system.debug('flightScheduleList'+flightScheduleList);   
+            }  
             if(flightScheduleList!=null) {
                 for(Flight_Schedule__c fly: flightScheduleList) {
                     Map<String, String> flightValueMap = new Map<String, String>();

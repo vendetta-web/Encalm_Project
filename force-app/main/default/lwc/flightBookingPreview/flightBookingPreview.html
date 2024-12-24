@@ -1,0 +1,255 @@
+<template>
+    <template if:true={isArrival}>
+        <lightning-card title="Arrival">
+        <!-- Arrival -->
+                <!-- Flight Details Section -->
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Arriving Airport</label>
+                        <lightning-input  variant="label-hidden" disabled
+                            value={bookingData.serviceAirport} >
+                        </lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Departure Airport</label>
+                        <lightning-input variant="label-hidden" disabled
+                             value={bookingData.departureAirport}
+                            ></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Select Sector</label>
+                        <lightning-input variant="label-hidden" disabled
+                             value={bookingData.sector} ></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Date of Arrival</label>
+                        <lightning-input type="date" variant="label-hidden" disabled value={bookingData.arrivalDate}
+                        ></lightning-input>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Flight Number</label>
+                        <lightning-input style="font-size: 14px;" variant="label-hidden" disabled
+                        value={bookingData.flightNumberArrival}></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">STA Time</label>
+                        <lightning-input style="font-size: 14px;" type="time" variant="label-hidden" value={bookingData.staTime}
+                        disabled></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Service Date-Time</label>
+                        <lightning-input style="font-size: 14px;" type="time" disabled variant="label-hidden" value={bookingData.staTime}
+                        ></lightning-input>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <div class="counter">
+                            <span>Adult</span>
+                            <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                            <span class="count">{adultCount}</span>
+                            <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
+                            <span class="age-range">12 years & above</span>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <div class="counter">
+                            <span>Child</span>
+                            <button onclick={decrementChild} class="btn minus">-</button>
+                            <span class="count">{childCount}</span>
+                            <button onclick={incrementChild} class="btn plus">+</button>
+                            <span class="age-range">2-11 years</span>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <div class="counter">
+                            <span>Infant</span>
+                            <button onclick={decrementInfant} class="btn minus">-</button>
+                            <span class="count">{infantCount}</span>
+                            <button onclick={incrementInfant} class="btn plus">+</button>
+                            <span class="age-range">Below 2 years</span>
+                        </div>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <div class="slds-align_absolute-center slds-m-top_medium">
+                    <lightning-button class="encalmbg" label="Next" variant="brand" onclick={handleSave}></lightning-button>
+                </div>
+        </lightning-card>
+    </template>
+    <!-- Departure -->
+    <template if:true={isDeparture}>
+        <lightning-card title="Departure">
+        <lightning-layout multiple-rows="true">
+            <lightning-layout-item size="6" class="slds-p-around_small">
+                <label class="custom-label slds-form-element__label">Departure Airport</label>
+                <lightning-input  variant="label-hidden" disabled
+                value={bookingData.serviceAirport}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="6" class="slds-p-around_small">
+                <label class="custom-label slds-form-element__label">Destination Airport</label>
+                <lightning-input variant="label-hidden" disabled
+                value={bookingData.arrivingAirport}></lightning-input>
+            </lightning-layout-item>
+        </lightning-layout>
+        <lightning-layout>
+            <lightning-layout-item size="6" class="slds-p-around_small">
+                <label class="custom-label slds-form-element__label">Select Sector</label>
+                <lightning-input variant="label-hidden" disabled
+                value={bookingData.sector}></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="6" class="slds-p-around_small">
+                <label class="custom-label slds-form-element__label">Date of Departure</label>
+                <lightning-input type="date" disabled variant="label-hidden" value={bookingData.departureDate}
+                ></lightning-input>
+            </lightning-layout-item>
+        </lightning-layout>
+        <lightning-layout multiple-rows="true">
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <label class="custom-label slds-form-element__label">Flight Number</label>
+                <lightning-input variant="label-hidden"
+                    value={bookingData.flightNumberDeparture} disabled></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <label class="custom-label slds-form-element__label">STD Time</label>
+                <lightning-input type="time" variant="label-hidden" value={bookingData.stdTime}
+                disabled></lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <label class="custom-label slds-form-element__label">Service Date-Time</label>
+                <lightning-input type="time" variant="label-hidden" disabled value={bookingData.stdTime}
+                ></lightning-input>
+            </lightning-layout-item>
+        </lightning-layout>
+        <lightning-layout multiple-rows="true">
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <div class="counter">
+                    <span>Adult</span>
+                    <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                    <span class="count">{adultCount}</span>
+                    <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
+                    <span class="age-range">12 years & above</span>
+                </div>
+            </lightning-layout-item>
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <div class="counter">
+                    <span>Child</span>
+                    <button onclick={decrementChild} class="btn minus">-</button>
+                    <span class="count">{childCount}</span>
+                    <button onclick={incrementChild} class="btn plus">+</button>
+                    <span class="age-range">2-11 years</span>
+                </div>
+            </lightning-layout-item>
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <div class="counter">
+                    <span>Infant</span>
+                    <button onclick={decrementInfant} class="btn minus">-</button>
+                    <span class="count">{infantCount}</span>
+                    <button onclick={incrementInfant} class="btn plus">+</button>
+                    <span class="age-range">Below 2 years</span>
+                </div>
+            </lightning-layout-item>
+        </lightning-layout>
+        <div class="slds-align_absolute-center slds-m-top_medium">
+            <lightning-button label="Next" class="encalmbg" variant="brand" onclick={handleSave}></lightning-button>
+        </div>
+        </lightning-card>
+    </template>
+    <!-- Transit -->
+    <template if:true={isTransit}>
+        <lightning-card title="Transit">
+
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Select Transit Via</label>
+                        <lightning-input  variant="label-hidden" disabled value={bookingData.serviceAirport}
+                        ></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Arriving From</label>
+                        <lightning-input name="Departure_Airport__c" variant="label-hidden" value={bookingData.departureAirport}
+                        disabled></lightning-input>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <lightning-layout>
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Departing To</label>
+                        <lightning-input variant="label-hidden" disabled value={bookingData.arrivingAirport}
+                        ></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="6" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Select Sector</label>
+                        <lightning-input disabled variant="label-hidden"
+                             value={bookingData.sector}></lightning-input>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <lightning-layout multiple-rows="true" class="slds-p-around_small">                        
+                <lightning-layout-item size="4" class="slds-p-around_small">
+                    <label class="custom-label slds-form-element__label">Date of Arrival</label>
+                    <lightning-input disabled variant="label-hidden" value={bookingData.arrivalDate}
+                        ></lightning-input>
+                </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Flight Number</label>
+                        <lightning-input disabled variant="label-hidden"
+                         value={bookingData.flightNumberArrival}></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">STA Time</label>
+                        <lightning-input type="time" variant="label-hidden" value={bookingData.staTime}
+                        disabled></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Date of Departure</label>
+                        <lightning-input type="date" variant="label-hidden" value={bookingData.departureDate}
+                        disabled></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">Flight Number</label>
+                        <lightning-input variant="label-hidden"
+                         value={bookingData.flightNumberDeparture} disabled></lightning-input>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <label class="custom-label slds-form-element__label">STD Time</label>
+                        <lightning-input type="time" variant="label-hidden" value={bookingData.stdTime}
+                        disabled></lightning-input>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <lightning-layout multiple-rows="true">
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <div class="counter">
+                            <span>Adult</span>
+                            <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                            <span class="count">{adultCount}</span>
+                            <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
+                            <span class="age-range">12 years & above</span>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <div class="counter">
+                            <span>Child</span>
+                            <button onclick={decrementChild} class="btn minus">-</button>
+                            <span class="count">{childCount}</span>
+                            <button onclick={incrementChild} class="btn plus">+</button>
+                            <span class="age-range">2-11 years</span>
+                        </div>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="4" class="slds-p-around_small">
+                        <div class="counter">
+                            <span>Infant</span>
+                            <button onclick={decrementInfant} class="btn minus">-</button>
+                            <span class="count">{infantCount}</span>
+                            <button onclick={incrementInfant} class="btn plus">+</button>
+                            <span class="age-range">Below 2 years</span>
+                        </div>
+                    </lightning-layout-item>
+                </lightning-layout>
+                <div class="slds-align_absolute-center slds-m-top_medium">
+                    <lightning-button label="Next" class="encalmbg" variant="brand" onclick={handleSave}></lightning-button>
+                </div>
+
+        
+        </lightning-card>
+    </template>
+</template>

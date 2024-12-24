@@ -1,5 +1,5 @@
 import { LightningElement, api, wire } from 'lwc';
-import { getRecord } from 'lightning/uiRecordApi';
+import { getRecord, updateRecord } from 'lightning/uiRecordApi';
 import { NavigationMixin } from 'lightning/navigation';
 import getLeadsForCase from '@salesforce/apex/LeadFromCaseController.getLeadsForCase';
 import CASE_ID from '@salesforce/schema/Case.Id';
@@ -68,7 +68,6 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             });
     }
 
-
     navigateToLeadWithPrefill() {
         const description = this.caseData.Description?.value || '';
         const subject = this.caseData.Subject?.value || '';
@@ -78,18 +77,17 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         const caseId = this.caseData?.Id?.value;
         const caseNumber = this.caseData?.CaseNumber?.value;
 
-         console.log('Navigating to Lead with Case ID:', caseId);
+        console.log('Navigating to Lead with Case ID:', caseId);
         console.log('Case Number:', caseNumber);
-
 
         const [firstName, ...lastNameParts] = name.split(' ');
         const lastName = lastNameParts.join(' ') || 'Unknown';
 
         if (!caseId) {
-        this.actionMessage = 'Case ID is missing or invalid.';
-        this.isSuccess = false;
-        return;
-    }
+            this.actionMessage = 'Case ID is missing or invalid.';
+            this.isSuccess = false;
+            return;
+        }
 
         const leadDefaultValues = {
             Description__c: description,
@@ -112,6 +110,29 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
                 defaultFieldValues: this.getDefaultFieldValues(leadDefaultValues)
             }
         });
+
+        // Update Case status to Closed
+        this.updateCaseStatus(caseId);
+    }
+
+    updateCaseStatus(caseId) {
+        const fields = {};
+        fields[CASE_ID.fieldApiName] = caseId;
+        fields[CASE_STATUS.fieldApiName] = 'Closed';
+
+        const recordInput = { fields };
+
+        updateRecord(recordInput)
+            .then(() => {
+                console.log('Case status updated to Closed');
+                this.actionMessage = 'Case status updated to Closed.';
+                this.isSuccess = true;
+            })
+            .catch(error => {
+                console.error('Error updating Case status:', error);
+                this.actionMessage = 'Error updating Case status.';
+                this.isSuccess = false;
+            });
     }
 
     getDefaultFieldValues(defaultValues) {

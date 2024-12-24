@@ -1,16 +1,3 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<AssignmentRules xmlns="http://soap.sforce.com/2006/04/metadata">
-    <assignmentRule>
-        <fullName>Sales Team Assignment Rule</fullName>
-        <active>false</active>
-        <ruleEntry>
-            <assignedTo>Sales_team</assignedTo>
-            <assignedToType>Queue</assignedToType>
-            <criteriaItems>
-                <field>Lead.Status</field>
-                <operation>equals</operation>
-                <value>Sent to Sales</value>
-            </criteriaItems>
-        </ruleEntry>
-    </assignmentRule>
-</AssignmentRules>
+<AssignmentRules xmlns="http://soap.sforce.com/2006/04/metadata"/>
+

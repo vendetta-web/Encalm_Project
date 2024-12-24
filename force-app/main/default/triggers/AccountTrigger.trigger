@@ -25,19 +25,33 @@ trigger AccountTrigger on Account (before insert, before update) {
     ];
 
     // Cross-check duplicates and add errors
-    for (Account duplicate : duplicates) {
-        for (Account acc : Trigger.new) {
-            if (Trigger.isInsert || Trigger.oldMap.get(acc.Id) != null) {
-                if (
-                    (duplicate.Phone != null && duplicate.Phone == acc.Phone) ||
-                    (duplicate.PersonEmail != null && duplicate.PersonEmail == acc.PersonEmail) ||
-                    (duplicate.BusinessEmail__c != null && duplicate.BusinessEmail__c == acc.BusinessEmail__c)
-                ) {
-                    duplicateErrors.put(acc.Id, 'An account with the same phone number or email already exists.');
-                }
+   for (Account duplicate : duplicates) {
+    for (Account acc : Trigger.new) {
+        if (Trigger.isInsert || Trigger.oldMap.get(acc.Id) != null) {
+            // Initialize a list to hold error messages
+            List<String> errorMessages = new List<String>();
+
+            // Check for duplicate phone number
+            if (duplicate.Phone != null && duplicate.Phone == acc.Phone) {
+                errorMessages.add('An account with the same phone number already exists.');
+            }
+            // Check for duplicate personal email
+            if (duplicate.PersonEmail != null && duplicate.PersonEmail == acc.PersonEmail) {
+                errorMessages.add('An account with the same personal email already exists.');
+            }
+            // Check for duplicate business email
+            if (duplicate.BusinessEmail__c != null && duplicate.BusinessEmail__c == acc.BusinessEmail__c) {
+                errorMessages.add('An account with the same business email already exists.');
+            }
+
+            // Combine messages if there are any
+            if (!errorMessages.isEmpty()) {
+                String combinedMessage = String.join(errorMessages, ' ');
+                duplicateErrors.put(acc.Id, combinedMessage);
             }
         }
     }
+}
 
     // Add errors to accounts
     for (Account acc : Trigger.new) {
