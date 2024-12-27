@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Airline PNR --></label>
+    <name>Airline_PNR__c</name>
+    <relationshipLabel><!-- Passenger Details (Airline PNR) --></relationshipLabel>
+</CustomFieldTranslation>

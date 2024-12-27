@@ -4,7 +4,7 @@
         <name>Lead_Creation_Shopping_Email</name>
         <label>Lead Creation Shopping Email</label>
         <locationX>314</locationX>
-        <locationY>1295</locationY>
+        <locationY>1079</locationY>
         <actionName>Lead.Lead_Creation_Shopping_Email</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -19,60 +19,62 @@
         <versionSegment>1</versionSegment>
     </actionCalls>
     <actionCalls>
-        <name>Lead_Creation_Shopping_Mail</name>
-        <label>Lead Creation Shopping Mail</label>
+        <name>Send_Email_Action_1</name>
+        <label>Send Email Action 1</label>
         <locationX>314</locationX>
-        <locationY>1187</locationY>
-        <actionName>EmailUtility</actionName>
-        <actionType>apex</actionType>
+        <locationY>971</locationY>
+        <actionName>emailSimple</actionName>
+        <actionType>emailSimple</actionType>
         <connector>
             <targetReference>Lead_Creation_Shopping_Email</targetReference>
         </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
-            <name>replyToAddress</name>
+            <name>senderType</name>
             <value>
-                <elementReference>varReplyToAddress</elementReference>
+                <stringValue>OrgWideEmailAddress</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
-            <name>templateName</name>
+            <name>senderAddress</name>
             <value>
-                <stringValue>Shopping Email on Case Creation</stringValue>
+                <stringValue>encalmreservation@gmail.com</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
-            <name>toAddresses</name>
+            <name>emailSubject</name>
+            <value>
+                <stringValue>Nice to meet you</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>emailBody</name>
+            <value>
+                <stringValue>Let&apos;s start</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recipientId</name>
             <value>
                 <elementReference>$Record.Email</elementReference>
             </value>
         </inputParameters>
-        <nameSegment>EmailUtility</nameSegment>
+        <inputParameters>
+            <name>logEmailOnSend</name>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputParameters>
+        <nameSegment>emailSimple</nameSegment>
         <offset>0</offset>
         <versionSegment>1</versionSegment>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
-    <assignments>
-        <name>assign</name>
-        <label>assign</label>
-        <locationX>182</locationX>
-        <locationY>539</locationY>
-        <assignmentItems>
-            <assignToReference>Email_to_Case_support.Id</assignToReference>
-            <operator>Assign</operator>
-            <value>
-                <elementReference>varReplyToAddress</elementReference>
-            </value>
-        </assignmentItems>
-        <connector>
-            <targetReference>Existing_Account_Email</targetReference>
-        </connector>
-    </assignments>
     <decisions>
         <name>Decision_Account_Check</name>
         <label>Decision Account Check</label>
         <locationX>182</locationX>
-        <locationY>755</locationY>
+        <locationY>539</locationY>
         <defaultConnector>
             <targetReference>Create_Person_Account</targetReference>
         </defaultConnector>
@@ -119,7 +121,7 @@
         <name>Create_Person_Account</name>
         <label>Create Person Account</label>
         <locationX>314</locationX>
-        <locationY>863</locationY>
+        <locationY>647</locationY>
         <connector>
             <targetReference>Update_Lead</targetReference>
         </connector>
@@ -145,28 +147,10 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
     <recordLookups>
-        <name>Email_to_Case_support</name>
-        <label>Email-to-Case support</label>
-        <locationX>182</locationX>
-        <locationY>431</locationY>
-        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
-        <connector>
-            <targetReference>assign</targetReference>
-        </connector>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>DeveloperName</field>
-            <operator>EqualTo</operator>
-        </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>ReplyEmailSettings</object>
-        <storeOutputAutomatically>true</storeOutputAutomatically>
-    </recordLookups>
-    <recordLookups>
         <name>Existing_Account_Email</name>
         <label>Existing Account Email</label>
         <locationX>182</locationX>
-        <locationY>647</locationY>
+        <locationY>431</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Decision_Account_Check</targetReference>
@@ -190,7 +174,7 @@
         <locationY>323</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Email_to_Case_support</targetReference>
+            <targetReference>Existing_Account_Email</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -208,7 +192,7 @@
         <name>Associate_lead</name>
         <label>Associate lead</label>
         <locationX>50</locationX>
-        <locationY>863</locationY>
+        <locationY>647</locationY>
         <inputAssignments>
             <field>Account__c</field>
             <value>
@@ -221,9 +205,9 @@
         <name>Update_Case</name>
         <label>Update Case</label>
         <locationX>314</locationX>
-        <locationY>1079</locationY>
+        <locationY>863</locationY>
         <connector>
-            <targetReference>Lead_Creation_Shopping_Mail</targetReference>
+            <targetReference>Send_Email_Action_1</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -245,7 +229,7 @@
         <name>Update_Lead</name>
         <label>Update Lead</label>
         <locationX>314</locationX>
-        <locationY>971</locationY>
+        <locationY>755</locationY>
         <connector>
             <targetReference>Update_Case</targetReference>
         </connector>
@@ -267,12 +251,5 @@
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
-    <variables>
-        <name>varReplyToAddress</name>
-        <dataType>String</dataType>
-        <isCollection>false</isCollection>
-        <isInput>true</isInput>
-        <isOutput>false</isOutput>
-    </variables>
+    <status>Obsolete</status>
 </Flow>

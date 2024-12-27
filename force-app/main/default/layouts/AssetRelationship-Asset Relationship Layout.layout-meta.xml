@@ -18,10 +18,6 @@
                 <behavior>Edit</behavior>
                 <field>RelationshipType</field>
             </layoutItems>
-            <layoutItems>
-                <behavior>Edit</behavior>
-                <field>CurrencyIsoCode</field>
-            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>

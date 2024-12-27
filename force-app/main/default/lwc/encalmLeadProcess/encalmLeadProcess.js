@@ -23,6 +23,8 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     @track isStageClosed= false; // Added by Sidhant
     @track isStageFollowup= false; // Added by Sidhant
     @track leadOwnerId; // Sidhant
+    @track isLeadClose = false; // Sidhant
+
 
     @track isModalOpen = false; // Track modal visibility
     @track isBookingOpen = false;
@@ -44,6 +46,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             this.pathValues = [];
             console.log("recordTypeId", this.recordTypeId);
             console.log("RecordType", this.RecordType);
+            console.log("followUpFieldValue", this.followUpFieldValue);
             if (this.RecordType == 'Reservation') {
                 let i = 1;
                 this.reservationStages.forEach(currentItem => {
@@ -60,6 +63,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             }
 
             else if (this.RecordType == 'Sales') {
+                console.log('Sales : ');
                 let i = 1;
                 this.salesStages.forEach(currentItem => {
                     let currentVal = currentItem;
@@ -80,6 +84,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
                 this.showMarkStatusButton = true;
 
             console.log('Current Stage is ' + this.currentStage);
+            console.log('OUTPUTSaurabh : ',this.followUpFieldValue);
             console.log('final path - >' + JSON.stringify(this.finalpathvalue));
 
             this.showcustompath = true;
@@ -87,8 +92,8 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     }
 
     handleMarkStatus() {
-        if (this.RecordType === 'Sales' && !this.isLeadOwnerUser()) {
-            this.showToast('error', 'Lead Owner must be a User to update the stage in Sales record.');
+        if (this.RecordType === 'Sales' && !this.isLeadOwnerUser()) { // Sidhant
+            this.showToast('info', 'Lead Owner must be a User to update the stage in Sales record.');
             return; // Don't proceed with stage update
         } else {
         let newStage = ''
@@ -102,24 +107,27 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
 
         if (newStage == 'Closed') {
             this.isStageClosed = true;
-            this.isStageFollowup = false;
+            this.isStageFollowup = false;       
             this.openModal();
             return;
         }
         // Added by Sidhant
         if (newStage == 'Follow up required' && (this.followUpFieldValue == null || this.followUpFieldValue === undefined)) {
+            console.log('Test');
             this.isStageFollowup = true;
             this.isStageClosed = false;
             this.openModal();
             return;
         }
+        console.log('OUTPUT : nnnnnnn>>>>>>>>>');
         this.updateRecord(newStage);
     }
     }
-
     updateRecord(newStage) {
+        console.log('OUTPUT : New', newStage);
         const fields = {};
-        if(newStage == 'Follow up required' && this.RecordType === 'Reservation'){
+        console.log('followUpFieldValue : ',this.followUpFieldValue);
+        if(newStage == 'Follow up required' && this.RecordType === 'Reservation' && this.followUpDateTime){
             console.log('OUTPUT :>>>>>>>>>>> ');
             fields[FOLLOWUP_FIELD.fieldApiName] = this.followUpDateTime;
             fields[STAGE_NAME.fieldApiName] = newStage;
@@ -128,10 +136,12 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         fields[STAGE_NAME.fieldApiName] = newStage; // Set the new status value
         console.log('OUTPUT : ',fields);    
         }
-
+        console.log('OUTPUT : nnnnnnnnewwwwwwwwwwww',fields[STAGE_NAME.fieldApiName]);
+        console.log('fields : ',fields);
         const recordInput = { fields };
         recordInput.fields.Id = this.recordId;
         // Update the record
+        console.log('recordInput : ',recordInput);
         updateRecord(recordInput)
             .then(() => {
                 console.log('New Stage is  ' + newStage);
@@ -195,6 +205,13 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     // Handle picklist change
     handlePicklistChange(event) {
         this.selectedValue = event.target.value;
+        // Sidhant
+        if(this.selectedValue == 'Close'){
+        this.isLeadClose = true; 
+            console.log('test close');
+        } else {
+            this.isLeadClose = false;
+        }
     }
 
     // Handle form submission
@@ -221,7 +238,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             this.closeModal();
         }
     }
-    handleDateTimeChange(event) {
+    handleDateTimeChange(event) { //Sidhant
         this.followUpDateTime = event.target.value;
         console.log("Selected Date and Time: ", this.followUpDateTime);
     }

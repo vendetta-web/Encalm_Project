@@ -1,5 +1,5 @@
 public without sharing class EmailUtility {
-    public class FlowInputs{    
+    public class FlowInputs {    
         @InvocableVariable
         public String templateName;
         @InvocableVariable
@@ -23,27 +23,30 @@ public without sharing class EmailUtility {
         toAddress.add('supriya.bassi@maxify.digital');
         
         EmailTemplate emailTemp;
-        if(Test.isRunningTest())
-        {
+        if(Test.isRunningTest()) {
             emailTemp = [Select id, Subject, Body From EmailTemplate Limit 1];
-            system.debug('------emailTemp------1----->'+emailTemp);
-        }
-        else{
+        } else {
             emailTemp = [Select id, Subject, Body From EmailTemplate Where Name = :input.templateName limit 1];
-            system.debug('------emailTemp------2----->'+emailTemp);
         }
         
         Messaging.SingleEmailMessage mail = Messaging.renderStoredEmailTemplate(emailTemp.Id, null, input.recordId);
         
-        if(Test.isRunningTest()){
+        if(Test.isRunningTest()) {
             mail.setToAddresses(new List<String>{'test123xyz@test.com'});
-        }
-        else{
+        } else {
             mail.setToAddresses(toAddress);
         }
+        
+        // Set Reply-To address
+        if (String.isNotBlank(input.fromAddress)) {
+            mail.setReplyTo(input.fromAddress);
+        } else {
+            mail.setReplyTo('encalmreservation@gmail.com');
+        }
+        
         mail.setSaveAsActivity(true); 
         
         List<Messaging.SingleEmailMessage> emailList = new List<Messaging.SingleEmailMessage>{mail};
-            Messaging.SendEmailResult[] results = Messaging.sendEmail(emailList);
+        Messaging.SendEmailResult[] results = Messaging.sendEmail(emailList);
     }
 }

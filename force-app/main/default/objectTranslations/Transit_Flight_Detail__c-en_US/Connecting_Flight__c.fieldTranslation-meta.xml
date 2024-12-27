@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Connecting Flight --></label>
+    <name>Connecting_Flight__c</name>
+    <relationshipLabel><!-- Transit Flight Details (Connecting Flight) --></relationshipLabel>
+</CustomFieldTranslation>

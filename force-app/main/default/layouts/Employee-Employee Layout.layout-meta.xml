@@ -75,10 +75,6 @@
                 <behavior>Edit</behavior>
                 <field>ManagerId</field>
             </layoutItems>
-            <layoutItems>
-                <behavior>Edit</behavior>
-                <field>IndividualId</field>
-            </layoutItems>
         </layoutColumns>
         <style>TwoColumnsLeftToRight</style>
     </layoutSections>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomFieldTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label><!-- Passenger Type --></label>
+    <name>Passenger_Type__c</name>
+    <picklistValues>
+        <masterLabel>Adult</masterLabel>
+        <translation><!-- Adult --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Child</masterLabel>
+        <translation><!-- Child --></translation>
+    </picklistValues>
+    <picklistValues>
+        <masterLabel>Infant</masterLabel>
+        <translation><!-- Infant --></translation>
+    </picklistValues>
+</CustomFieldTranslation>

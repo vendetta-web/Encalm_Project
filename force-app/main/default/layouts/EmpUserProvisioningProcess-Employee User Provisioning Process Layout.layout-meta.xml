@@ -66,6 +66,7 @@
     </layoutSections>
     <relatedLists>
         <fields>Name</fields>
+        <fields>Account</fields>
         <fields>ErrorCode</fields>
         <fields>ErrorMessage</fields>
         <relatedList>EmpUserProvisionProcessErrList</relatedList>
