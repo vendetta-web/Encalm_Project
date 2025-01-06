@@ -15,6 +15,16 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.PersonTitle</fieldItem>
+                <identifier>RecordPersonTitleField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
                     <value>readonly</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.OwnerId</fieldItem>
@@ -61,16 +71,6 @@
                 <identifier>RecordAnnualRevenueField</identifier>
             </fieldInstance>
         </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.BusinessEmail__c</fieldItem>
-                <identifier>RecordBusinessEmail_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
         <name>Facet-0106a84e-d83f-44e6-9890-9915add9cab0</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -113,6 +113,16 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Website</fieldItem>
                 <identifier>RecordWebsiteField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.BusinessEmail__c</fieldItem>
+                <identifier>RecordBusinessEmail_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>

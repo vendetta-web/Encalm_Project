@@ -29,6 +29,7 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
     caseData;
     actionMessage = ''; 
     isSuccess = true; 
+    isNavigatingToLead = false; 
 
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredCase({ error, data }) {
@@ -104,7 +105,8 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             Case_Number__c: caseNumber,
             LeadSource: this.caseData?.Origin?.value
         };
-
+        this.isNavigatingToLead = true;
+        console.log('isNavigatingToLead : ',this.isNavigatingToLead);
         this[NavigationMixin.Navigate]({
             type: 'standard__objectPage',
             attributes: {
@@ -117,7 +119,7 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         });
 
         // Update Case status to Closed
-        this.updateCaseStatus(caseId);
+       // this.updateCaseStatus(caseId);
     }
 
     updateCaseStatus(caseId) {

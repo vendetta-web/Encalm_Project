@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Lead_Creation_Shopping_Email</name>
         <label>Lead Creation Shopping Email</label>
-        <locationX>314</locationX>
-        <locationY>1079</locationY>
+        <locationX>708</locationX>
+        <locationY>1019</locationY>
         <actionName>Lead.Lead_Creation_Shopping_Email</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -16,65 +16,13 @@
         </inputParameters>
         <nameSegment>Lead.Lead_Creation_Shopping_Email</nameSegment>
         <offset>0</offset>
-        <versionSegment>1</versionSegment>
-    </actionCalls>
-    <actionCalls>
-        <name>Send_Email_Action_1</name>
-        <label>Send Email Action 1</label>
-        <locationX>314</locationX>
-        <locationY>971</locationY>
-        <actionName>emailSimple</actionName>
-        <actionType>emailSimple</actionType>
-        <connector>
-            <targetReference>Lead_Creation_Shopping_Email</targetReference>
-        </connector>
-        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
-        <inputParameters>
-            <name>senderType</name>
-            <value>
-                <stringValue>OrgWideEmailAddress</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>senderAddress</name>
-            <value>
-                <stringValue>encalmreservation@gmail.com</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailSubject</name>
-            <value>
-                <stringValue>Nice to meet you</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailBody</name>
-            <value>
-                <stringValue>Let&apos;s start</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>recipientId</name>
-            <value>
-                <elementReference>$Record.Email</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>logEmailOnSend</name>
-            <value>
-                <booleanValue>true</booleanValue>
-            </value>
-        </inputParameters>
-        <nameSegment>emailSimple</nameSegment>
-        <offset>0</offset>
-        <versionSegment>1</versionSegment>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <decisions>
         <name>Decision_Account_Check</name>
         <label>Decision Account Check</label>
-        <locationX>182</locationX>
-        <locationY>539</locationY>
+        <locationX>795</locationX>
+        <locationY>595</locationY>
         <defaultConnector>
             <targetReference>Create_Person_Account</targetReference>
         </defaultConnector>
@@ -107,7 +55,7 @@
     <processMetadataValues>
         <name>CanvasMode</name>
         <value>
-            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
         </value>
     </processMetadataValues>
     <processMetadataValues>
@@ -120,8 +68,8 @@
     <recordCreates>
         <name>Create_Person_Account</name>
         <label>Create Person Account</label>
-        <locationX>314</locationX>
-        <locationY>647</locationY>
+        <locationX>708</locationX>
+        <locationY>695</locationY>
         <connector>
             <targetReference>Update_Lead</targetReference>
         </connector>
@@ -149,8 +97,8 @@
     <recordLookups>
         <name>Existing_Account_Email</name>
         <label>Existing Account Email</label>
-        <locationX>182</locationX>
-        <locationY>431</locationY>
+        <locationX>927</locationX>
+        <locationY>529</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Decision_Account_Check</targetReference>
@@ -170,8 +118,8 @@
     <recordLookups>
         <name>Get_Case</name>
         <label>Get Case</label>
-        <locationX>182</locationX>
-        <locationY>323</locationY>
+        <locationX>840</locationX>
+        <locationY>371</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Existing_Account_Email</targetReference>
@@ -191,8 +139,8 @@
     <recordUpdates>
         <name>Associate_lead</name>
         <label>Associate lead</label>
-        <locationX>50</locationX>
-        <locationY>647</locationY>
+        <locationX>972</locationX>
+        <locationY>695</locationY>
         <inputAssignments>
             <field>Account__c</field>
             <value>
@@ -204,10 +152,10 @@
     <recordUpdates>
         <name>Update_Case</name>
         <label>Update Case</label>
-        <locationX>314</locationX>
-        <locationY>863</locationY>
+        <locationX>708</locationX>
+        <locationY>911</locationY>
         <connector>
-            <targetReference>Send_Email_Action_1</targetReference>
+            <targetReference>Lead_Creation_Shopping_Email</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -228,8 +176,8 @@
     <recordUpdates>
         <name>Update_Lead</name>
         <label>Update Lead</label>
-        <locationX>314</locationX>
-        <locationY>755</locationY>
+        <locationX>708</locationX>
+        <locationY>803</locationY>
         <connector>
             <targetReference>Update_Case</targetReference>
         </connector>
@@ -241,15 +189,31 @@
         </inputAssignments>
         <inputReference>$Record</inputReference>
     </recordUpdates>
-    <start>
-        <locationX>56</locationX>
-        <locationY>0</locationY>
+    <recordUpdates>
+        <name>Update_Related_Case_Status</name>
+        <label>Update Related Case Status</label>
+        <locationX>1095</locationX>
+        <locationY>372</locationY>
         <connector>
             <targetReference>Get_Case</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Closed</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record.Case__r</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>714</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>Update_Related_Case_Status</targetReference>
         </connector>
         <object>Lead</object>
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Active</status>
 </Flow>

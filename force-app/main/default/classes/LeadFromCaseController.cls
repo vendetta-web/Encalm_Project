@@ -74,43 +74,42 @@ public with sharing class LeadFromCaseController {
         }
     }
 
-    public PageReference saveLead() {
-        try {
-            System.debug('Lead ID: ' + leadRecord.Id);
-            System.debug('Lead Details: ' + leadRecord);
+   public PageReference saveLead() {
+    try {
+        System.debug('Lead ID: ' + leadRecord.Id);
+        System.debug('Lead Details: ' + leadRecord);
 
-            if (leadRecord.Id != null) {
-                update leadRecord;
-                message = 'Details have been updated successfully.';
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
-            } else {
-                insert leadRecord;
-                message = 'Details have been submitted successfully.';
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
-                
-                if (caseId != null) {
-                    closeAssociatedCase(caseId);
-                }
+        if (leadRecord.Id != null) {
+            // If Lead already exists, update it
+            update leadRecord;
+            message = 'Details have been updated successfully.';
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+        } else {
+            // If Lead is new, insert it
+            insert leadRecord;
+            message = 'Details have been submitted successfully.';
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+
+            // Only close the associated case if the lead creation was successful
+            if (leadRecord.Id != null && caseId != null) {
+                closeAssociatedCase(caseId);
             }
-            showForm = false;
-        } catch (DmlException e) {
-           if (e.getMessage().contains('DUPLICATES_DETECTED')) {
-
-                message = 'Duplicate Detected: You\'re creating a duplicate record. We recommend you use an existing record instead.';
-               isErrorMessage = true;
-
-            } else {
-
-                message = 'Error: ' + e.getMessage();
-                isErrorMessage = true;
-
-            }
-
-            showForm = false;
-            System.debug('Error: ' + e.getMessage());
         }
-        return null;
+        showForm = false;
+    } catch (DmlException e) {
+        if (e.getMessage().contains('DUPLICATES_DETECTED')) {
+            message = 'Duplicate Detected: You\'re creating a duplicate record. We recommend you use an existing record instead.';
+            isErrorMessage = true;
+        } else {
+            message = 'Error: ' + e.getMessage();
+            isErrorMessage = true;
+        }
+        showForm = false;
+        System.debug('Error: ' + e.getMessage());
     }
+    return null;
+}
+
 
     // Fetch Leads associated with a Case
     @AuraEnabled(cacheable=true)

@@ -1,10 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
+        <name>Acknowledgement_Mail</name>
+        <label>Acknowledgement Mail</label>
+        <locationX>1113</locationX>
+        <locationY>491</locationY>
+        <actionName>EmailUtility</actionName>
+        <actionType>apex</actionType>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>fromAddress</name>
+            <value>
+                <stringValue>encalmreservation@gmail.com</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>recordId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>templateName</name>
+            <value>
+                <stringValue>Case Creation Response</stringValue>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>toAddresses</name>
+            <value>
+                <elementReference>$Record.SuppliedEmail</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>EmailUtility</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
         <name>New_Case_Creation</name>
         <label>New Case Creation</label>
-        <locationX>314</locationX>
-        <locationY>431</locationY>
+        <locationX>772</locationX>
+        <locationY>629</locationY>
         <actionName>Case.Case_Creation_Email</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -16,13 +51,12 @@
         </inputParameters>
         <nameSegment>Case.Case_Creation_Email</nameSegment>
         <offset>0</offset>
-        <versionSegment>1</versionSegment>
     </actionCalls>
     <actionCalls>
         <name>Send_shopping_email</name>
         <label>Send shopping email</label>
-        <locationX>50</locationX>
-        <locationY>431</locationY>
+        <locationX>576</locationX>
+        <locationY>479</locationY>
         <actionName>EmailUtility</actionName>
         <actionType>apex</actionType>
         <connector>
@@ -55,14 +89,13 @@
         </inputParameters>
         <nameSegment>EmailUtility</nameSegment>
         <offset>0</offset>
-        <versionSegment>1</versionSegment>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <decisions>
         <name>Email_Decision</name>
         <label>Email Decision</label>
-        <locationX>314</locationX>
-        <locationY>323</locationY>
+        <locationX>877</locationX>
+        <locationY>367</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>Inquiry_Type</name>
@@ -112,7 +145,7 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>New_Case_Creation</targetReference>
+                <targetReference>Acknowledgement_Mail</targetReference>
             </connector>
             <label>New Case</label>
         </rules>
@@ -134,7 +167,7 @@
     <processMetadataValues>
         <name>CanvasMode</name>
         <value>
-            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+            <stringValue>FREE_FORM_CANVAS</stringValue>
         </value>
     </processMetadataValues>
     <processMetadataValues>
@@ -147,8 +180,8 @@
     <recordUpdates>
         <name>Case_Update_Records</name>
         <label>Case Update Records</label>
-        <locationX>50</locationX>
-        <locationY>539</locationY>
+        <locationX>354</locationX>
+        <locationY>548</locationY>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Inquiry_Type__c</field>
@@ -166,8 +199,8 @@
         <inputReference>$Record</inputReference>
     </recordUpdates>
     <start>
-        <locationX>188</locationX>
-        <locationY>0</locationY>
+        <locationX>714</locationX>
+        <locationY>48</locationY>
         <connector>
             <targetReference>Email_Decision</targetReference>
         </connector>

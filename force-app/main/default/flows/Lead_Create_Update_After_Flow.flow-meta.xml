@@ -4,7 +4,7 @@
         <name>Copy_2_of_Status_Changed</name>
         <label>Copy 2 of Status Changed</label>
         <locationX>50</locationX>
-        <locationY>971</locationY>
+        <locationY>1271</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -40,7 +40,6 @@
         </inputParameters>
         <nameSegment>emailSimple</nameSegment>
         <offset>0</offset>
-        <versionSegment>1</versionSegment>
     </actionCalls>
     <actionCalls>
         <name>Send_Email_to_Supervisor</name>
@@ -64,13 +63,12 @@
         </inputParameters>
         <nameSegment>EmailUtility</nameSegment>
         <offset>0</offset>
-        <versionSegment>1</versionSegment>
     </actionCalls>
     <actionCalls>
         <name>Status_Changed</name>
         <label>Status Changed</label>
         <locationX>182</locationX>
-        <locationY>755</locationY>
+        <locationY>1055</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <connector>
@@ -109,7 +107,6 @@
         </inputParameters>
         <nameSegment>emailSimple</nameSegment>
         <offset>0</offset>
-        <versionSegment>1</versionSegment>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <decisions>
@@ -129,9 +126,8 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Create_Reminder</targetReference>
+                <targetReference>Get_FollowUp</targetReference>
             </connector>
-            <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
             <label>Create Follow up task</label>
         </rules>
         <rules>
@@ -168,6 +164,35 @@
         </rules>
     </decisions>
     <decisions>
+        <name>Check_followUp</name>
+        <label>Check followUp</label>
+        <locationX>182</locationX>
+        <locationY>647</locationY>
+        <defaultConnector>
+            <targetReference>Create_Reminder</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Create</defaultConnectorLabel>
+        <rules>
+            <name>Update_Remainder</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Set_Follow_up_Date_and_Time__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Set_Follow_up_Date_and_Time__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+            </conditions>
+            <connector>
+                <targetReference>Update_Task</targetReference>
+            </connector>
+            <label>Update Remainder</label>
+        </rules>
+    </decisions>
+    <decisions>
         <name>Check_Operation</name>
         <label>Check Operation</label>
         <locationX>215</locationX>
@@ -193,7 +218,7 @@
         <name>Escalated_Status</name>
         <label>Escalated Status</label>
         <locationX>182</locationX>
-        <locationY>863</locationY>
+        <locationY>1163</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>checkEscalated</name>
@@ -247,8 +272,8 @@
     <recordCreates>
         <name>Create_Reminder</name>
         <label>Create Reminder</label>
-        <locationX>182</locationX>
-        <locationY>539</locationY>
+        <locationX>314</locationX>
+        <locationY>755</locationY>
         <connector>
             <targetReference>Change_stage_to_Follow_up_required</targetReference>
         </connector>
@@ -273,7 +298,7 @@
         <inputAssignments>
             <field>OwnerId</field>
             <value>
-                <elementReference>$Record.CreatedBy.Id</elementReference>
+                <elementReference>$Record.OwnerId</elementReference>
             </value>
         </inputAssignments>
         <inputAssignments>
@@ -303,6 +328,27 @@
         <object>Task</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
+    <recordLookups>
+        <name>Get_FollowUp</name>
+        <label>Get FollowUp</label>
+        <locationX>182</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_followUp</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>WhoId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <recordLookups>
         <name>Get_User</name>
         <label>Get User</label>
@@ -349,16 +395,10 @@
         <name>Change_stage_to_Follow_up_required</name>
         <label>Change stage to Follow up required</label>
         <locationX>182</locationX>
-        <locationY>647</locationY>
+        <locationY>947</locationY>
         <connector>
             <targetReference>Status_Changed</targetReference>
         </connector>
-        <inputAssignments>
-            <field>Status</field>
-            <value>
-                <stringValue>Follow up required</stringValue>
-            </value>
-        </inputAssignments>
         <inputAssignments>
             <field>Trigger_Time_15__c</field>
             <value>
@@ -385,6 +425,42 @@
             </value>
         </inputAssignments>
         <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Task</name>
+        <label>Update Task</label>
+        <locationX>50</locationX>
+        <locationY>755</locationY>
+        <connector>
+            <targetReference>Change_stage_to_Follow_up_required</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>WhoId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>IsReminderSet</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ReminderDateTime</field>
+            <value>
+                <elementReference>setTimeReminder</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <stringValue>Updated Follow Up</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
     </recordUpdates>
     <start>
         <locationX>89</locationX>

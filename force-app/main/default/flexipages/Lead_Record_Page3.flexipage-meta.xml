@@ -204,14 +204,22 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.Case__r.Description</fieldItem>
-                <identifier>RecordCase_rDescriptionField</identifier>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Description__c</fieldItem>
+                <identifier>RecordDescription_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
             <fieldInstance>
-                <fieldItem>Record.Case__r.CaseNumber</fieldItem>
-                <identifier>RecordCase_rCaseNumberField</identifier>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Case_Number__c</fieldItem>
+                <identifier>RecordCase_Number_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
