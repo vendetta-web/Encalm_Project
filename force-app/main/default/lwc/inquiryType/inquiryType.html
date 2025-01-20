@@ -1,0 +1,26 @@
+<template>
+    <div class="slds-p-around_medium confirmation-container">
+        <template if:true={isConfirmVisible}>
+            <p class="confirmation-text">Are you sure you want to send the email?</p>
+            <lightning-button class="confirmation-button" label="Yes" onclick={confirmSendEmail}></lightning-button>
+            <lightning-button class="confirmation-button" label="No" onclick={cancelSendEmail}></lightning-button>
+        </template>
+    </div>
+    
+    <div class="slds-p-around_medium">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+        </template>
+        <template if:true={message}>
+            <!-- Use classMap to bind success or error class -->
+            <div class={messageClass}>
+                <lightning-icon 
+                    icon-name={iconName} 
+                    size="small" 
+                    class="slds-m-right_small">
+                </lightning-icon>
+                <p>{message}</p>
+            </div>
+        </template>
+    </div>
+</template>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    <label>Meet &amp; Greet</label>
+    <label>Choose option(s)</label>
     <protected>false</protected>
     <values>
         <field>KeywordList__c</field>
-        <value xsi:type="xsd:string">Meet and assist,meet and greet, airport assistance, security assistance, welcome agent, greet and assist, atithya, Required Gate to Gate Service, Booking confirmation, Airport service, VIP Service &amp; Assistance,Group, Personal Assistance, GMR, meet &amp; greet</value>
+        <value xsi:nil="true"/>
     </values>
     <values>
         <field>Type__c</field>

@@ -10,6 +10,9 @@
                             <value>Submit</value>
                         </valueListItems>
                         <valueListItems>
+                            <value>Lead.Inquiry</value>
+                        </valueListItems>
+                        <valueListItems>
                             <value>Edit</value>
                         </valueListItems>
                         <valueListItems>
@@ -17,6 +20,9 @@
                         </valueListItems>
                         <valueListItems>
                             <value>Delete</value>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Lead.Send_Shopping_Email</value>
                         </valueListItems>
                         <valueListItems>
                             <value>ChangeRecordType</value>
@@ -618,6 +624,13 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection4</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Status}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Follow up required</rightValue>
+                    </criteria>
+                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>

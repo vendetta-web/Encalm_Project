@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Acknowledgement_Mail</name>
         <label>Acknowledgement Mail</label>
-        <locationX>1113</locationX>
-        <locationY>491</locationY>
+        <locationX>1180</locationX>
+        <locationY>502</locationY>
         <actionName>EmailUtility</actionName>
         <actionType>apex</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -33,23 +33,6 @@
             </value>
         </inputParameters>
         <nameSegment>EmailUtility</nameSegment>
-        <offset>0</offset>
-    </actionCalls>
-    <actionCalls>
-        <name>New_Case_Creation</name>
-        <label>New Case Creation</label>
-        <locationX>772</locationX>
-        <locationY>629</locationY>
-        <actionName>Case.Case_Creation_Email</actionName>
-        <actionType>emailAlert</actionType>
-        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
-        <inputParameters>
-            <name>SObjectRowId</name>
-            <value>
-                <elementReference>$Record.Id</elementReference>
-            </value>
-        </inputParameters>
-        <nameSegment>Case.Case_Creation_Email</nameSegment>
         <offset>0</offset>
     </actionCalls>
     <actionCalls>
@@ -94,8 +77,8 @@
     <decisions>
         <name>Email_Decision</name>
         <label>Email Decision</label>
-        <locationX>877</locationX>
-        <locationY>367</locationY>
+        <locationX>984</locationX>
+        <locationY>382</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>Inquiry_Type</name>
@@ -128,9 +111,6 @@
                     <stringValue>Meet &amp; Greet</stringValue>
                 </rightValue>
             </conditions>
-            <connector>
-                <targetReference>Send_shopping_email</targetReference>
-            </connector>
             <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
             <label>Inquiry Type</label>
         </rules>
@@ -180,8 +160,8 @@
     <recordUpdates>
         <name>Case_Update_Records</name>
         <label>Case Update Records</label>
-        <locationX>354</locationX>
-        <locationY>548</locationY>
+        <locationX>576</locationX>
+        <locationY>587</locationY>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Inquiry_Type__c</field>

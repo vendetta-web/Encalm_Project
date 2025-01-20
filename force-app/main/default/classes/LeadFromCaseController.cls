@@ -5,7 +5,7 @@ public with sharing class LeadFromCaseController {
     public Boolean showForm { get; set; }
     public String message { get; set; } 
     public Boolean isErrorMessage { get; set; }
-
+    
     public LeadFromCaseController() {
         caseId = ApexPages.currentPage().getParameters().get('caseId');
         leadRecord = new Lead();
@@ -17,12 +17,12 @@ public with sharing class LeadFromCaseController {
             : null;
         populateLeadFromCase();
     }
-
+    
     public void populateLeadFromCase() {
         try {
             if (caseId != null) {
                 System.debug('Case ID: ' + caseId);
-
+                
                 List<Lead> leads = getLeadsForCase(caseId);
                 
                 if (!leads.isEmpty()) {
@@ -55,7 +55,7 @@ public with sharing class LeadFromCaseController {
                     }
                 }
             }
-
+            
             if (leadId != null) {
                 leadRecord = [
                     SELECT Id, FirstName, LastName, Email, Phone, Travel_Date__c, Number_of_Adult__c, Flight_No__c, 
@@ -73,44 +73,44 @@ public with sharing class LeadFromCaseController {
             System.debug('Error message: ' + e.getMessage() + ' at line number: ' + e.getLineNumber());
         }
     }
-
-   public PageReference saveLead() {
-    try {
-        System.debug('Lead ID: ' + leadRecord.Id);
-        System.debug('Lead Details: ' + leadRecord);
-
-        if (leadRecord.Id != null) {
-            // If Lead already exists, update it
-            update leadRecord;
-            message = 'Details have been updated successfully.';
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
-        } else {
-            // If Lead is new, insert it
-            insert leadRecord;
-            message = 'Details have been submitted successfully.';
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
-
-            // Only close the associated case if the lead creation was successful
-            if (leadRecord.Id != null && caseId != null) {
-                closeAssociatedCase(caseId);
+    
+    public PageReference saveLead() {
+        try {
+            System.debug('Lead ID: ' + leadRecord.Id);
+            System.debug('Lead Details: ' + leadRecord);
+            
+            if (leadRecord.Id != null) {
+                // If Lead already exists, update it
+                update leadRecord;
+                message = 'Details have been updated successfully.';
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+            } else {
+                // If Lead is new, insert it
+                insert leadRecord;
+                message = 'Details have been submitted successfully.';
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.CONFIRM, message));
+                
+                // Only close the associated case if the lead creation was successful
+                if (leadRecord.Id != null && caseId != null) {
+                    closeAssociatedCase(caseId);
+                }
             }
+            showForm = false;
+        } catch (DmlException e) {
+            if (e.getMessage().contains('DUPLICATES_DETECTED')) {
+                message = 'Duplicate Detected: You\'re creating a duplicate record. We recommend you use an existing record instead.';
+                isErrorMessage = true;
+            } else {
+                message = 'Error: ' + e.getMessage();
+                isErrorMessage = true;
+            }
+            showForm = false;
+            System.debug('Error: ' + e.getMessage());
         }
-        showForm = false;
-    } catch (DmlException e) {
-        if (e.getMessage().contains('DUPLICATES_DETECTED')) {
-            message = 'Duplicate Detected: You\'re creating a duplicate record. We recommend you use an existing record instead.';
-            isErrorMessage = true;
-        } else {
-            message = 'Error: ' + e.getMessage();
-            isErrorMessage = true;
-        }
-        showForm = false;
-        System.debug('Error: ' + e.getMessage());
+        return null;
     }
-    return null;
-}
-
-
+    
+    
     // Fetch Leads associated with a Case
     @AuraEnabled(cacheable=true)
     public static List<Lead> getLeadsForCase(Id caseId) {
@@ -118,9 +118,9 @@ public with sharing class LeadFromCaseController {
             throw new IllegalArgumentException('Case ID cannot be null or empty.');
         }
         
-         return [SELECT Id, Name, Case__c FROM Lead WHERE Case__c = :caseId];
+        return [SELECT Id, Name, Case__c FROM Lead WHERE Case__c = :caseId];
     }
-
+    
     // Close the associated case
     private void closeAssociatedCase(String caseId) {
         try {
@@ -136,6 +136,51 @@ public with sharing class LeadFromCaseController {
             }
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error closing Case: ' + e.getMessage()));
+        }
+    }
+    
+    //Use to send the Inquiry Mail from Lead
+    @AuraEnabled
+    public static void sendEmailToLead(Id leadId) {
+        if (String.isBlank(leadId)) {
+            throw new AuraHandledException('Lead Id is required to send email.');
+        }
+        
+        // Fetch the Lead record
+        Lead leadRecord = [SELECT Id, Email, Status FROM Lead WHERE Id = :leadId LIMIT 1];
+        if (String.isBlank(leadRecord.Email)) {
+            throw new AuraHandledException('The Lead does not have an email address.');
+        }
+        
+        // Fetch the specified email template
+        EmailTemplate emailTemplate = [
+            SELECT Id, DeveloperName 
+            FROM EmailTemplate 
+            WHERE DeveloperName = 'Shopping_Email_on_Lead_Creation' 
+            LIMIT 1
+        ];
+        
+        // Prepare the email message
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        email.setTargetObjectId(leadRecord.Id); // Set Lead Id as target object
+        email.setTemplateId(emailTemplate.Id); // Use the specified template
+        email.setSaveAsActivity(false); // Prevent saving as an activity to avoid conflicts
+        
+        try {
+            // Send the email
+            Messaging.SendEmailResult[] emailResults = Messaging.sendEmail(new List<Messaging.SingleEmailMessage> { email });
+            
+            // Validate email send results
+            if (!emailResults[0].isSuccess()) {
+                throw new AuraHandledException('Failed to send email: ' + emailResults[0].getErrors()[0].getMessage());
+            }
+            
+            // Update Lead Stage
+            leadRecord.Status = 'Awaiting Customer Response';
+            update leadRecord;
+            
+        } catch (Exception ex) {
+            throw new AuraHandledException('An error occurred while sending the email: ' + ex.getMessage());
         }
     }
 }

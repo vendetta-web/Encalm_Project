@@ -112,7 +112,8 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             return;
         }
         // Added by Sidhant
-        if (newStage == 'Follow up required' && (this.followUpFieldValue == null || this.followUpFieldValue === undefined)) {
+        // Add New changes by Saurabh
+        if (newStage == 'Awaiting Customer response' && (this.followUpFieldValue == null || this.followUpFieldValue === undefined)) {
             console.log('Test');
             this.isStageFollowup = true;
             this.isStageClosed = false;
@@ -127,7 +128,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         console.log('OUTPUT : New', newStage);
         const fields = {};
         console.log('followUpFieldValue : ',this.followUpFieldValue);
-        if(newStage == 'Follow up required' && this.RecordType === 'Reservation' && this.followUpDateTime){
+        if(newStage == 'Awaiting Customer response' && this.RecordType === 'Reservation' && this.followUpDateTime){
             console.log('OUTPUT :>>>>>>>>>>> ');
             fields[FOLLOWUP_FIELD.fieldApiName] = this.followUpDateTime;
             fields[STAGE_NAME.fieldApiName] = newStage;
@@ -234,7 +235,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         }
         // Sidhant
         else if (this.isStageFollowup){
-            this.updateRecord('Follow up required');
+            this.updateRecord('Awaiting Customer response');
             this.closeModal();
         }
     }

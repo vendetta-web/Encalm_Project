@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Lead_Creation_Shopping_Email</name>
         <label>Lead Creation Shopping Email</label>
-        <locationX>708</locationX>
-        <locationY>1019</locationY>
+        <locationX>516</locationX>
+        <locationY>1056</locationY>
         <actionName>Lead.Lead_Creation_Shopping_Email</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -154,9 +154,6 @@
         <label>Update Case</label>
         <locationX>708</locationX>
         <locationY>911</locationY>
-        <connector>
-            <targetReference>Lead_Creation_Shopping_Email</targetReference>
-        </connector>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Id</field>

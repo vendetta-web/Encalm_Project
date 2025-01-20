@@ -130,8 +130,25 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Geography__c</fieldItem>
-                <identifier>RecordGeography_cField</identifier>
+                <fieldItem>Record.Location__c</fieldItem>
+                <identifier>RecordLocation__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Please_Specify_Location__c</fieldItem>
+                <identifier>RecordPlease_Specify_Location_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ShowLocationOther__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Show</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <name>Facet-9032232e-32d3-4495-803f-492535b5c005</name>
@@ -152,10 +169,27 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>none</value>
+                    <value>required</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.Origin</fieldItem>
                 <identifier>RecordOriginField2</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Please_specify__c</fieldItem>
+                <identifier>RecordPlease_specify_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Origin}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Other</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
