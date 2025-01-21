@@ -4,7 +4,7 @@
         <name>Invoke_Email_Utility_Action_1</name>
         <label>Invoke Email Utility Action 1</label>
         <locationX>176</locationX>
-        <locationY>566</locationY>
+        <locationY>674</locationY>
         <actionName>EmailUtility</actionName>
         <actionType>apex</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -12,6 +12,12 @@
             <name>bccAddresses</name>
             <value>
                 <elementReference>Additional_Email_Addresses</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>body</name>
+            <value>
+                <elementReference>Selected_Email_Template_Detail</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -23,13 +29,13 @@
         <inputParameters>
             <name>recordId</name>
             <value>
-                <elementReference>recordId</elementReference>
+                <elementReference>Get_Lead_Record_Details.Account__c</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
             <name>templateName</name>
             <value>
-                <stringValue>Shopping Email on Lead Creation</stringValue>
+                <elementReference>Selected_Email_Template</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -42,6 +48,14 @@
         <offset>0</offset>
     </actionCalls>
     <apiVersion>63.0</apiVersion>
+    <dynamicChoiceSets>
+        <name>EmailTemplateNamePicklistVal</name>
+        <collectionReference>Get_EmailTemplates</collectionReference>
+        <dataType>String</dataType>
+        <displayField>Name</displayField>
+        <object>EmailTemplate</object>
+        <valueField>DeveloperName</valueField>
+    </dynamicChoiceSets>
     <environments>Default</environments>
     <interviewLabel>Lead Shopping Email {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Send Shopping Email</label>
@@ -75,10 +89,38 @@
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>Name</field>
+            <field>TemplateType</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>Shopping Email on Lead Creation</stringValue>
+                <stringValue>html</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>EmailTemplate</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_EmailTemplates_based_on_selected_Email_Template_DeveloperName</name>
+        <label>Get EmailTemplates based on selected Email Template DeveloperName</label>
+        <locationX>176</locationX>
+        <locationY>458</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Email_Preview</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>TemplateType</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>html</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Selected_Email_Template</elementReference>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -107,22 +149,40 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
     <screens>
-        <name>Send_Email_Preview</name>
-        <label>Send Email Preview</label>
+        <name>Email_Preview</name>
+        <label>Email Preview</label>
         <locationX>176</locationX>
-        <locationY>458</locationY>
+        <locationY>566</locationY>
         <allowBack>true</allowBack>
         <allowFinish>true</allowFinish>
-        <allowPause>true</allowPause>
+        <allowPause>false</allowPause>
         <connector>
             <targetReference>Invoke_Email_Utility_Action_1</targetReference>
         </connector>
         <fields>
-            <name>tempp</name>
-            <fieldText>&lt;p&gt;{!Template_Preview}&lt;/p&gt;</fieldText>
-            <fieldType>DisplayText</fieldType>
+            <name>Selected_Email_Template_Detail</name>
+            <defaultValue>
+                <stringValue>{!Get_EmailTemplates_based_on_selected_Email_Template_DeveloperName.Body}</stringValue>
+            </defaultValue>
+            <fieldText>Selected Email Template Detail</fieldText>
+            <fieldType>LargeTextArea</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>false</isRequired>
         </fields>
-        <nextOrFinishButtonLabel>Send Email</nextOrFinishButtonLabel>
+        <fields>
+            <name>Email_Preview_Val</name>
+            <defaultValue>
+                <stringValue>{!Selected_Email_Template_Detail}</stringValue>
+            </defaultValue>
+            <fieldText>Email Preview</fieldText>
+            <fieldType>LargeTextArea</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isReadOnly>
+                <booleanValue>true</booleanValue>
+            </isReadOnly>
+            <isRequired>false</isRequired>
+        </fields>
+        <nextOrFinishButtonLabel>Send</nextOrFinishButtonLabel>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
     </screens>
@@ -135,7 +195,7 @@
         <allowFinish>true</allowFinish>
         <allowPause>false</allowPause>
         <connector>
-            <targetReference>Send_Email_Preview</targetReference>
+            <targetReference>Get_EmailTemplates_based_on_selected_Email_Template_DeveloperName</targetReference>
         </connector>
         <fields>
             <name>ToEmailAddress</name>
@@ -223,16 +283,14 @@
             </visibilityRule>
         </fields>
         <fields>
-            <name>Template_Preview</name>
-            <defaultValue>
-                <stringValue>{!ShoppingEmail}</stringValue>
-            </defaultValue>
-            <fieldText>Template Preview</fieldText>
-            <fieldType>LargeTextArea</fieldType>
+            <name>Selected_Email_Template</name>
+            <choiceReferences>EmailTemplateNamePicklistVal</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Email Template</fieldText>
+            <fieldType>DropdownBox</fieldType>
             <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
-            <isRequired>false</isRequired>
+            <isRequired>true</isRequired>
         </fields>
-        <nextOrFinishButtonLabel>Email Preview</nextOrFinishButtonLabel>
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
     </screens>
@@ -247,7 +305,7 @@
     <textTemplates>
         <name>ShoppingEmail</name>
         <isViewedAsPlainText>false</isViewedAsPlainText>
-        <text>&lt;p&gt;{!Get_EmailTemplates.Body}&lt;/p&gt;</text>
+        <text>&lt;p&gt;Dear&lt;/p&gt;</text>
     </textTemplates>
     <variables>
         <name>EmailTemplatesCollection</name>
@@ -262,6 +320,6 @@
         <dataType>String</dataType>
         <isCollection>false</isCollection>
         <isInput>true</isInput>
-        <isOutput>true</isOutput>
+        <isOutput>false</isOutput>
     </variables>
 </Flow>
