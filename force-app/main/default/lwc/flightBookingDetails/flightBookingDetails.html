@@ -41,7 +41,7 @@
         <div class="slds-card__body">
             <div class="slds-grid slds-wrap"  style="margin-left: 15px;" slot="actions">
                 <template for:each={getPackage} for:item="pack" for:index="index">
-                    <div key={pack.packageName} class="slds-col slds-size_1-of-3 column">
+                    <div key={pack.packageName} if:true={pack.showPackage} class="slds-col slds-size_1-of-3 column">
                         <div class="package">
                             <!-- Apply the class to package name -->
                             <div class="slds-text-heading_medium package-name row" style="padding-left: 10px;">
@@ -87,6 +87,27 @@
                             </div>
                             <div class="slds-m-top_medium">
                         </br>
+                        <div>
+                            <!-- First Picklist -->
+                                <lightning-combobox
+                                name="pickup"
+                                label="Pickup Terminal"
+                                options={terminalOptions}
+                                value={pack.pickupTerminal}
+                                onchange ={handleTerminalChange}
+                                data-id={pack.pickupDataId}
+                            ></lightning-combobox>
+
+                            <!-- Second Picklist -->
+                            <lightning-combobox
+                                name="drop"
+                                label="Drop Terminal"
+                                options={terminalOptions}
+                                value={pack.dropTerminal}
+                                onchange ={handleTerminalChange}
+                                data-id={pack.dropDataId}
+                            ></lightning-combobox>
+                        </div>
                             <div class="counter">
                                 <span>Qty</span>
                                 <button data-id="decrementAddOn" data-index={index}  onclick={decrementAddOn} class="btn minus">-</button>
@@ -134,89 +155,236 @@
         
         </div>
                 <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
                     <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={closeModal} style="margin-right: 10px;"></lightning-button>
                     <lightning-button label="Next" class="encalmbg" variant="brand" onclick={openPassengerPage}></lightning-button>
                 </footer>
             </template>
 
-                <template if:true={passengerDetailPage}>
-                        <lightning-card title="Guest Details">
-                            <template for:each={guestRows} for:item="guest">
-                                <div key={guest.id} class="guest-row">
-                                    <lightning-layout multiple-rows="true">
-                                        <lightning-layout-item size="1" class="slds-p-around_small">
-                                            <lightning-input class="input-field" label="Passenger" value={guest.pass} disabled></lightning-input>
-                                        </lightning-layout-item>
-                                        <!-- Title field (disabled for display purpose) -->
-                                        <lightning-layout-item size="1" class="slds-p-around_small">
-                                        <lightning-combobox class="input-field" 
-                                            label="Title" 
-                                            value={guest.title} 
-                                            options={titleOptions} 
-                                            onchange={handleChange}>
-                                        </lightning-combobox>
-                                        </lightning-layout-item>
-                                        
-                                        <!-- First Name field -->
-                                        <lightning-layout-item size="1" class="slds-p-around_small">
-                                        <lightning-input class="input-field" label="First Name" value={guest.firstName} onchange={handleChange}></lightning-input>
-                                        </lightning-layout-item>
-                                        <!-- Last Name field -->
-                                        <lightning-layout-item size="1" class="slds-p-around_small">
-                                        <lightning-input class="input-field" label="Last Name" value={guest.lastName} onchange={handleChange}></lightning-input>
-                                        </lightning-layout-item>
-                                        <!-- Gender field (Picklist) -->
-                                        <lightning-layout-item size="2" class="slds-p-around_small">
-                                        <lightning-combobox class="input-field" label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
-                                        </lightning-layout-item>
-                                        <!-- Age field -->
-                                        <lightning-layout-item size="1" class="slds-p-around_small">
-                                        <lightning-input class="input-field" label="Age" value={guest.age} onchange={handleChange}></lightning-input>
-                                        </lightning-layout-item>
-                                        <!-- Designation field -->
-                                        <lightning-layout-item size="1" class="slds-p-around_small">
-                                        <lightning-input class="input-field" label="Designation" value={guest.designation} onchange={handleChange}></lightning-input>
-                                        </lightning-layout-item>
-                                        <!-- Travel Class field (Picklist) -->
-                                        <lightning-layout-item size="2" class="slds-p-around_small">
-                                        <lightning-combobox class="input-field" label="Travel Class" value={guest.travelClass} options={travelClassOptions} onchange={handleChange}></lightning-combobox>
-                                        </lightning-layout-item>
-                                        <!-- Travel PNR No field -->
-                                        <lightning-layout-item size="2" class="slds-p-around_small">
-                                        <lightning-input class="input-field" label="Travel PNR No" value={guest.pnrNo} onchange={handleChange}></lightning-input>
-                                        </lightning-layout-item>
-                                </lightning-layout>
-                                </div>
-                            </template>
-                        </lightning-card>
+            <template if:true={passengerDetailPage}>
+                <lightning-card title="Guest Details">
+                    <template for:each={guestRows} for:item="guest" for:index="index">
+                        <div key={guest.id} class="guest-row">
+                            <lightning-layout multiple-rows="true">
+                                <lightning-layout-item size="1" class="slds-p-around_small">
+                                    <lightning-input class="input-field" label="Passenger" value={guest.pass} disabled></lightning-input>
+                                </lightning-layout-item>
+                                <!-- Title field (disabled for display purpose) -->
+                                <lightning-layout-item size="1" class="slds-p-around_small">
+                                <lightning-combobox class="input-field" 
+                                    label="Title" 
+                                    value={guest.title} 
+                                    options={titleOptions} 
+                                    onchange={handleChange}
+                                    data-index={index}>
+                                </lightning-combobox>
+                                </lightning-layout-item>
+                                
+                                <!-- First Name field -->
+                                <lightning-layout-item size="1" class="slds-p-around_small">
+                                <lightning-input class="input-field" data-index={index} label="First Name" value={guest.firstname} onchange={handleChange}></lightning-input>
+                                </lightning-layout-item>
+                                <!-- Last Name field -->
+                                <lightning-layout-item size="1" class="slds-p-around_small">
+                                <lightning-input class="input-field" data-index={index} label="Last Name" value={guest.lastname} onchange={handleChange}></lightning-input>
+                                </lightning-layout-item>
+                                <!-- Gender field (Picklist) -->
+                                <lightning-layout-item size="2" class="slds-p-around_small">
+                                <lightning-combobox class="input-field" data-index={index} label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
+                                </lightning-layout-item>
+                                <!-- Age field -->
+                                <lightning-layout-item size="1" class="slds-p-around_small">
+                                <lightning-input class="input-field" data-index={index} label="Age" value={guest.age} onchange={handleChange}></lightning-input>
+                                </lightning-layout-item>
+                                <!-- Designation field -->
+                                <lightning-layout-item size="1" class="slds-p-around_small">
+                                <lightning-input class="input-field" data-index={index} label="Designation" value={guest.designation} onchange={handleChange}></lightning-input>
+                                </lightning-layout-item>
+                                <!-- Travel Class field (Picklist) -->
+                                <lightning-layout-item size="2" class="slds-p-around_small">
+                                <lightning-combobox class="input-field" data-index={index} label="Travel Class" value={guest.travelclass} options={travelClassOptions} onchange={handleChange}></lightning-combobox>
+                                </lightning-layout-item>
+                                <!-- Travel PNR No field -->
+                                <lightning-layout-item size="2" class="slds-p-around_small">
+                                <lightning-input class="input-field" data-index={index} label="Travel PNR No" value={guest.travelpnrno} onchange={handleChange}></lightning-input>
+                                </lightning-layout-item>
+                        </lightning-layout>
+                        </div>
+                    </template>
+                </lightning-card>
 
-                        <lightning-card title="Placard Details">
-                            <div class="guest-row">
+                <lightning-card title="Placard Details">
+                    <div class="guest-rows">
+                            <!-- Title field (disabled for display purpose) -->
+                            <lightning-combobox class="input-field" 
+                                name="Title__c"
+                                label="Title" 
+                                value={title} 
+                                options={titleOptions} 
+                                onchange={handleChange}>
+                            </lightning-combobox>
+                            
+                            <!-- First Name field -->
+                            <lightning-input class="input-field" name="First_Name__c" label="First Name" value={firstName} onchange={handleFieldChange}></lightning-input>
+                            
+                            <!-- Last Name field -->
+                            <lightning-input class="input-field" name="Last_Name__c"  label="Last name" value={lastName} onchange={handleFieldChange}></lightning-input>
+                                                                
+                            <!-- Mobile field -->
+                            <lightning-input class="input-field" name="Mobile__c" label="Mobile" value={mobile} onchange={handleFieldChange}></lightning-input>
+                            
+                        </div>           
+                </lightning-card>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
+                    <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openDetailPage} style="margin-right: 10px;"></lightning-button>
+                    <lightning-button label="Preview Details" class="encalmbg" variant="brand" onclick={handleSave} style="margin-right: 10px;"></lightning-button>
+                </footer>
+                
+            </template>
+
+                <!-- Modal for confirmation -->
+            <template if:true={isModalOpen}>
+                <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <!-- Modal/Confirmation Header -->
+                        <header class="slds-modal__header">
+                            <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                    title="Close" onclick={closePopupModal}>
+                                <lightning-icon icon-name="utility:close" size="small" alternative-text="close" class="slds-button__icon slds-button__icon_small"></lightning-icon>
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <h2 class="slds-text-heading_medium">Cancel Booking</h2>
+                        </header>
+
+                        <!-- Modal Body -->
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <p>Are you sure you want to Cancel this booking?</p>
+                        </div>
+
+                        <!-- Modal Footer -->
+                        <footer class="slds-modal__footer">
+                            <lightning-button variant="neutral" label="No" class="encalmbg" onclick={closePopupModal}></lightning-button>
+                            <lightning-button variant="brand" label="Yes" class="encalmbg" onclick={handleRedirect}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+
+                <!-- Backdrop for Modal -->
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+            <!--preview final details-->
+            <template if:true={showPreview}>
+                                    
+                <lightning-card title="Order Summary">
+                    <div class="slds-card__body">
+                        <template if:true={orderSummary}>
+                            <div class="param2-container">
+                                <div class="param2-box">
+                                    <template for:each={orderSummary} for:item="value">
+                                        <div key={value} style="font-family: Brandon !important;font-size: 16px;">
+                                            <lightning-layout multiple-rows="true">
+                                                <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
+                                                    {value.name}
+                                                </lightning-layout-item>
+                                                <lightning-layout-item size="3" class="slds-p-around_small">
+                                                    <p>&#8377; {value.amount}</p> <!-- Show the param2 of the selected row -->
+                                                </lightning-layout-item>
+                                            </lightning-layout>  
+                                        </div>
+                                    </template>
+                                    
+                                    <strong>Final Amount : &#8377; {totalAmount}</strong> <!-- Show the param2 of the selected row --> 
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </lightning-card>
+                    <lightning-card title="Guest Details">
+                        <template for:each={guestRows} for:item="guest">
+                            <div key={guest.id} class="guest-rows" data-index={index}>
+                                <lightning-layout multiple-rows="true">
+                                    <lightning-layout-item size="1" class="slds-p-around_small">
+                                        <lightning-input class="input-field" label="Passenger" value={guest.pass} disabled></lightning-input>
+                                    </lightning-layout-item>
                                     <!-- Title field (disabled for display purpose) -->
+                                    <lightning-layout-item size="1" class="slds-p-around_small">
                                     <lightning-combobox class="input-field" 
-                                        name="Title__c"
                                         label="Title" 
-                                        value={title} 
+                                        value={guest.title} 
                                         options={titleOptions} 
-                                        onchange={handleChange}>
+                                        onchange={handleChange}
+                                        disabled>
                                     </lightning-combobox>
+                                    </lightning-layout-item>
                                     
                                     <!-- First Name field -->
-                                    <lightning-input class="input-field" name="First_Name__c" label="First Name" value={firstName} onchange={handleFieldChange}></lightning-input>
-                                    
+                                    <lightning-layout-item size="1" class="slds-p-around_small">
+                                    <lightning-input disabled class="input-field" label="First Name" value={guest.firstname} onchange={handleChange}></lightning-input>
+                                    </lightning-layout-item>
                                     <!-- Last Name field -->
-                                    <lightning-input class="input-field" name="Last_Name__c"  label="Last name" value={lastName} onchange={handleFieldChange}></lightning-input>
-                                                                        
-                                    <!-- Mobile field -->
-                                    <lightning-input class="input-field" name="Mobile__c" label="Mobile" value={mobile} onchange={handleFieldChange}></lightning-input>
-                                    
-                                </div>           
-                        </lightning-card>
-                        <footer class="slds-modal__footer">
-                            <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openDetailPage} style="margin-right: 10px;"></lightning-button>
-                            <lightning-button label="Proceed to Checkout" class="encalmbg" variant="brand" onclick={handleSave} style="margin-right: 10px;"></lightning-button>
-                        </footer>
-                    
-                </template>
+                                    <lightning-layout-item size="1" class="slds-p-around_small">
+                                    <lightning-input disabled class="input-field" label="Last Name" value={guest.lastname} onchange={handleChange}></lightning-input>
+                                    </lightning-layout-item>
+                                    <!-- Gender field (Picklist) -->
+                                    <lightning-layout-item size="2" class="slds-p-around_small">
+                                    <lightning-combobox disabled class="input-field" label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
+                                    </lightning-layout-item>
+                                    <!-- Age field -->
+                                    <lightning-layout-item size="1" class="slds-p-around_small">
+                                    <lightning-input disabled class="input-field" label="Age" value={guest.age} onchange={handleChange}></lightning-input>
+                                    </lightning-layout-item>
+                                    <!-- Designation field -->
+                                    <lightning-layout-item size="1" class="slds-p-around_small">
+                                    <lightning-input disabled class="input-field" label="Designation" value={guest.designation} onchange={handleChange}></lightning-input>
+                                    </lightning-layout-item>
+                                    <!-- Travel Class field (Picklist) -->
+                                    <lightning-layout-item size="2" class="slds-p-around_small">
+                                    <lightning-combobox disabled class="input-field" label="Travel Class" value={guest.travelclass} options={travelClassOptions} onchange={handleChange}></lightning-combobox>
+                                    </lightning-layout-item>
+                                    <!-- Travel PNR No field -->
+                                    <lightning-layout-item size="2" class="slds-p-around_small">
+                                    <lightning-input disabled class="input-field" label="Travel PNR No" value={guest.travelpnrno} onchange={handleChange}></lightning-input>
+                                    </lightning-layout-item>
+                            </lightning-layout>
+                            </div>
+                        </template>
+                    </lightning-card>
+
+                    <lightning-card title="Placard Details">
+                        <div class="guest-rows">
+                                <!-- Title field (disabled for display purpose) -->
+                                <lightning-combobox class="input-field" 
+                                    name="Title__c"
+                                    label="Title" 
+                                    value={title} 
+                                    options={titleOptions} 
+                                    onchange={handleChange}
+                                    disabled>
+                                </lightning-combobox>
+                                
+                                <!-- First Name field -->
+                                <lightning-input disabled class="input-field" name="First_Name__c" label="First Name" value={firstName} onchange={handleFieldChange}></lightning-input>
+                                
+                                <!-- Last Name field -->
+                                <lightning-input disabled class="input-field" name="Last_Name__c"  label="Last name" value={lastName} onchange={handleFieldChange}></lightning-input>
+                                                                    
+                                <!-- Mobile field -->
+                                <lightning-input disabled class="input-field" name="Mobile__c" label="Mobile" value={mobile} onchange={handleFieldChange}></lightning-input>
+                                
+                            </div>           
+                    </lightning-card>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
+                        <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button>
+                        <lightning-button label="Proceed to Checkout" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
+                    </footer>
+                
+            </template>
+            <!-- Conditionally display the spinner -->
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
         
 </template>

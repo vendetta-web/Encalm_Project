@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>KeywordList__c</field>
-        <value xsi:type="xsd:string">Group booking, invoice requests, relating to other depts, lounge, spa, nap rooms,</value>
+        <value xsi:type="xsd:string">Group booking, invoice requests, relating to other depts, lounge, spa, nap rooms</value>
     </values>
     <values>
         <field>Type__c</field>

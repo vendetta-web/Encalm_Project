@@ -4,7 +4,7 @@
     <protected>false</protected>
     <values>
         <field>KeywordList__c</field>
-        <value xsi:type="xsd:string">Current Date or Next date, Refund, cancel/cancellation, complaint, dissatisfaction, GMR, director, HOD,ex-comm, today, tomorrow, early morning, noon, evening, invoice, amendment, urgent, urgent refund, reschedule, reservation, customs,Current Date, cancel</value>
+        <value xsi:type="xsd:string">Current Date or Next date, Refund, cancel/cancellation, complaint, dissatisfaction, GMR, director, HOD,ex-comm, today, tomorrow, early morning, noon, evening, amendment, urgent, urgent refund, reschedule, reservation, customs,Current Date, cancel, invoice</value>
     </values>
     <values>
         <field>Type__c</field>

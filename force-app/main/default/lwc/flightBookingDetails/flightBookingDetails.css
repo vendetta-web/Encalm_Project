@@ -12,9 +12,10 @@
 /* Container for the box */
 .param2-container {
     display: flex;
-    justify-content: center;  /* Center horizontally */
+    justify-content: left;  /* left align box */
     align-items: center;  /* Center vertically */
     margin-top: 20px;
+    padding-left: 10px;
 }
 
 /* Style for the box that shows the selected param2 */
@@ -206,7 +207,7 @@ span {
 
 .remove {
     color: black; /* red color for remove */
-    background-color: red;
+    /*background-color: red;*/
 }
 
 .select {
@@ -214,6 +215,15 @@ span {
 }
 
 .guest-row {
+    display: flex;
+    flex-wrap: wrap;  /* Allow fields to wrap if they overflow */
+    gap: 15px;  /* Adds space between the fields */
+    margin-bottom: 15px; /* Adds     space between rows */
+    margin-left: 10px; /* Adds space from first rows */
+    margin-right: 10px; /* Adds space from   last rows */
+}
+
+.guest-rows {
     display: flex;
     flex-wrap: wrap;  /* Allow fields to wrap if they overflow */
     gap: 15px;  /* Adds space between the fields */

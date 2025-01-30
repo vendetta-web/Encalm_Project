@@ -130,8 +130,8 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Location__c</fieldItem>
-                <identifier>RecordLocation__cField</identifier>
+                <fieldItem>Record.Services__c</fieldItem>
+                <identifier>RecordServices_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -155,6 +155,23 @@
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Reason_For_Escalated__c</fieldItem>
+                <identifier>RecordReason_For_Escalated_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Status}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Escalated</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
         <itemInstances>
             <fieldInstance>
                 <fieldInstanceProperties>
@@ -208,8 +225,8 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Closure_Reason__c</fieldItem>
-                <identifier>RecordClosure_Reason_cField</identifier>
+                <fieldItem>Record.Location__c</fieldItem>
+                <identifier>RecordLocation__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -218,8 +235,8 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Services__c</fieldItem>
-                <identifier>RecordServices_cField</identifier>
+                <fieldItem>Record.Closure_Reason__c</fieldItem>
+                <identifier>RecordClosure_Reason_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-9b17439f-1625-4966-82ed-505de577e5b5</name>
@@ -254,7 +271,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>readonly</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.SuppliedEmail</fieldItem>
                 <identifier>RecordSuppliedEmailField</identifier>
@@ -264,7 +281,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>readonly</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.SuppliedName</fieldItem>
                 <identifier>RecordSuppliedNameField</identifier>
@@ -278,7 +295,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>readonly</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.SuppliedCompany</fieldItem>
                 <identifier>RecordSuppliedCompanyField</identifier>
@@ -288,7 +305,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>readonly</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.SuppliedPhone</fieldItem>
                 <identifier>RecordSuppliedPhoneField</identifier>

@@ -1,0 +1,65 @@
+<template>
+
+    
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Confirmation Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" size="small" alternative-text="close" class="slds-button__icon slds-button__icon_small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Cancel Booking</h2>
+                </header>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-radio-group
+                        name="cancelOptions"
+                        label="Select Cancel Type"
+                        options={cancelOptions}
+                        value={selectedCancelOption}
+                        onchange={handleCancelOptionChange}
+                    ></lightning-radio-group>
+                </div>
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={handleNext}></lightning-button>
+                </footer>
+            </div>
+        </section>
+
+        <!-- Backdrop for Modal -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showMultipleCancelScreen}>
+        <lightning-card title="Cancel Booking">
+            <div class="slds-p-around_medium">
+                 <!-- Display loading spinner when data is being fetched -->
+                <template if:true={isLoading}>
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </template>
+                 <!-- Table with selectable rows -->
+                <lightning-datatable
+                    key-field="id"
+                    data={lineItems}
+                    columns={columns}
+                    is-loading={isLoading}
+                    onrowselection={handleRowSelection}
+                    class="datatable-custom"
+                ></lightning-datatable>
+    
+                <!-- Button to send selected values to Apex -->
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Previous" onclick={handlePrevious}></lightning-button>
+                    <lightning-button variant="brand" label="Next" onclick={handleBookingCancellation}></lightning-button>
+                </footer>
+            </div>
+        </lightning-card>
+    </template>
+</template>

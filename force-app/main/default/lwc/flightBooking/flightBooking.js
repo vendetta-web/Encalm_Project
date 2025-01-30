@@ -6,7 +6,7 @@ import getAirportDetails from '@salesforce/apex/Encalm_BookingEngine.getAirportD
 import getFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getFlightDetails';
 import getAirport from '@salesforce/apex/Flight_Booking_encalm.getAirport';
 import getTransitFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getTransitFlightDetails';
-import convertLead from '@salesforce/apex/LeadConversionController.convertLead';
+import processBooking from '@salesforce/apex/LeadConversionController.processBooking';
 import getFlightInfo from '@salesforce/apex/Flight_Booking_encalm.getFlightInfo';
 import createOpportunity from '@salesforce/apex/Flight_Booking_encalm.createOpportunity';
 export default class FlightBooking extends NavigationMixin(LightningElement) {
@@ -21,7 +21,8 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
  allAirportOptions;
  allAirportOptionsDepTo;
  allAirportOptionsArrFrom;
- flightSchedule = new Map();;
+ flightSchedule=[];
+ allAirportIds=[];
  countryMap = new Map();
  flightStaMap = new Map();
  flightDtaMap = new Map();
@@ -64,7 +65,6 @@ sectorOption = [
         // If data is returned from the wire function
         if (data) {
             // Map the data to an array of base airport options
-        console.log('Data = ' ,    data );
             this.baseAirportOptions = data.baseAirportPicklist.map(option => {
                 return {
                     label: option.label,
@@ -78,6 +78,7 @@ sectorOption = [
                     value: option.value
                 };
             });
+            this.allAirportIds = data.allAirportPicklist;
             this.countryMap = new Map(Object.entries(data.airportToCountryMap));
         }
         // If there is an error
@@ -98,8 +99,7 @@ sectorOption = [
                 value: option.value
                 };
             }); 
-            this.flightSchedule = new Map(Object.entries(result.flightPicklist));
-            console.log('result->> '+JSON.stringify(result));
+            this.flightSchedule = result.flightPicklist;
             this.flightStaMap = new Map(Object.entries(result.flightNumberToStaMap));
             this.flightDtaMap = new Map(Object.entries(result.flightNumberToDtaMap));
             
@@ -272,15 +272,13 @@ handleTabChange(event) {
         
         if(this.isTabOne){
             this.setStaTime();
-            if (this.flightNumber !='' && this.flightSchedule.has(this.flightNumber)) {
-                this.opportunityFieldValues['Arriving_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumber);
-            }
+            this.opportunityFieldValues['Arriving_Flight_Schedule__c']=this.getFlightId(this.flightNumber);
         }else if(this.isTabTwo) {
             this.setStdTime();
-            if (this.flightNumber !='' && this.flightSchedule.has(this.flightNumber)) {
-                this.opportunityFieldValues['Departure_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumber);
-            }
+            this.opportunityFieldValues['Departure_Flight_Schedule__c']=this.getFlightId(this.flightNumber);
         }
+
+        
         /*if( this.myMap.has(event.target.value)){
               
             
@@ -290,7 +288,34 @@ handleTabChange(event) {
            this.staTime =  this.formatTime(sta.STA__c);;
         }
         console.log('------------',this.flightNumber);*/
-         }
+    }
+
+    // Method to retrieve flight ID based on flight number
+    getFlightId(flightNumber) {
+        // Iterate through the flightPicklist
+        let flightScheduleId = null;
+        this.flightSchedule.forEach(item => {
+        if (item.value == flightNumber) {
+                // Extract the record ID associated with "flight number"
+                flightScheduleId= item[flightNumber];
+            }
+        });
+        return flightScheduleId;
+    }
+
+    // Method to retrieve flight ID based on flight number
+    getAirportId(airportCode) {
+        // Iterate through the flightPicklist
+        let airportId = null;
+        this.allAirportIds.forEach(item => {
+        if (item.value == airportCode) {
+                // Extract the record ID associated with "flight number"
+                airportId= item[airportCode];
+            }
+        });
+        return airportId;
+    }
+    
     formatTime(milliseconds,hrs,mns) {
         const adjustedMillis = milliseconds - (hrs * 3600000) - (mns * 60000);
         const date = new Date(adjustedMillis);
@@ -299,7 +324,7 @@ handleTabChange(event) {
         return `${hours}:${minutes}`; // Format as HH:MM
     }
     handleSave(event){
-        this.handleConvertLead();
+        this.handleBooking();
         /*console.log('---jjjjjjjjjjjjjjjjjjjjjjjjjjjjj--------->');
         var infantCounts;
         var childCounts;
@@ -358,10 +383,11 @@ handleTabChange(event) {
     handleArrivingAirportChange(event) {
         this.arrivingAirport = event.target.value;
         if(this.isTabThree){
-            console.log('isTabThree->>>');
             this.setTransitSector();
+            this.opportunityFieldValues['Arriving_Airport_Id__c'] = this.getAirportId(this.arrivingAirport);
         } else {
             this.setSector();
+            this.opportunityFieldValues['Service_Airport_Id__c'] = this.getAirportId(this.arrivingAirport);
         }
 
     }
@@ -369,13 +395,19 @@ handleTabChange(event) {
         this.departureAirport = event.target.value;
         if(this.isTabThree){
             this.setTransitSector();
+            this.opportunityFieldValues['Departure_Airport_Id__c'] = this.getAirportId(this.departureAirport);
         } else {
             this.setSector();
+            if (this.isTabOne){
+                this.opportunityFieldValues['Departure_Airport_Id__c'] = this.getAirportId(this.departureAirport);
+            } else {
+                this.opportunityFieldValues['Arriving_Airport_Id__c'] = this.getAirportId(this.departureAirport);
+            }
         }
     }
  
 
-    handleStaTimeChange(event) { this.staTime = event.target.value; }
+    handleStaTimeChange(event) { this.staTime = event.target.value;}
     handleStdTimeChange(event) { this.stdTime = event.target.value; }
     handleServiceTimeChange(event) { this.serviceTime = event.target.value; }
 
@@ -396,16 +428,12 @@ handleTabChange(event) {
     handleFlightNumberChangeArrival(event) {
         this.flightNumberArrival = event.target.value; 
         this.setStaTime();
-        if (this.flightNumberArrival !='' && this.flightSchedule.has(this.flightNumberArrival)) {
-            this.opportunityFieldValues['Arriving_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumberArrival);
-        }
+        this.opportunityFieldValues['Arriving_Flight_Schedule__c'] = this.getFlightId(this.flightNumberArrival);
     }
     handleFlightNumberChangeDeparture(event) {
         this.flightNumberDeparture = event.target.value;
         this.setStdTime();
-        if (this.flightNumberDeparture !='' && this.flightSchedule.has(this.flightNumberDeparture)) {
-            this.opportunityFieldValues['Departure_Flight_Schedule__c'] = this.flightSchedule.get(this.flightNumberDeparture);
-        }
+        this.opportunityFieldValues['Departure_Flight_Schedule__c'] = this.getFlightId(this.flightNumberDeparture);
     }
 
 
@@ -481,6 +509,7 @@ setStaTime(){
     if (this.flightNumberArrival !='' && this.flightStaMap.has(this.flightNumberArrival)) {
         this.staTime = this.formatTime(this.flightStaMap.get(this.flightNumberArrival),0,0);
     }
+    this.opportunityFieldValues['STA_Time__c'] = this.staTime;
 }
 setStdTime(){
     if (this.flightNumber !='' && this.flightDtaMap.has(this.flightNumber)) {
@@ -489,6 +518,7 @@ setStdTime(){
     if (this.flightNumberDeparture !='' && this.flightDtaMap.has(this.flightNumberDeparture)) {
         this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumberDeparture),1,30);
     }
+    this.opportunityFieldValues['STD_Time__c'] = this.stdTime;
 }
 resetFlightDetails(){
     this.flightNumber='';
@@ -516,14 +546,14 @@ handleAccountRecord(event){
     this.accountId = event.detail['Id'];
 }
 
-handleConvertLead() {
+handleBooking() {
     this.opportunityFieldValues['Number_of_Adults__c'] = this.adultCount;
     this.opportunityFieldValues['Number_of_Children__c'] = this.childCount;
     this.opportunityFieldValues['Number_of_Infants__c'] = this.infantCount;
     //this.opportunityFieldValues[''] = this.flightSchedule;
-    convertLead({ leadId: this.recordId, accId: this.accountId, opportunityFieldValues: this.opportunityFieldValues })
+    processBooking({ recId: this.recordId, accId: this.accountId, opportunityFieldValues: this.opportunityFieldValues })
         .then((opportunityId) => {
-            this.showToast('Success', 'Lead converted successfully!', 'success');
+            //this.showToast('Success', 'Lead converted successfully!', 'success');
 
             // Redirect to Opportunity record
             this[NavigationMixin.Navigate]({
@@ -558,6 +588,7 @@ handleFieldChange(event) {
 }
 handleTransitAirportChange(event){
     this.transitAirport = event.target.value;
+    this.opportunityFieldValues['Service_Airport_Id__c'] = this.getAirportId(this.transitAirport);    
 }
 handleTransitArrivalDateChange(event){
     this.arrivalDate = event.target.value;

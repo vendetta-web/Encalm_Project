@@ -1,0 +1,23 @@
+.slds-modal__container {
+    width: 30rem;
+}
+
+.datatable-custom .slds-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.datatable-custom .slds-table th, .datatable-custom .slds-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: break-word;
+}
+
+.datatable-custom .slds-table th {
+    min-width: 150px; /* Ensure the headers have a minimum width */
+}
+
+.datatable-custom .slds-table td {
+    min-width: 150px; /* Ensure the data cells have a minimum width */
+}

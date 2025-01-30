@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+	<apiVersion>62.0</apiVersion>
+	<isExposed>true</isExposed>
+	<targets>
+    <target>lightning__FlowScreen</target>
+</targets>
+<targetConfigs>
+    <targetConfig targets="lightning__FlowScreen">
+      <property name="fieldLabel" label="Field Label" type="String" required="true"/>
+	  <property name="fieldValue" label="Field Value" type="String" required="true"/>
+	  <property name="visibleLines" label="# Visble Lines" type="Integer" required="true"/>
+	  <property name="recordId" label="Share with Id" type="String" required="true"/>
+    </targetConfig>
+  </targetConfigs>
+</LightningComponentBundle>

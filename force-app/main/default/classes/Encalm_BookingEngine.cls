@@ -22,6 +22,7 @@ public with sharing class Encalm_BookingEngine {
                     Map<String, String> airportsValueMap = new Map<String, String>();
                     airportsValueMap.put('label', air.Name);
                     airportsValueMap.put('value', air.Airport_Code__c);
+                    airportsValueMap.put(air.Airport_Code__c, air.Id);
                     airportListValues.add(airportsValueMap);
                     airportCountryMap.put(air.Airport_Code__c, air.Country__c);
                 }

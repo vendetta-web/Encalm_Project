@@ -11,6 +11,7 @@ public class CaseTriggerHandler {
                 
                 // Only parse and set picklist values if manual fields are not set
                 if (oldCase == null || 
+                    (caseRecord.Priority == null || caseRecord.Priority == 'Choose option') && 
                     (caseRecord.Priority == oldCase.Priority 
                      && 
                      (String.isBlank(oldCase.Services__c) || oldCase.Services__c == caseRecord.Services__c) 

@@ -155,9 +155,10 @@
     <externalSharingModel>ReadWrite</externalSharingModel>
     <label>Flight Detail</label>
     <nameField>
+        <displayFormat>{000000}</displayFormat>
         <label>Flight Detail Name</label>
         <trackHistory>false</trackHistory>
-        <type>Text</type>
+        <type>AutoNumber</type>
     </nameField>
     <pluralLabel>Flight Details</pluralLabel>
     <searchLayouts></searchLayouts>

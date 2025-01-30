@@ -10,7 +10,7 @@
                             <value>Submit</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>Lead.Inquiry</value>
+                            <value>Lead.Send_Shopping_Email</value>
                         </valueListItems>
                         <valueListItems>
                             <value>Edit</value>
@@ -20,9 +20,6 @@
                         </valueListItems>
                         <valueListItems>
                             <value>Delete</value>
-                        </valueListItems>
-                        <valueListItems>
-                            <value>Lead.Send_Shopping_Email</value>
                         </valueListItems>
                         <valueListItems>
                             <value>ChangeRecordType</value>

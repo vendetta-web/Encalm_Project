@@ -3,6 +3,10 @@
     <label>GOX</label>
     <protected>false</protected>
     <values>
+        <field>Airport_Id__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
         <field>Airport_Name__c</field>
         <value xsi:type="xsd:string">GOX</value>
     </values>

@@ -14,21 +14,19 @@ public without sharing class EmailUtility {
         @InvocableVariable
         public String recordId; // Related record ID
          @InvocableVariable
-        public String body; // Related record ID  //Saurabh
+        public String Body; // Related record ID  //Saurabh
     }
-     //Saurabh
-   /* @future
-    public static void updateEmailTemplate(String bodyVal,String templatename){
-        EmailTemplate em=[Select Id,Body,Name,DeveloperName From EmailTemplate 
-                          WHERE Name = :templateName or DeveloperName = :templateName LIMIT 1];
-        em.Body=bodyVal;
-        em.HtmlValue = bodyVal;
-                System.debug('25 '+bodyUpdated);
-        
-
-        bodyUpdated=bodyVal;
-        update em;
+  /* @future
+    public static void updateEmailTemplateBody(String templateName, String newBody) {
+        if (String.isBlank(templateName) || String.isBlank(newBody)) {
+            throw new EmailTemplateException('Template name and body cannot be blank.');
+        }
+        EmailTemplate emailTemplate = getEmailTemplate(templateName);
+        emailTemplate.Body = newBody;
+        emailTemplate.HtmlValue = newBody;
+        update emailTemplate;
     } */
+
 
     @InvocableMethod(label='Invoke Email Utility' description='Send Email')
     public static void sendEmail(List<FlowInputs> request) {
@@ -59,7 +57,7 @@ public without sharing class EmailUtility {
         if (emailTemp == null) {
             throw new EmailUtilityException('No email template found with the provided name: ' + input.templateName);
         }
-		System.debug(emailTemp.Body);
+		System.debug('EmailTempBody'+emailTemp.Body);
         // Render email using the template
         Messaging.SingleEmailMessage mail = Messaging.renderStoredEmailTemplate(emailTemp.Id, null, input.recordId);
 
@@ -84,9 +82,22 @@ public without sharing class EmailUtility {
         } else {
             mail.setReplyTo('encalmreservation@gmail.com'); // Default Reply-To address
         }
-
+		
+        
+       
         // Ensure email is logged as an activity
-        mail.setSaveAsActivity(true);
+        //mail.setSaveAsActivity(true);
+ 
+         // Validate recordId for WhatId
+        String recordPrefix = input.recordId?.substring(0, 3);
+        Boolean isValidWhatId = recordPrefix == '001' || recordPrefix == '003' || recordPrefix == '500'; // Account, Contact, Case 
+       // Set SaveAsActivity based on the validity of recordId
+        if (isValidWhatId) {
+            mail.setSaveAsActivity(true);
+            mail.setWhatId(input.recordId); 
+        } else {
+            mail.setSaveAsActivity(false);
+        }
 
         // Send the email
         List<Messaging.SingleEmailMessage> emailList = new List<Messaging.SingleEmailMessage>{mail};
