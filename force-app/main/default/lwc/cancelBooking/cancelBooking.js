@@ -44,6 +44,7 @@ export default class CancelBooking extends LightningElement {
     @api recordId; // Record ID for the Opportunity page
     isModalOpen = true;
     showMultipleCancelScreen = false;
+    showSummary=false;
     selectedLineItems = [];  // Stores selected line item IDs
     lineItems = [];  // Data for the table
     columns = COLUMNS;
@@ -51,6 +52,7 @@ export default class CancelBooking extends LightningElement {
     totalAmount;
     selectedPassengers;
     selectedPackage;
+    cancellationOrder;
     cancelOptions = [
         { label: 'Full Cancel', value: 'fullCancel' },
         { label: 'Partial Cancel', value: 'partialCancel' }
@@ -66,19 +68,29 @@ export default class CancelBooking extends LightningElement {
         this.showMultipleCancelScreen = false;
         this.isModalOpen = true;
     }
+    handleSelection(){
+        this.showSummary = false;
+        if (this.selectedCancelOption=='partialCancel') {
+            this.showMultipleCancelScreen = true;
+        } else {
+            this.isModalOpen = true;
+        }
+    }
 
     handleCancelOptionChange(event) {
         this.selectedCancelOption = event.detail.value;
     }
 
     handleNext() {
-        if (this.selectedCancelOption) {
-            console.log(`Order will be cancelled with option: ${this.selectedCancelOption}`);
+        console.log('this.selectedCancelOption-->:', this.selectedCancelOption);
+        if (this.selectedCancelOption=='partialCancel') {
             this.isModalOpen = false;
             this.showMultipleCancelScreen = true;
             
         } else {
-            console.log('Please select a cancel option');
+            this.isModalOpen = false;
+            this.showSummary = true;
+            this.handleBookingCancellation();
         }
     }
 
@@ -114,14 +126,20 @@ export default class CancelBooking extends LightningElement {
             this.selectedPackage = selectedRows[0].packageName;  // Just picking the first package (or change to any other logic)
         }
     }
+
+    handleCancellation(){
+        //final submit
+    }
     
 
     handleBookingCancellation() {
         // Call Apex method to process the selected options
-        
-        cancelledSummaryPreview({ bookingAmount: this.totalAmount, packageName: this.selectedPackage, opportunityId: this.recordId, numberOfPax:  this.totalAmount})
+        cancelledSummaryPreview({ cancelType: this.selectedCancelOption, bookingAmount: this.totalAmount, packageName: this.selectedPackage, opportunityId: this.recordId, numberOfPax:  this.selectedPassengers})
             .then(result => {
                 console.log('Apex Response:', JSON.stringify(result));
+                this.cancellationOrder = result;
+                this.showMultipleCancelScreen = false;
+                this.showSummary = true;
             })
             .catch(error => {
                 console.error('Apex Error:', error);

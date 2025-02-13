@@ -62,4 +62,65 @@
             </div>
         </lightning-card>
     </template>
+
+    <template if:true={showSummary}>
+        <lightning-card title="Cancellation Summary" class="slds-size_1-of-4">
+            <div class="slds-card__body">
+                <template if:true={cancellationOrder}>
+                    <div class="param2-container">
+                        <div class="param2-box"> 
+                                    <lightning-layout multiple-rows="true">
+                                            <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
+                                                Booking Amount:
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="3" class="slds-p-around_small">
+                                                <p>&#8377; {cancellationOrder.bookingAmount}</p> <!-- Show the param2 of the selected row -->
+                                            </lightning-layout-item>
+                                    </lightning-layout>
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
+                                            Refund Amount:
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                            <p>&#8377; {cancellationOrder.refundAmount}</p> <!-- Show the param2 of the selected row -->
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
+                                            Amount deducted:
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                            <p>&#8377; {cancellationOrder.deductedAmount}</p> <!-- Show the param2 of the selected row -->
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
+                                            Refund Method:
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                            <p>{cancellationOrder.refundMethod}</p> <!-- Show the param2 of the selected row -->
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
+                                            Cancellation for Persons:
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                            <p>{cancellationOrder.numberOfPaxCancelled}</p> <!-- Show the param2 of the selected row -->
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                
+                            
+                            <strong>Total Refund Amount: &#8377; {cancellationOrder.refundAmount}</strong> <!-- Show the param2 of the selected row --> 
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </lightning-card>
+        <!-- Button to send selected values to Apex -->
+        <footer class="slds-modal__footer">
+            <lightning-button variant="neutral" label="Previous" onclick={handleSelection}></lightning-button>
+            <lightning-button variant="brand" label="Submit" onclick={handleCancellation}></lightning-button>
+        </footer>
+    </template>
 </template>

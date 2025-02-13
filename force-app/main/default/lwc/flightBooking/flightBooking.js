@@ -11,6 +11,7 @@ import getFlightInfo from '@salesforce/apex/Flight_Booking_encalm.getFlightInfo'
 import createOpportunity from '@salesforce/apex/Flight_Booking_encalm.createOpportunity';
 export default class FlightBooking extends NavigationMixin(LightningElement) {
     @api recordId;
+    isLoading = false;
     accountId='';
  airportOptions = [];
  flightNumbers = [];
@@ -323,61 +324,26 @@ handleTabChange(event) {
         const minutes = String(date.getUTCMinutes()).padStart(2, '0');
         return `${hours}:${minutes}`; // Format as HH:MM
     }
-    handleSave(event){
-        this.handleBooking();
-        /*console.log('---jjjjjjjjjjjjjjjjjjjjjjjjjjjjj--------->');
-        var infantCounts;
-        var childCounts;
-        var adultCounts;
-        var arrivingAirport ;
-        var departureAirport
-        var sector;
-        var flightNumber;
-        const comboBoxes = this.template.querySelectorAll('lightning-combobox'); // Select all comboboxes
-                comboBoxes.forEach(comboBox => {
-                    const fieldId = comboBox.dataset.id; // Get data-id of the combobox
-                    if(comboBox.dataset.id == 'arrivingAirportr'){
-                    arrivingAirport = comboBox.value;
-                    }
-                    
-                    if(comboBox.dataset.id == 'departureAirport'){
-            departureAirport =  comboBox.value;
-                    }
-                    if(comboBox.dataset.id == 'selectSector'){
-                sector = comboBox.value;
-                    }
-                    if(comboBox.dataset.id == 'flightNumber'){
-                    flightNumber = comboBox.value;
-                    }
-                    console.log('--------------comboBox.dataset.id;----------',comboBox.dataset.id);
-                    console.log('===========comboBox.value;=======>',comboBox.value);
-                
-                });
-
-
-        const buttons = this.template.querySelectorAll('button'); // Select all comboboxes
-
-
-        //  buttons.forEach(button => {
-                
-        //             console.log(' button.dataset.id------------------->', button.dataset.id);
-        //             if( button.dataset.id == ''){
-        //                      infantCounts  = button.value;
-        //             }
-        //             if( button.dataset.id == ''){
-        //                        childCounts = button.value;
-        //             }
-        //             if( button.dataset.id == ''){
-        //                    adultCounts  = button.value;
-        //             }
-                    
-        //  });
-        createOpportunity({arrivingAirport:arrivingAirport,departureAirport:departureAirport,dateOfArrival:this.arrivalDate,sector:sector,flightNumber:flightNumber,infantCount:this.infantCount,childCount:this.childCount,adultCount:this.adultCount})
-                .then(result => {
-                    console.log('result------------>',result)
-                        
-                    });
-        */
+    handleSave(){
+        const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
+            .reduce((validSoFar, input_Field_Reference) => {
+                input_Field_Reference.reportValidity();
+                return validSoFar && input_Field_Reference.checkValidity();
+            }, true);
+        const All_Compobox_Valid = [...this.template.querySelectorAll('lightning-combobox')]
+            .reduce((validSoFar, input_Field_Reference) => {
+                input_Field_Reference.reportValidity();
+                return validSoFar && input_Field_Reference.checkValidity();
+            }, true);
+        var errorMessage = 'Please fill the mandatory fields.'
+        // Check validity of the fields
+        if (!All_Input_Valid || !All_Compobox_Valid) {
+            // If any of the fields are invalid, don't proceed with submission
+            this.showToast('Error', errorMessage, 'error');
+            return;
+        }else {
+            this.handleBooking();
+        }
     }
 
     handleArrivingAirportChange(event) {
@@ -531,8 +497,8 @@ resetOnTabChange() {
     this.transitAirport='';
     this.flightNumberArrival='';
     this.flightNumberDeparture='';
-    this.arrivalDate;  
-    this.departureDate;  
+    this.arrivalDate=undefined;  
+    this.departureDate=undefined;  
     this.flightNumber = '';
     this.staTime = '';
     this.stdTime = '';
@@ -547,9 +513,11 @@ handleAccountRecord(event){
 }
 
 handleBooking() {
+
     this.opportunityFieldValues['Number_of_Adults__c'] = this.adultCount;
     this.opportunityFieldValues['Number_of_Children__c'] = this.childCount;
     this.opportunityFieldValues['Number_of_Infants__c'] = this.infantCount;
+    this.isLoading = true;
     //this.opportunityFieldValues[''] = this.flightSchedule;
     processBooking({ recId: this.recordId, accId: this.accountId, opportunityFieldValues: this.opportunityFieldValues })
         .then((opportunityId) => {
@@ -567,6 +535,7 @@ handleBooking() {
         })
         .catch((error) => {
             this.showToast('Error', error.body.message, 'error');
+            this.isLoading = false;
         });
 }
 
@@ -598,6 +567,7 @@ handleTransitDepartureDateChange(event){
     this.departureDate = event.target.value;
         this.loadTransitFlightData(this.departureDate, '', this.arrivingAirport);
 }
+
 
 
 

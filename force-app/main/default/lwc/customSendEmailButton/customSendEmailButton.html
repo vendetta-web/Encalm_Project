@@ -1,3 +1,7 @@
 <template>
-<lightning-button label="Send Shop Email" onclick={handleSendEmail}></lightning-button>
+    <lightning-card title="Send Email">
+        <lightning-input label="Subject" value={subject} onchange={handleChange} data-id="subject"></lightning-input>
+        <lightning-textarea label="Body" value={body} onchange={handleChange} data-id="body"></lightning-textarea>
+        <lightning-button label="Send Email" onclick={sendEmail} class="slds-m-top_medium"></lightning-button>
+    </lightning-card>
 </template>

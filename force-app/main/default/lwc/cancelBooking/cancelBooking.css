@@ -21,3 +21,40 @@
 .datatable-custom .slds-table td {
     min-width: 150px; /* Ensure the data cells have a minimum width */
 }
+
+/* Container for the box */
+.param2-container {
+    display: flex;
+    justify-content: left;  /* left align box */
+    align-items: center;  /* Center vertically */
+    margin-top: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* Style for the box that shows the selected param2 */
+.param2-box {
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    width: 100%;  /* Allow box to be responsive */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);  /* Add a slight shadow for better visual effect */
+    text-align: center;  /* Center the text inside the box */
+}
+
+/* Header style inside the box */
+.param2-box strong {
+    font-weight: bold;
+    color: #0070d2; /* Salesforce blue */
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Paragraph style for the param2 content */
+.param2-box p {
+    font-size: 16px;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0;
+}

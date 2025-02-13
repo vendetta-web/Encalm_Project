@@ -11,6 +11,9 @@ import CASE_SUPPLIED_NAME from '@salesforce/schema/Case.SuppliedName';
 import CASE_SUPPLIED_PHONE from '@salesforce/schema/Case.SuppliedPhone';
 import CASE_NUMBER from '@salesforce/schema/Case.CaseNumber';
 import CASE_ORIGIN from '@salesforce/schema/Case.Origin';
+import CASE_INQUIRY_TYPE from '@salesforce/schema/Case.Inquiry_Type__c';
+
+import { CloseActionScreenEvent } from 'lightning/actions';
 
 const FIELDS = [
     CASE_ID,
@@ -21,35 +24,76 @@ const FIELDS = [
     CASE_SUPPLIED_EMAIL,
     CASE_SUPPLIED_NAME,
     CASE_SUPPLIED_PHONE,
-    CASE_ORIGIN
+    CASE_ORIGIN,
+    CASE_INQUIRY_TYPE
+
 ];
 
 export default class CaseToLead extends NavigationMixin(LightningElement) {
     @api recordId;
     caseData;
-    actionMessage = ''; 
-    isSuccess = true; 
-    isNavigatingToLead = false; 
-
+    actionMessage = '';
+    isSuccess = true;
+    isNavigatingToLead = false;
+    openCaseClosedScreen = false;
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredCase({ error, data }) {
         if (data) {
-            console.log('DataLine36 : ',JSON.stringify(data));
+            console.log('DataLine36 : ', JSON.stringify(data));
             this.caseData = data.fields;
             //this.checkIfLeadExists(); 
-            this.navigateToLeadWithPrefill(); // Directly navigate to lead creation
+            console.log('42 ' + this.caseData?.CASE_INQUIRY_TYPE?.value);
+            if (this.caseData?.CASE_INQUIRY_TYPE?.value !== 'Booking') {
+
+                console.log('45 ' + this.caseData?.CASE_INQUIRY_TYPE?.value);
+                this.openCaseClosedScreenStart();
+            } else {
+                console.log('49 ' + this.caseData?.CASE_INQUIRY_TYPE?.value);
+
+                this.navigateToLeadWithPrefill();
+            }
+            // // Directly navigate to lead creation
         } else if (error) {
             this.actionMessage = 'Error fetching Case data.';
             this.isSuccess = false;
         }
     }
+    openCaseClosedScreenStart() {
+        this.openCaseClosedScreen = true;
+    }
+    handleSubmit(event) {
+        event.preventDefault();
+        // Get data from submitted form
+        const fields = event.detail.fields;
+        // Here you can execute any logic before submit
+        // and set or modify existing fields
+        fields.Status = 'Closed';
 
+        // You need to submit the form after modifications
+        this.template
+            .querySelector('lightning-record-edit-form').submit(fields);
+        this.openCaseClosedScreen = false;
+        this.navigateToLeadWithPrefill();
+
+    }
+
+    handleError(event) {
+        console.log("handleError event");
+        console.log(JSON.stringify(event.detail));
+    }
+    hideModalBox(event) {
+        event.preventDefault();
+        //event.stopPropagation(); 
+        this.openCaseClosedScreen = false;
+        this.dispatchEvent(new CloseActionScreenEvent());
+
+    }
     renderedCallback() {
         // Insert HTML for success messages
         if (this.isSuccess && this.actionMessage) {
             const container = this.template.querySelector('.message-container');
             if (container) {
-                container.innerHTML = this.actionMessage; 
+                container.innerHTML = this.actionMessage;
             }
         }
     }
@@ -106,7 +150,7 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             LeadSource: this.caseData?.Origin?.value
         };
         this.isNavigatingToLead = true;
-        console.log('isNavigatingToLead : ',this.isNavigatingToLead);
+        console.log('isNavigatingToLead : ', this.isNavigatingToLead);
         this[NavigationMixin.Navigate]({
             type: 'standard__objectPage',
             attributes: {
@@ -119,7 +163,7 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         });
 
         // Update Case status to Closed
-       // this.updateCaseStatus(caseId);
+        // this.updateCaseStatus(caseId);
     }
 
     updateCaseStatus(caseId) {

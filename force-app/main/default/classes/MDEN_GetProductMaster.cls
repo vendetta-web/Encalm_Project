@@ -69,30 +69,30 @@ global class MDEN_GetProductMaster {
             system.debug('productPrice==>'+productPrice);
             
             //Null check
-            if(productPrice != null){
+            if(productPrice != null && !productPrice.isEmpty()){
                 //Initialize the wrapper with status and message
                 mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
                 
-                List<get_product_with_availablity> datalist = new List<get_product_with_availablity>();
+                List<productAvailabilityWrapper> datalist = new List<productAvailabilityWrapper>();
                 for(PricebookEntry pbe: productPrice){
             		//mden_responseWrapper.status = "true";
                     //mden_responseWrapper.message = "data found.";
-                    get_product_with_availablity gpwa = new get_product_with_availablity();
+                    productAvailabilityWrapper paw = new productAvailabilityWrapper();
           
-                    gpwa.id = pbe.product2.id;
-                    gpwa.name = pbe.product2.name;
-                    gpwa.list_price = pbe.unitPrice;
-                    gpwa.tax_string = '(= ₹ '+pbe.Tax_Price__c+' Incl. Taxes)';
-                    gpwa.tax_price = pbe.Tax_Price__c;
-                    gpwa.categ_id = new List<String>{pbe.product2.ProductCode, 'Welcome and Assist / '+ pbe.product2.Service_Type__c + ' / ' + pbe.product2.Sector__c};
-                    gpwa.description = pbe.product2.Description;
-                    //gpwa.surcharge_applicable_hours = Integer.valueOf(surcharge_applicable_hours);
-                    gpwa.surcharge_amount = pbe.Surcharge_Amount__c;
-                    //gpwa.min_lead_time_booking_hrs = productPrice.Arrival_Terminal__r.Name;
-                    //gpwa.available = pbe.product2.Is_Available__c;
-                    gpwa.available = pbe.product2.isActive;
+                    paw.id = pbe.product2.id;
+                    paw.name = pbe.product2.name;
+                    paw.list_price = pbe.unitPrice;
+                    paw.tax_string = '(= ₹ '+pbe.Tax_Price__c+' Incl. Taxes)';
+                    paw.tax_price = pbe.Tax_Price__c;
+                    paw.categ_id = new List<String>{pbe.product2.ProductCode, 'Welcome and Assist / '+ pbe.product2.Service_Type__c + ' / ' + pbe.product2.Sector__c};
+                    paw.description = pbe.product2.Description;
+                    //paw.surcharge_applicable_hours = Integer.valueOf(surcharge_applicable_hours);
+                    paw.surcharge_amount = pbe.Surcharge_Amount__c;
+                    //paw.min_lead_time_booking_hrs = productPrice.Arrival_Terminal__r.Name;
+                    //paw.available = pbe.product2.Is_Available__c;
+                    paw.available = pbe.product2.isActive;
                     
-                    datalist.add(gpwa);
+                    datalist.add(paw);
                 }
             
                 mden_responseWrapper.datalist = datalist;
@@ -100,12 +100,12 @@ global class MDEN_GetProductMaster {
                 //gtba.name = terminal.Airport__r.name;
                 //gtba.value = terminal.name;
                 //gtba.code = terminal.Code__c;
-                String jsonString = JSON.serialize(mden_responseWrapper);
-                system.debug('mden_responseWrapper==>'+jsonString);
             }
             else{
                 mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
             }
+            system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper));
+            
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
         }
@@ -132,14 +132,14 @@ global class MDEN_GetProductMaster {
     global class MDEN_GetResponseWrapper {
         global String status; 
         global String message;
-        global List<get_product_with_availablity> datalist;
+        global List<productAvailabilityWrapper> datalist;
         global MDEN_GetResponseWrapper(String status, String message) {
             this.status = status;
             this.message = message; 
         }        
     }
     
-    global class get_product_with_availablity{
+    global class productAvailabilityWrapper{
         global string id;
         global string name;
         global Decimal list_price;
@@ -155,7 +155,7 @@ global class MDEN_GetProductMaster {
         global Boolean available;
         global Boolean surcharge;
                 
-        global get_product_with_availablity(){
+        global productAvailabilityWrapper(){
             
         }
     }
