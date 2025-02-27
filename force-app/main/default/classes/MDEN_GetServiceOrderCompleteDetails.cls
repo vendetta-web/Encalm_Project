@@ -25,6 +25,7 @@ global class MDEN_GetServiceOrderCompleteDetails {
         try{
             //MDEN_RegisterCustomer.registerCustomer();
             
+            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
             
@@ -416,6 +417,7 @@ global class MDEN_GetServiceOrderCompleteDetails {
                 
                 /********** End : Fetching buggy	 Data i.e. ----- Details **********/                    
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             mainDataDetails = new mainData('false', 'data not found.');
             itemDataDetails = new itemData('false', 'data not found.');
@@ -613,6 +615,7 @@ global class MDEN_GetServiceOrderCompleteDetails {
             }else{
                 return false;
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             System.debug('Error Message : '+e.getMessage());
             return false;

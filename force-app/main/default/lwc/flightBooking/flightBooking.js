@@ -9,10 +9,15 @@ import getTransitFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getTr
 import processBooking from '@salesforce/apex/LeadConversionController.processBooking';
 import getFlightInfo from '@salesforce/apex/Flight_Booking_encalm.getFlightInfo';
 import createOpportunity from '@salesforce/apex/Flight_Booking_encalm.createOpportunity';
+// Define the fields for both Lead and Case (AccountId and Account Name)
+const LEAD_FIELDS = ['Lead.ConvertedAccountId', 'Lead.ConvertedAccount.Name', 'Lead.IsConverted', 'Lead.Account__c', 'Lead.Account__r.Name'];
+const CASE_FIELDS = ['Case.AccountId', 'Case.Account.Name'];
+
 export default class FlightBooking extends NavigationMixin(LightningElement) {
     @api recordId;
     isLoading = false;
     accountId='';
+    selectedAccount;
  airportOptions = [];
  flightNumbers = [];
  baseAirportOptions;
@@ -43,7 +48,64 @@ sectorOption = [
     {label: 'Domestic to Domestic', value : 'Domestic to Domestic'},
     {label: 'International to Domestic', value : 'International to Domestic'},
     {label: 'International to International', value : 'International to International'},
-]
+]   
+
+    // Use wire to get the record dynamically based on the record type (Lead or Case)
+    @wire(getRecord, { recordId: '$recordId', fields: '$fields' })
+    record({ error, data }) {
+        if (data) {
+            let accountId = null;
+            let accountName = null;
+
+            // Handle Lead object
+            if (this.recordId && this.recordId.startsWith('00Q')) { // Check if it’s a Lead record (Leads start with '00Q')
+                const isConverted = data.fields.IsConverted.value;
+
+                // If the Lead is converted, use the ConvertedAccountId and ConvertedAccount
+                if (isConverted) {
+                    accountId = data.fields.ConvertedAccountId ? data.fields.ConvertedAccountId.value : null;
+                    accountName = data.fields.ConvertedAccount && data.fields.ConvertedAccount.displayValue
+                        ? data.fields.ConvertedAccount.displayValue
+                        : null;
+                }
+                // If the Lead is not converted, use the Account__c lookup field
+                else {
+                    accountId = data.fields.Account__c ? data.fields.Account__c.value : null;
+                    accountName = data.fields.Account__r && data.fields.Account__r.displayValue
+                        ? data.fields.Account__r.displayValue
+                        : null ; // Use fallback value if Account__r.Name is not available
+                }
+            }
+
+            // Handle Case object
+            if (this.recordId && this.recordId.startsWith('500')) { // Check if it’s a Case record (Cases start with '500')
+                accountId = data.fields.AccountId ? data.fields.AccountId.value : null;
+                // Ensure Account is not undefined before accessing Name
+                accountName = data.fields.Account && data.fields.Account.displayValue 
+                                ? data.fields.Account.displayValue 
+                                : null;
+            }
+
+            // If AccountId and AccountName are available, create the selectedAccount object
+            if (accountId && accountName) {
+                this.selectedAccount = { Id: accountId, Name: accountName };
+                this.accountId = this.selectedAccount.Id ? this.selectedAccount.Id : '';
+            } else {
+                this.selectedAccount = null;
+            }
+        } else if (error) {
+            console.error('Error fetching record data:', error);
+        }
+    }
+
+    // Dynamically assign the fields based on whether the record is Lead or Case
+    get fields() {
+        return this.recordId && this.recordId.startsWith('00Q') // If it's a Lead (Lead records have a '00Q' prefix)
+            ? LEAD_FIELDS
+            : CASE_FIELDS; // If it's a Case
+    }
+
+
   @wire(getAirport)
     wiredLocations({ error, data }) {
    
@@ -241,8 +303,8 @@ handleTabChange(event) {
    handleArrivalDateChange(event) { 
        this.arrivalDate = event.target.value;
        if(this.isTabOne){
-        this.loadFlightData(this.arrivalDate, this.departureAirport, this.arrivingAirport);
-    }
+            this.loadFlightData(this.arrivalDate, this.departureAirport, this.arrivingAirport);
+        }
           /*getFlightInfo({arrivalDate:event.target.value})
           .then(result => {
               console.log('result------------>',result)
@@ -354,6 +416,12 @@ handleTabChange(event) {
         } else {
             this.setSector();
             this.opportunityFieldValues['Service_Airport_Id__c'] = this.getAirportId(this.arrivingAirport);
+            this.resetflightNumber();
+            if(this.isTabOne){
+                this.loadFlightData(this.arrivalDate, this.departureAirport, this.arrivingAirport);
+            }else if(this.isTabTwo){
+                this.loadFlightData(this.departureDate, this.arrivingAirport, this.departureAirport);
+            }
         }
 
     }
@@ -364,12 +432,19 @@ handleTabChange(event) {
             this.opportunityFieldValues['Departure_Airport_Id__c'] = this.getAirportId(this.departureAirport);
         } else {
             this.setSector();
+            this.resetflightNumber();
             if (this.isTabOne){
                 this.opportunityFieldValues['Departure_Airport_Id__c'] = this.getAirportId(this.departureAirport);
+                this.loadFlightData(this.arrivalDate, this.departureAirport, this.arrivingAirport);
             } else {
                 this.opportunityFieldValues['Arriving_Airport_Id__c'] = this.getAirportId(this.departureAirport);
+                this.loadFlightData(this.departureDate, this.arrivingAirport, this.departureAirport);
             }
         }
+    }
+
+    resetflightNumber(){
+        this.flightNumber = undefined;
     }
  
 

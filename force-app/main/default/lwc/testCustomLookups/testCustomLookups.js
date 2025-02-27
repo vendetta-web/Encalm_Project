@@ -1,4 +1,4 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, api } from 'lwc';
 import getAccounts from '@salesforce/apex/AccountController.getAccounts';
 import getRecordTypeIds from '@salesforce/apex/AccountController.getRecordTypeIds';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -7,7 +7,7 @@ export default class TestCustomLookups extends LightningElement {
     @track searchResults = [];
     @track noSearchResult = false;
     @track hasResults = false;
-    @track selectedAccount = {};
+    @api selectedAccount = {};
     @track isOpenModal = false;
     @track showError = false;
     @track selectedAccountType = '';

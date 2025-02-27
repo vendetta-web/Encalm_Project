@@ -14,7 +14,7 @@
                     </lightning-progress-indicator>
                 </div>
 
-                <div class="slds-col slds-size_2-of-12" style="margin-left: -1rem;" if:true={showMarkStatusButton}>
+                <div class="slds-col slds-size_2-of-12" style="margin-left: 1rem;" if:true={showMarkStatusButton}>
                     <lightning-button label="Mark Status" onclick={handleMarkStatus} variant="brand"></lightning-button>
                 </div>
             </div>
@@ -22,7 +22,7 @@
         <!-- Add the "Mark Status" button -->
     </lightning-card>
 
-    <template if:true={isModalOpen}>
+      <template if:true={isModalOpen}>
         <section class="slds-modal slds-fade-in-open" aria-hidden="false">
             <div class="slds-modal__container">
                 <!-- Modal Header -->
@@ -35,21 +35,24 @@
 
                 <!-- Modal Body -->
                 <template if:true={isStageClosed}>
-                <div class="slds-modal__content slds-p-around_medium">
-                    <lightning-combobox name="picklist" label="What you want to do?" placeholder="Select an option"
-                        options={finalStageOptions} value={selectedValue} onchange={handlePicklistChange}>
-                    </lightning-combobox>
-                </div>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-combobox name="picklist" label="What you want to do?" placeholder="Select an option"
+                            options={finalStageOptions} value={selectedValue} onchange={handlePicklistChange}>
+                        </lightning-combobox>
+
+                        <!-- Add Reason_For_Close__c field -->
+                        <template if:true={isLeadClose}>
+                            <lightning-input type="text" label="Reason For Close" value={reasonForClose}
+                                onchange={handleReasonChange}>
+                            </lightning-input>
+                        </template>
+                    </div>
                 </template>
                 <template if:true={isStageFollowup}>
                     <div class="slds-modal__content slds-p-around_medium">
-                    <lightning-input
-                type="datetime-local"
-                label="Follow-up Date and Time"
-                value={followUpDateTime}
-                onchange={handleDateTimeChange}
-            ></lightning-input>
-                </div>
+                        <lightning-input type="datetime-local" label="Follow-up Date and Time" value={followUpDateTime}
+                            onchange={handleDateTimeChange}></lightning-input>
+                    </div>
                 </template>
 
                 <!-- Modal Footer -->
@@ -61,7 +64,7 @@
             </div>
         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
-    </template>
+    </template> 
 
     <template if:true={isBookingOpen}>
         <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">

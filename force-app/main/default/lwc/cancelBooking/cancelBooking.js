@@ -2,6 +2,7 @@ import { LightningElement, api, wire } from 'lwc';
 import { CloseActionScreenEvent } from 'lightning/actions';
 import getpassengerDetails from '@salesforce/apex/CancellationPolicyService.getBookingToCancel';
 import cancelledSummaryPreview from '@salesforce/apex/CancellationPolicyService.showCancellationCharges';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 const COLUMNS = [
     {
@@ -31,26 +32,30 @@ const COLUMNS = [
         fieldName: 'quantity',
         type: 'number',
         minWidth: 100,  // Set minimum width for the column
-    },{
+    }, {
         label: 'Type',
         fieldName: 'type',
         type: 'text',
         minWidth: 100,  // Set minimum width for the column
     },
-    
+
 ];
 
 export default class CancelBooking extends LightningElement {
     @api recordId; // Record ID for the Opportunity page
+    isLoading = false;
     isModalOpen = true;
+    showNoBooking=false;
+    selectedRows = [];
     showMultipleCancelScreen = false;
-    showSummary=false;
+    confirmDelete = false;
+    showSummary = false;
     selectedLineItems = [];  // Stores selected line item IDs
     lineItems = [];  // Data for the table
     columns = COLUMNS;
-    isLoading = true;  // Indicates loading state
+    isLoading = false;  // Indicates loading state
     totalAmount;
-    selectedPassengers;
+    selectedPassengers = 0;
     selectedPackage;
     cancellationOrder;
     cancelOptions = [
@@ -64,14 +69,15 @@ export default class CancelBooking extends LightningElement {
         // Dispatch an event to close the LWC component
         this.dispatchEvent(new CloseActionScreenEvent());
     }
-    handlePrevious(){
+    handlePrevious() {
         this.showMultipleCancelScreen = false;
         this.isModalOpen = true;
     }
-    handleSelection(){
+    handleSelection() {
         this.showSummary = false;
-        if (this.selectedCancelOption=='partialCancel') {
-            this.showMultipleCancelScreen = true;
+        if (this.selectedCancelOption == 'partialCancel') {
+            this.showMultipleCancelScreen = true;            
+            this.selectedPassengers = 0; //reset passenger selection
         } else {
             this.isModalOpen = true;
         }
@@ -82,15 +88,18 @@ export default class CancelBooking extends LightningElement {
     }
 
     handleNext() {
-        console.log('this.selectedCancelOption-->:', this.selectedCancelOption);
-        if (this.selectedCancelOption=='partialCancel') {
-            this.isModalOpen = false;
-            this.showMultipleCancelScreen = true;
-            
+        if (this.selectedCancelOption == ''){
+            this.showToast('Error', 'Please select a cancel type', 'error');
         } else {
-            this.isModalOpen = false;
-            this.showSummary = true;
-            this.handleBookingCancellation();
+            if (this.selectedCancelOption == 'partialCancel') {
+                this.isModalOpen = false;
+                this.showMultipleCancelScreen = true;    
+            } else {
+                this.isLoading = true;
+                this.isModalOpen = false;
+                this.showSummary = true;
+                this.handleBookingCancellation();
+            }
         }
     }
 
@@ -99,23 +108,38 @@ export default class CancelBooking extends LightningElement {
     wiredOpportunityLineItems({ error, data }) {
         if (data) {
             this.isLoading = false;  // Data fetched, stop loading
-            this.lineItems = data.map(pd => ({
-                id: pd.id,
-                oliId: pd.oliId,
-                name: pd.name,
-                packageName: pd.packageName,
-                unitPrice: pd.unitPrice,
-                quantity: pd.quantity,
-                type: pd.type
-            }));
+            if(data.length>0) {                
+                this.lineItems = data.map(pd => ({
+                    id: pd.id,
+                    oliId: pd.oliId,
+                    name: pd.name,
+                    packageName: pd.packageName,
+                    unitPrice: pd.unitPrice,
+                    quantity: pd.quantity,
+                    type: pd.type,
+                    pbenteryId: pd.pbenteryId
+                }));
+            } else {
+                this.showNoBooking = true;
+            }
         } else if (error) {
             this.isLoading = false;  // Stop loading even if there's an error
             console.error('Error fetching line items', error);
         }
     }
     // Handle checkbox selection
-     handleRowSelection(event) {
+    handleRowSelection(event) {
         const selectedRows = event.detail.selectedRows;
+        this.selectedRows = selectedRows.map(pd => ({
+                id: pd.id,
+                oliId: pd.oliId,
+                name: pd.name,
+                packageName: pd.packageName,
+                unitPrice: pd.unitPrice,
+                quantity: pd.quantity,
+                type: pd.type,
+                pbenteryId: pd.pbenteryId
+        }));
         // Convert Proxy objects to regular objects and capture theeach row unitPrice
         this.selectedLineItems = selectedRows.map(row => row.unitPrice);
         this.selectedPassengers = selectedRows.length;
@@ -127,22 +151,72 @@ export default class CancelBooking extends LightningElement {
         }
     }
 
-    handleCancellation(){
+    handleCancellation() {
         //final submit
-    }
-    
-
-    handleBookingCancellation() {
-        // Call Apex method to process the selected options
-        cancelledSummaryPreview({ cancelType: this.selectedCancelOption, bookingAmount: this.totalAmount, packageName: this.selectedPackage, opportunityId: this.recordId, numberOfPax:  this.selectedPassengers})
+        cancelledSummaryPreview({ 
+            cancelType: this.selectedCancelOption,
+            selectedOrders: this.selectedRows,
+            bookingAmount: this.totalAmount,
+            packageName: this.selectedPackage,
+            opportunityId: this.recordId,
+            numberOfPax: this.selectedPassengers,
+            submit: true})
             .then(result => {
-                console.log('Apex Response:', JSON.stringify(result));
                 this.cancellationOrder = result;
-                this.showMultipleCancelScreen = false;
-                this.showSummary = true;
+                this.showToast('Success', 'Booking cancelled successfully!', 'success');
             })
             .catch(error => {
                 console.error('Apex Error:', error);
+        });
+    }
+
+
+    handleBookingCancellation() {
+        if(this.selectedCancelOption == 'partialCancel' && this.selectedPassengers<1) {
+            this.showToast('Error', 'Please select a booking to cancel', 'error');
+        } else {// Call Apex method to process the selected options
+            cancelledSummaryPreview({ 
+                cancelType: this.selectedCancelOption,
+                selectedOrders: this.selectedRows,
+                bookingAmount: this.totalAmount,
+                packageName: this.selectedPackage,
+                opportunityId: this.recordId,
+                numberOfPax: this.selectedPassengers,
+                submit: false })
+                .then(result => {
+                    this.cancellationOrder = result;
+                    this.showMultipleCancelScreen = false;
+                    this.showSummary = true;
+                    this.isLoading = false;
+                })
+                .catch(error => {
+                    console.error('Apex Error:', error);
+                    this.isLoading = false;
             });
+        }
+        
+    }
+
+    closePopupModal() {
+        this.confirmDelete = false;
+    }
+
+    openModal() {
+        this.confirmDelete = true;
+    }
+
+    handleFinalCancel() {
+        this.confirmDelete = false;
+        this.showSummary = false;
+        this.handleCancellation();
+        this.closeModal();
+    }
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title,
+            message,
+            variant,
+        });
+        this.dispatchEvent(event);
     }
 }

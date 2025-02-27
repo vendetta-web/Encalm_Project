@@ -44,8 +44,7 @@ public with sharing class PackageSelectionController {
             AND Product2.Service_Type__c =:opp.Service_Type__c
             ORDER BY Product2.Package_Is_For__c, UnitPrice
         ];
-        Map<String, String> adultToChildPriceBookMap = new Map<String, String>();
-        Map<String, Decimal> adultToChildPriceMap = new Map<String, Decimal>();
+        Map<String, ChildWrapper> adultToChildPriceBookMap = new Map<String, ChildWrapper>();
         for (PricebookEntry pbEntry : pricebookEntries) {
             
             List<String> allServices = new List<String>(packageToServiceMap.get('All'));
@@ -59,26 +58,26 @@ public with sharing class PackageSelectionController {
             pckg.productId =  pbEntry.Product2Id;
             pckg.pricebookId = pbEntry.Pricebook2Id;
             pckg.showPackage = false;
+            pckg.packageFamily = pbEntry.Product2.Family;
             if(pbEntry.Product2.Package_Is_For__c == 'Adult') {
                 pckg.pricebookEntryId = pbEntry.Id;
                 pckg.showPackage = true;
                 pckg.priceTag = pbEntry.UnitPrice;
-                adultToChildPriceBookMap.put(pbEntry.Pricebook2Id, null);
-                adultToChildPriceMap.put(pbEntry.Pricebook2Id, null);
+                adultToChildPriceBookMap.put(pbEntry.Product2.Family, null);
             } else if(pbEntry.Product2.Package_Is_For__c == 'Child') {
-                if(adultToChildPriceBookMap.containsKey(pbEntry.Pricebook2Id)) {
-                    adultToChildPriceBookMap.put(pbEntry.Pricebook2Id,pbEntry.Id);
-                    adultToChildPriceMap.put(pbEntry.Pricebook2Id,pbEntry.UnitPrice);
+                if(adultToChildPriceBookMap.containsKey(pbEntry.Product2.Family)) {
+                    ChildWrapper wrp = new ChildWrapper();
+                    wrp.priceBookEntryId = pbEntry.Id;
+                    wrp.price = pbEntry.UnitPrice;
+                    adultToChildPriceBookMap.put(pbEntry.Product2.Family,wrp);
                 }
             } 
             pckg.services = combineService; 
-            pckg.parentTochildPricebookEntryId = adultToChildPriceBookMap; 
-            System.debug('parentTochildPricebookEntryId--> '+pckg.parentTochildPricebookEntryId);           
-            pckg.parentTochildPrice = adultToChildPriceMap; 
-            System.debug('parentTochildPrice--> '+pckg.parentTochildPrice);          
+            pckg.childPackageWrapper = adultToChildPriceBookMap;            
 
             packageColumns.add(pckg);
-        }      
+        }  
+        System.debug('pack>> '+packageColumns);    
         return packageColumns;
     }
 
@@ -122,14 +121,14 @@ public with sharing class PackageSelectionController {
         if(pricebookAddonEntries.size()<1){
             return null;
         }
-        
         for (PricebookEntry pbEntry : pricebookAddonEntries) {
             AddonWrapper pckg = new AddonWrapper();
             pckg.addOnName = pbEntry.Product2.Name;
             pckg.addOnTag = pbEntry.UnitPrice;   
             pckg.productId =  pbEntry.Product2Id;
             pckg.pricebookEntryId =  pbEntry.Id; 
-
+            pckg.pickupTerminal = getFlightTerminalInfo(oppId);
+            pckg.dropTerminal = '';
             addOnColumns.add(pckg);
         }      
 
@@ -146,9 +145,30 @@ public with sharing class PackageSelectionController {
             LIMIT 1
             ];
 
-        List<Terminal__c> terminals = [SELECT Id,Code__c from Terminal__c WHERE Airport__r.Airport_Code__c =:opp.Service_Airport__c];
+        List<Terminal__c> terminals = [SELECT Id,Code__c from Terminal__c WHERE Airport__r.Airport_Code__c =:opp.Service_Airport__c ORDER BY Code__c];
         
             return terminals;
+        }
+        @AuraEnabled
+        public static String getFlightTerminalInfo(String oppId) {
+            Id terminalId;
+            Opportunity opp = [
+            SELECT Id,Arriving_Flight_Schedule__c,Departure_Flight_Schedule__c,
+            Departure_Flight_Schedule__r.Departure_Terminal__c,
+            Arriving_Flight_Schedule__r.Arrival_Terminal__c
+            FROM Opportunity
+            WHERE Id=:oppId
+            LIMIT 1
+            ];
+            if (opp.Arriving_Flight_Schedule__c !=null) {
+                terminalId = opp.Arriving_Flight_Schedule__r.Arrival_Terminal__c;
+                Terminal__c terminal = [SELECT Id,Code__c from Terminal__c WHERE Id=: terminalId LIMIT 1];    
+                return terminal.Code__c!=null ? terminal.Code__c : '';
+            } else {
+                terminalId= opp.Departure_Flight_Schedule__r.Departure_Terminal__c;
+                Terminal__c terminal = [SELECT Id,Code__c from Terminal__c WHERE Id=: terminalId LIMIT 1]; 
+                return terminal.Code__c!=null ? terminal.Code__c : ''; 
+            }
         }
 
     @AuraEnabled
@@ -162,6 +182,7 @@ public with sharing class PackageSelectionController {
                        Date_of_Departure__c,
                        Service_Airport__c,
                        Flight_Number_Arrival__c,
+                       Service_Type__c,
                        Flight_Number_Departure__c,(SELECT Id FROM OpportunityLineItems)
                 FROM Opportunity 
                 WHERE Id = :opportunityId 
@@ -171,15 +192,14 @@ public with sharing class PackageSelectionController {
         pasWrp.NoOfChild = opp.Number_of_Children__c;
         pasWrp.NoOfInfant = opp.Number_of_Infants__c;
         pasWrp.serviceAirport = opp.Service_Airport__c;
-        pasWrp.flightNumber = opp.Flight_Number_Arrival__c != null ? 
+        pasWrp.flightNumber = opp.Service_Type__c =='Transit' ? opp.Flight_Number_Arrival__c + ' / '+ opp.Flight_Number_Departure__c : opp.Flight_Number_Arrival__c != null ? 
                                 opp.Flight_Number_Arrival__c : 
                                 opp.Flight_Number_Departure__c != null ?
-                                opp.Flight_Number_Departure__c : 
-                                opp.Flight_Number_Arrival__c + ' / '+ opp.Flight_Number_Departure__c;
-        pasWrp.flightDate = opp.Date_of_Arrival__c != null ? 
+                                opp.Flight_Number_Departure__c : '';                                
+        pasWrp.flightDate = opp.Service_Type__c =='Transit' ?  opp.Date_of_Arrival__c + ' / '+ opp.Date_of_Departure__c : opp.Date_of_Arrival__c != null ? 
                                 opp.Date_of_Arrival__c : 
                                 opp.Date_of_Departure__c != null ?
-                                opp.Date_of_Departure__c : opp.Date_of_Arrival__c + ' / '+ opp.Date_of_Departure__c;
+                                opp.Date_of_Departure__c : '';
         return pasWrp;
     }
 
@@ -189,6 +209,11 @@ public with sharing class PackageSelectionController {
         // Create a Map directly from the query result
         Map<Id, String> opportunityMap = new Map<Id, String>();// Initialize a Map to store Record_Id__c as key and Description__c as value
         List<OpportunityLineItem> oliList = [SELECT Id,Product2.Package_Is_For__c FROM OpportunityLineItem WHERE OpportunityId =:opportunityId];
+        //Delete existing passengers and create new list if updates are made
+        List<Passenger_Details__c> passengersToDelete = [SELECT Id FROM Passenger_Details__c WHERE Opportunity_ID__c=:opportunityId];
+        if (passengersToDelete!=null && passengersToDelete.size()>0) {
+            Delete passengersToDelete;
+        }
         Map<String, String> typeToOliIdMap = new Map<String, String>();
         // Iterate over the OpportunityLineItem object records and populate the map
         for (OpportunityLineItem oli : oliList) {
@@ -196,19 +221,22 @@ public with sharing class PackageSelectionController {
         }
         for (Map<String, Object> guest : passengerData) {
             Passenger_Details__c passenger = new Passenger_Details__c();
-            passenger.Name = (String) guest.get('firstname') + (String) guest.get('lastname');
+            passenger.Name = (String) guest.get('firstname') + ' ' + (String) guest.get('lastname');
             passenger.Opportunity_ID__c = opportunityId;
             passenger.Title__c = (String) guest.get('title');
             passenger.First_Name__c = (String) guest.get('firstname');
             passenger.Last_Name__c = (String) guest.get('lastname');
             passenger.Gender__c = (String) guest.get('gender');
             String ageStr = (String) guest.get('age');
-    		Integer age =  Integer.valueOf(ageStr);  // Convert the String to Integer
+    		Integer age =  ageStr != null ? Integer.valueOf(ageStr) : null;  // Convert the String to Integer
    			passenger.Age__c = age;
-           // passenger.Age__c = (Integer) guest.get('age');
             passenger.Designation__c = (String) guest.get('designation');
             passenger.Travel_Class__c = (String) guest.get('travelclass');
             passenger.Travel_PNR_No__c = (String) guest.get('travelpnrno');
+            passenger.Designation__c = (String) guest.get('designation');
+            passenger.Nationality__c = (String) guest.get('nationality');
+            passenger.Passport_Govt_Id__c = (String) guest.get('passport');
+            passenger.Mobile__c = (String) guest.get('phone');
             passenger.Passenger_Type__c = (String) guest.get('type');
             if(typeToOliIdMap.containsKey((String) guest.get('type'))) {
                 passenger.Individual_Booking_Details__c = typeToOliIdMap.get((String) guest.get('type'));
@@ -217,8 +245,36 @@ public with sharing class PackageSelectionController {
             }
             passengerDetailsList.add(passenger);
         }
-        System.debug('passengerDetailsList--> '+passengerDetailsList);
-        insert passengerDetailsList;
+        // Insert the Opportunity Line Items
+        try { 
+            insert passengerDetailsList;
+        } catch (Exception e) {
+            System.debug('Error inserting Passenger_Details__c records: ' + e.getMessage());
+            throw new AuraHandledException('Error in creating guest data, please show this message to admin');
+        }
+    }
+
+    @AuraEnabled
+    public static void savePlacardDetails(List<Map<String, Object>> placardData, Id opportunityId) {
+        List<Placard__c> placardList = new List<Placard__c>();
+        
+        for (Map<String, Object> guest : placardData) {
+            Placard__c plc = new Placard__c();
+            plc.Name = (String) guest.get('firstname') + ' ' + (String) guest.get('lastname');
+            plc.Opportunity_ID__c = opportunityId;
+            plc.Title__c = (String) guest.get('title');
+            plc.First_Name__c = (String) guest.get('firstname');
+            plc.Last_Name__c = (String) guest.get('lastname');
+            plc.Mobile_Number__c = (String) guest.get('mobile');
+            
+            placardList.add(plc);
+        }
+        try { 
+            insert placardList;
+        } catch (Exception e) {
+            System.debug('Error inserting Placard__c records: ' + e.getMessage());
+            throw new AuraHandledException('Error in creating Placard data, please show this message to admin');
+        }
     }
 
 
@@ -236,17 +292,14 @@ public with sharing class PackageSelectionController {
         }
         opp.Amount = amount;
         update opp;*/
-        // Loop through the productDetails array to create OLI records
-        System.debug('productDetails-->> '+productDetails);
         for (Map<String, Object> productDetail : productDetails) {
             // Extract the values from the map
             Id productId = (Id) productDetail.get('productId');
             Id pricebookEntry = (Id) productDetail.get('pricebookEntryId');
-            Decimal quantity = (Decimal) productDetail.get('count');
+            Decimal quantity = (Boolean) productDetail.get('isChild') ? (Decimal) productDetail.get('childCount') : (Decimal) productDetail.get('count');
             Decimal unitPrice = (Decimal) productDetail.get('unitPrice');
             String pickupTerminal = (String) productDetail.get('pickup');
-            String dropTerminal = (String) productDetail.get('drop');
-            
+            String dropTerminal = (String) productDetail.get('drop'); 
             
             for (Integer i=0; i<quantity; i++) {
                 // Create a new Opportunity Line Item
@@ -258,7 +311,7 @@ public with sharing class PackageSelectionController {
                 oli.PricebookEntryId = pricebookEntry; // Link PricebookEntry to OLI
                 oli.Pickup_Terminal__c = pickupTerminal;
                 oli.Drop_Terminal__c = dropTerminal;
-
+                oli.Status__c = 'Active';
                 // Add the OLI to the list
                 opportunityLineItemsToInsert.add(oli);
             }
@@ -267,10 +320,9 @@ public with sharing class PackageSelectionController {
         // Insert the Opportunity Line Items
         try {
             insert opportunityLineItemsToInsert;
-            System.debug('Opportunity Line Items created successfully.');
         } catch (Exception e) {
             System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
-            throw new AuraHandledException('Error creating Opportunity Line Items: ' + e.getMessage());
+            throw new AuraHandledException('Error in creating order summary, please show this message to admin');
         }
     }
 
@@ -286,13 +338,20 @@ public with sharing class PackageSelectionController {
         @AuraEnabled
         public Id pricebookId;
         @AuraEnabled
-        public Map<String, String> parentTochildPricebookEntryId;
-        @AuraEnabled
-        public Map<String, Decimal> parentTochildPrice;
+        public Map<String, ChildWrapper> childPackageWrapper;
         @AuraEnabled
         public Boolean showPackage;
         @AuraEnabled
         public List<String> services {get;set;}
+        @AuraEnabled
+        public String packageFamily;
+
+    }
+    public class ChildWrapper {
+        @AuraEnabled
+        public String priceBookEntryId;
+        @AuraEnabled
+        public Decimal price;
     }
     public class AddonWrapper {
         @AuraEnabled
@@ -303,8 +362,10 @@ public with sharing class PackageSelectionController {
         public Id productId;
         @AuraEnabled
         public Id pricebookEntryId;
-        //@AuraEnabled
-        //public List<String> terminals {get;set;}
+        @AuraEnabled
+        public String pickupTerminal;
+        @AuraEnabled
+        public String dropTerminal;
     }
     public class passengerWrapper {
         @AuraEnabled

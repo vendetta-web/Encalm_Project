@@ -43,23 +43,23 @@ public class EmailParser {
             List<String> serviceValues = new List<String>();
             List<String> locationValues = new List<String>();
             
-            // Check for Priority matches
-            /*String emailcontentPrioKeywordVal = ((emailBody != null ? emailBody : '') + 
-(emailSubject != null ? ' ' + emailSubject : ''))
-.split('and')[0].trim(); */
+                    // Check for Priority matches
+                        /*String emailcontentPrioKeywordVal = ((emailBody != null ? emailBody : '') + 
+                            (emailSubject != null ? ' ' + emailSubject : ''))
+                            .split('and')[0].trim(); */
             
             for (String key : priorityKeywordsMap.keySet()) {            
                 List<String> keywords = priorityKeywordsMap.get(key);
                 System.debug('Checking Priority Key: ' + key + ' with keywords: ' + keywords);
                 for (String keyword : keywords) {
                     System.debug('Priority Keyword: ' + keyword);
-                    // Saurabh
-                    /* if(keyword.equalsIgnoreCase(emailcontentPrioKeywordVal)){
-priorityValue = key;
-System.debug('Matched Priority Value: ' + priorityValue);
-break;
-}*/
-                    // Saurabh                
+                            // Saurabh
+                            /* if(keyword.equalsIgnoreCase(emailcontentPrioKeywordVal)){
+                                priorityValue = key;
+                                System.debug('Matched Priority Value: ' + priorityValue);
+                                break;
+                                }*/
+                            // Saurabh                
                     
                     if (emailContentLower.contains(keyword.toLowerCase().trim())) {
                         priorityValue = key;
@@ -108,8 +108,8 @@ break;
             if (String.isNotBlank(priorityValue)) {
                 caseRecord.Priority = priorityValue;
             } else {
-                caseRecord.Priority = 'Choose option';
-                System.debug('No matching Priority keywords found, setting default Priority: Choose option');
+                caseRecord.Priority = 'Low';
+                System.debug('No matching Priority keywords found, setting default Priority: Low');
             }
             
             System.debug('Final Service Values: ' + serviceValues);

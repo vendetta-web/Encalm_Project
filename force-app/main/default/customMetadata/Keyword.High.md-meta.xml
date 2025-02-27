@@ -7,6 +7,10 @@
         <value xsi:type="xsd:string">Current Date or Next date, Refund, cancel/cancellation, complaint, dissatisfaction, GMR, director, HOD,ex-comm, today, tomorrow, early morning, noon, evening, amendment, urgent, urgent refund, reschedule, reservation, customs,Current Date, cancel, invoice</value>
     </values>
     <values>
+        <field>Service_Email__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
         <field>Type__c</field>
         <value xsi:type="xsd:string">Priority</value>
     </values>

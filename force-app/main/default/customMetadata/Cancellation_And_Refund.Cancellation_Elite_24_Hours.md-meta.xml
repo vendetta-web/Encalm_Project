@@ -27,6 +27,10 @@
         <value xsi:type="xsd:string">Elite</value>
     </values>
     <values>
+        <field>Refund_Policy__c</field>
+        <value xsi:type="xsd:string">More than 24 hours prior to the scheduled service time so no charges applicable</value>
+    </values>
+    <values>
         <field>Sort_Order__c</field>
         <value xsi:type="xsd:double">4.0</value>
     </values>

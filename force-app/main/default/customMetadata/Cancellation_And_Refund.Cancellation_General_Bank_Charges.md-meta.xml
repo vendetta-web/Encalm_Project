@@ -27,6 +27,10 @@
         <value xsi:type="xsd:string">General</value>
     </values>
     <values>
+        <field>Refund_Policy__c</field>
+        <value xsi:type="xsd:string">3% bank charges is applicable for all cancellation requests received 48 hours prior to service time</value>
+    </values>
+    <values>
         <field>Sort_Order__c</field>
         <value xsi:type="xsd:double">1.0</value>
     </values>

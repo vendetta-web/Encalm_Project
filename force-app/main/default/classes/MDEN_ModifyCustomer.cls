@@ -12,9 +12,11 @@ global class MDEN_ModifyCustomer {
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '');
         
         try{
+            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
             Customer requestMap = (Customer) JSON.deserialize(request.RequestBody.toString(), Customer.class);
             
+            //Uncomment below to call via Developer console using : MDEN_GetAirportTerminalByAirport.getAiportTerminals();
             /*String reqBody =' { ' +
 	        	' "id": "001Su00000Ez9KvIAJ", '+
                 ' "title": "001", '+
@@ -39,13 +41,16 @@ global class MDEN_ModifyCustomer {
             
             system.debug('requestMap==>'+requestMap.title);
             
-            Salutation__c salutation = [select Salutation_Name__c from Salutation__c Where Name =:requestMap.title limit 1];
-            Country__c country = [select id, name, Country_Name__c from Country__c Where Name =:requestMap.country_code limit 1];
-            State__c state = [select id, name, State_Name__c from State__c Where Name =:requestMap.state limit 1];
+            List<Salutation__c> salutation = [select Salutation_Name__c from Salutation__c Where Name =:requestMap.title limit 1];
+            List<Country__c> country = [select id, name, Country_Name__c from Country__c Where Name =:requestMap.country_code limit 1];
+            List<State__c>  state = [select id, name, State_Name__c from State__c Where Name =:requestMap.state limit 1];
             Account acc = [select id, PersonTitle, firstname, lastname, PersonEmail, PersonMobilePhone, PersonGenderIdentity, PersonBirthdate, /*ClickToDial__Country_Code__c,*/ State__c, Country__c, Pin_Code__c, Password__c, BillingCity from Account Where id =:requestMap.id limit 1];
             system.debug('acc==>'+acc);
             if(acc != null){
-                acc.PersonTitle = (salutation.Salutation_Name__c <> null) ? salutation.Salutation_Name__c : '';
+                if(!salutation.isEmpty()){
+               acc.PersonTitle = (salutation[0].Salutation_Name__c <> null) ? salutation[0].Salutation_Name__c : '';
+
+                }
                 acc.firstname = requestMap.first_name;
                 acc.lastname = requestMap.last_name;
                 acc.PersonEmail = requestMap.email;
@@ -56,15 +61,19 @@ global class MDEN_ModifyCustomer {
                 //acc.ClickToDial__Country_Code__c = (country.Country_Name__c <> null) ? country.Country_Name__c : '';
                 acc.BillingCity = requestMap.city;
                 //acc.ShippingAddress = requestMap.address ;
-				acc.State__c = state.id;
-                acc.Country__c = country.id;
+                if(!state.isEmpty()){
+                   acc.State__c = state[0].id; 
+                }
+				if(!country.isEmpty()){
+                 acc.Country__c = country[0].id; 
+                }
                 acc.Pin_Code__c = requestMap.pincode;
-                
+                acc.Source__c = requestMap.source;
                 system.debug('acc==>'+acc);
                 system.debug('MDEN_RegisterCustomer.checkCustomerDuplicacy(acc.PersonEmail, requestMap.id)==>'+MDEN_RegisterCustomer.checkCustomerDuplicacy(acc.PersonEmail, requestMap.id));
                 if(!MDEN_RegisterCustomer.checkCustomerDuplicacy(acc.PersonEmail, requestMap.id)){
                     update acc;
-                    mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data updated.');
+                    //Initialize the wrapper with status and message
                     mden_responseWrapper.id = 'true';
                     system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
                 }else{
@@ -80,6 +89,7 @@ global class MDEN_ModifyCustomer {
                 mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
                 system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
             system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
@@ -118,7 +128,7 @@ global class MDEN_ModifyCustomer {
         global String password;
         global String tnc;
         global String mkt_comm;
-    	
+        global String source;
         global Customer() {
         }
     }

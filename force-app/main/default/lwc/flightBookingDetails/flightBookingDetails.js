@@ -7,8 +7,10 @@ import getAddOnDetails from '@salesforce/apex/PackageSelectionController.getAddo
 import getOpportunityDetails from '@salesforce/apex/PackageSelectionController.getOpportunityDetails';
 import createOpportunityLineItems from '@salesforce/apex/PackageSelectionController.createOpportunityLineItems';
 import savePassengerDetails from '@salesforce/apex/PackageSelectionController.savePassengerDetails';
+import savePlacardDetails from '@salesforce/apex/PackageSelectionController.savePlacardDetails';
 import createContentVersion from '@salesforce/apex/MDEN_PdfAttachmentController.createContentVersion';
 import getTerminalInfo from '@salesforce/apex/PackageSelectionController.getTerminalInfo';
+import getFlightTerminalInfo from '@salesforce/apex/PackageSelectionController.getFlightTerminalInfo';
 import jsPDFLibrary from '@salesforce/resourceUrl/jsPDFLibrary';
 import { loadScript } from 'lightning/platformResourceLoader';
 import { RefreshEvent } from 'lightning/refresh';
@@ -42,6 +44,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     serviceAirport;
     flightNumber;
     flightDate;
+    selectedPassenger;
 
 
     //Individual Passenger Details
@@ -162,8 +165,6 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 buttonLabel: 'Select', // Add buttonLabel to each item
                 adddOnCount: this.adddOnCount,
                 class: 'btns select',
-                pickupTerminal: '',
-                dropTerminal: '',
                 pickupDataId: `${item.addOnName}-pickup`,  // Unique data-id for pickup terminal,
                 dropDataId: `${item.addOnName}-drop`,  // Unique data-id for drop terminal
             }));
@@ -207,7 +208,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         .filter(wrapper => wrapper.buttonLabel === 'Selected') // Filter condition
         .map(wrapper => {
             const numberOfRecords = this.numberOfAdults > this.numberOfChildren ? this.numberOfAdults : this.numberOfChildren; // or any other condition to determine number of records
-            console.log('wrapper--> '+JSON.stringify(wrapper));
+            
             // Create an array of records based on the number of adults
             const records = [];
                 records.push({
@@ -217,17 +218,20 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.priceTag,
-                    count: 1 // Set the count, potentially modify later based on adults/children
+                    count: 1, // Set the count, potentially modify later based on adults
+                    isChild: false 
                 });
                 if (this.numberOfChildren > 0) {             
                 records.push({
                     name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
-                    amount: wrapper.parentTochildPrice[wrapper.pricebookId] * this.numberOfChildren, // Calculate the amount
-                    totalAmount: wrapper.parentTochildPrice[wrapper.pricebookId] * this.numberOfChildren,
+                    amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, // Calculate the amount
+                    totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren,
                     productId: wrapper.productId,
-                    pricebookEntryId: wrapper.parentTochildPricebookEntryId[wrapper.pricebookId],
-                    unitPrice: wrapper.parentTochildPrice[wrapper.pricebookId],
-                    count: 1 // Set the count, potentially modify later based on adults/children
+                    pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
+                    unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
+                    count: 1, // Set the count, potentially modify later based on children
+                    isChild: true,
+                    childCount: this.numberOfChildren  //to create child oli records
                 });
             }            
 
@@ -265,7 +269,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                     unitPrice: wrapper.addOnTag,
                     count: wrapper.adddOnCount,
                     pickup: wrapper.pickup,
-                    drop: wrapper.drop
+                    drop: wrapper.drop,
+                    isChild: false
                 };
             });
             
@@ -317,6 +322,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.createOLIs();
             this.showModal=false;
             this.passengerDetailPage = true;
+            window.scrollTo({top: 0, behavior:'smooth'});
         } else {
             this.showToast('Error', 'Please select a package: !', 'error');
         }
@@ -326,11 +332,12 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     createOLIs() {
         createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmount })
             .then(result => {
-                this.showToast('Success', 'Opportunity Line Items created successfully: !', 'success');
+                //this.showToast('Success', 'Opportunity Line Items created successfully: !', 'success');
                 //console.log('Opportunity Line Items created successfully: ', result);
             })
             .catch(error => {
                 console.error('Error creating Opportunity Line Items: ', error);
+                this.showToast('Error', error, 'error');
             });
     }
 
@@ -368,7 +375,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 age: null,
                 designation: '',
                 travelclass: '',
-                travelpnrno: ''
+                travelpnrno: '',
+                nationality: '',
+                passport: '',
+                phone: '',
+                isPlacard: i==0 && type == 'Adult' ? true : false
             });
         }
         if (type == 'Adult') {
@@ -390,6 +401,28 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         if (this.guestRows[index]) {
             this.guestRows[index][field] = value;
         }
+        // Variable to store the selected passenger's details as placard for the first time
+        if (this.selectedPassenger == undefined &&
+            this.guestRows[0].firstname != '' &&
+            this.guestRows[0].lastname != '' &&
+            this.guestRows[0].title != '' &&
+            this.guestRows[0].gender != ''
+        ) {
+            this.selectedPassenger = { ...this.guestRows[0] };
+        }
+        
+    }
+
+    handlePlacardRadioButtonChange(event) {
+        const selectedPassengerId = event.target.value;  
+        // Update guestRows: set isPlacard to true for selected passenger, false for others
+        this.guestRows = this.guestRows.map(guest => {
+            // If the guest is the selected one, set isPlacard to true, else false
+            guest.isPlacard = guest.id === selectedPassengerId;
+            return guest;
+        });     
+        // Find the selected passenger and update the selectedPassenger variable
+        this.selectedPassenger = { ...this.guestRows.find(guest => guest.id === selectedPassengerId) };
     }
 
     handleTerminalChange(event) {
@@ -411,20 +444,70 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
 
         this.opportunityFieldValues[fieldName] = fieldValue;
     }
+    handleTitleChange(event) {
+        this.selectedPassenger.title = event.target.value;
+    }
+    handleFirstNameChange(event) {
+        this.selectedPassenger.firstname = event.target.value;
+    }
+    handleLastNameChange(event) {
+        this.selectedPassenger.lastname = event.target.value;
+    }
+    handleMobChange(event) {
+        this.selectedPassenger.mobile = event.target.value;
+    }
 
      // Handle the Save action
      handleSave() {
-        savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
-            .then(() => {
-                // Handle success
-                //this.showToast('Success', 'Passenger details saved successfully!', 'success');
-                this.showPreview = true;
-                this.passengerDetailPage = false;
+        const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
+            .reduce((validSoFar, input_Field_Reference) => {
+                input_Field_Reference.reportValidity();
+                return validSoFar && input_Field_Reference.checkValidity();
+            }, true);
+        var errorMessage = 'Please resolve all the required checks.'
+        var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter atleast one contact number';
 
+        if(All_Input_Valid) {
+            if (this.checkPhoneNumber()) {
+                savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
+                .then(() => {
+                    this.showPreview = true;
+                    this.passengerDetailPage = false;
+                    this.savePlacardDetails();// save placard details
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error saving passenger details:', error);
+                    this.showToast('Error', 'Error saving Passenger details', 'error');
+                });
+            } else {
+                this.showToast('Error', validationMessage, 'error');
+            }
+        }
+        else {
+            this.showToast('Error', errorMessage, 'error');
+        }
+        
+    }
+
+    checkPhoneNumber() {
+        // Check if at least one row has a non-empty phone number
+        const isPhonePresent = this.guestRows.some(row => row.phone == '');
+        if (isPhonePresent) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    savePlacardDetails() {
+        savePlacardDetails({ placardData: this.selectedPassenger, opportunityId: this.recordId })
+            .then(() => {
             })
             .catch(error => {
                 // Handle error
-                console.error('Error saving passenger details:', error);
+                console.error('Error saving placard details:', error);
+                this.showToast('Error', 'Error saving placard details', 'error');
             });
     }
     openDetailPage(){
@@ -444,6 +527,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     //open passenger page
     //on previous button click from final preview page
     openPassengerDetailPage() {
+        window.scrollTo({top: 0, behavior:'smooth'});
         this.passengerDetailPage = true;
         this.showPreview = false;
     }

@@ -10,18 +10,20 @@ global class MDEN_SaveSaleOrderParent {
         //Initialize the response wrapper with blank status and blank message
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '');
         try{
-            //MDEN_RegisterCustomer.registerCustomer();
-            RestRequest request = RestContext.request;
-            Order requestMap = (Order) JSON.deserialize(request.requestBody.toString(), Order.class);
-            
             Map<String, String> flightTypeMap = new Map<String, String>{
                  '1' => 'Arrival', 
                  '2' => 'Departure',
                  '3' => 'Transit'
             };
+                
+            //MDEN_RegisterCustomer.registerCustomer();
+            //Uncomment below code to test in Postman
+            RestRequest request = RestContext.request;
+            Order requestMap = (Order) JSON.deserialize(request.requestBody.toString(), Order.class);
+                      
             
-            /*
-            String reqBody =' { ' +
+			//Uncomment below to call via Developer console using : MDEN_GetAirportTerminalByAirport.getAiportTerminals();
+            /*String reqBody =' { ' +
                 ' "partner_id" : "100", '+
                 ' "date_order" : "2022-07-05 13:26:22", '+
                 ' "airport_location_id" : "000002", '+
@@ -50,21 +52,10 @@ global class MDEN_SaveSaleOrderParent {
                 ' "primary_product_id" : "23" '+
                 ' } ';
          
-            Order requestMap = (Order) JSON.deserialize(reqBody, Order.class);
-            */
+            Order requestMap = (Order) JSON.deserialize(reqBody, Order.class);*/
+            
                 
             system.debug('Order=partner_id=>'+requestMap.partner_id);
-            
-            /*
-            SELECT fields(all) 
-			FROM Flight_Schedule__c 
-            WHere Arrival_Terminal__c <> null and
-            Flight_Date__c = 2025-01-31 and 
-            Arrival_Terminal__r.Airport__r.Location_Id__r.Name = '000002' and
-            Flight_Detail__r.Airline_Id__r.Name = '001' and 
-            Flight_Detail__r.Flight_No_Arrival__c = '871'
-            limit 200
-            */
             
             if(requestMap != null )
             {
@@ -104,12 +95,13 @@ global class MDEN_SaveSaleOrderParent {
                 if(flightTypeMap.containsKey(requestMap.service_type_id)){
                     oppRec.Service_Type__c  = flightTypeMap.get(requestMap.service_type_id);
                 }
-                
+                System.debug('requestMap.source;==============>'+requestMap.source);
                 oppRec.Service_Duration__c = requestMap.length_stay;
                 oppRec.Booking_Origin__c = requestMap.booking_made_from;
                 oppRec.CloseDate = date.today();
                 oppRec.StageName = 'Value Proposition';
                 oppRec.Name = 'Test';
+                oppRec.Source__c = requestMap.source;
                 oppRec.Service_Category__c = 'Welcome And Assist';
                 if(flightSchedule <> null  && !flightSchedule.isEmpty()){
                    oppRec.Flight_Number_Arrival__c = flightSchedule[0].Flight_Detail__r.Flight_No_Arrival__c ;
@@ -120,6 +112,7 @@ global class MDEN_SaveSaleOrderParent {
                    oppRec.Arriving_Airport__c = flightSchedule[0].Arrival_Terminal__r.Airport__c;
                    oppRec.Departure_Airport__c = flightSchedule[0].Departure_Terminal__r.Airport__c;
                    oppRec.Service_Terminal__c = (oppRec.Service_Type__c == 'Arrival') ? flightSchedule[0].Arrival_Terminal__c : (oppRec.Service_Type__c == 'Departure') ? flightSchedule[0].Departure_Terminal__c: terminalList[0].id;
+                  
                     //oppRec.Service_Terminal__c = ;
                 }
                  
@@ -135,7 +128,8 @@ global class MDEN_SaveSaleOrderParent {
             
             system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         
-    }catch(Exception e){
+    			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
+        }catch(Exception e){
         mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
         system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
     }
@@ -160,7 +154,7 @@ global static boolean checkCustomerDuplicacy(String email, String accId){
         }else{
             return false;
         }
-    }catch(Exception e){
+    	}catch(Exception e){
         System.debug('Error Message : '+e.getMessage());
         return false;
     }
@@ -203,7 +197,7 @@ global class Order{
     global String arrival_term;
     global String departure_term;
     global String primary_product_id; 
-    
+    global String source; 
     global Order() {
     }
 }

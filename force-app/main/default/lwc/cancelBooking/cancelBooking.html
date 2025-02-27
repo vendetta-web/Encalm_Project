@@ -1,5 +1,10 @@
 <template>
-
+    <div class="spinner">
+        <template if:true={isLoading}>
+             <lightning-spinner alternative-text="Loading" variant="brand" size="large">
+             </lightning-spinner>
+        </template>
+    </div>
     
     <template if:true={isModalOpen}>
         <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
@@ -13,8 +18,8 @@
                     </button>
                     <h2 class="slds-text-heading_medium">Cancel Booking</h2>
                 </header>
-
-                <!-- Modal Body -->
+                <template if:false={showNoBooking}>
+                    <!-- Modal Body -->
                 <div class="slds-modal__content slds-p-around_medium">
                     <lightning-radio-group
                         name="cancelOptions"
@@ -27,9 +32,17 @@
 
                 <!-- Modal Footer -->
                 <footer class="slds-modal__footer">
-                    <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeModal} style="margin-right: 10px;"></lightning-button>
                     <lightning-button variant="brand" label="Next" onclick={handleNext}></lightning-button>
                 </footer>
+                </template>
+                <template if:true={showNoBooking}>
+                    <!-- Modal Body -->
+            <div class="slds-modal__content slds-p-around_medium">
+                <p>No booking available for cancellation</p>
+            </div>
+                </template>
+                
             </div>
         </section>
 
@@ -38,6 +51,7 @@
     </template>
 
     <template if:true={showMultipleCancelScreen}>
+        <template lwc:if={lineItems}>
         <lightning-card title="Cancel Booking">
             <div class="slds-p-around_medium">
                  <!-- Display loading spinner when data is being fetched -->
@@ -56,19 +70,34 @@
     
                 <!-- Button to send selected values to Apex -->
                 <footer class="slds-modal__footer">
-                    <lightning-button variant="neutral" label="Previous" onclick={handlePrevious}></lightning-button>
+                    <lightning-button variant="neutral" label="Previous" onclick={handlePrevious} style="margin-right: 10px;"></lightning-button>
                     <lightning-button variant="brand" label="Next" onclick={handleBookingCancellation}></lightning-button>
                 </footer>
             </div>
         </lightning-card>
+        </template>
+        <template lwc:else>
+            <!-- Modal Body -->
+            <div class="slds-modal__content slds-p-around_medium">
+                <p>No booking available for cancellation</p>
+            </div>
+        </template>
     </template>
 
     <template if:true={showSummary}>
         <lightning-card title="Cancellation Summary" class="slds-size_1-of-4">
             <div class="slds-card__body">
-                <template if:true={cancellationOrder}>
+                <template lwc:if={cancellationOrder}>
                     <div class="param2-container">
                         <div class="param2-box"> 
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
+                                            Policy Applied:
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                            <p>{cancellationOrder.refundPolicyApplicable}</p> <!-- Show the policy applied of the selected row -->
+                                        </lightning-layout-item>
+                                    </lightning-layout>
                                     <lightning-layout multiple-rows="true">
                                             <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
                                                 Booking Amount:
@@ -115,12 +144,49 @@
                         </div>
                     </div>
                 </template>
+                <template lwc:else>
+                    <!-- Modal Body -->
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p>No booking available for cancellation</p>
+                    </div>
+                </template>
             </div>
         </lightning-card>
         <!-- Button to send selected values to Apex -->
         <footer class="slds-modal__footer">
-            <lightning-button variant="neutral" label="Previous" onclick={handleSelection}></lightning-button>
-            <lightning-button variant="brand" label="Submit" onclick={handleCancellation}></lightning-button>
+            <lightning-button variant="neutral" label="Previous" onclick={handleSelection} style="margin-right: 10px;"></lightning-button>
+            <lightning-button variant="brand" label="Submit" onclick={openModal}></lightning-button>
         </footer>
     </template>
+
+        <!-- Modal for confirmation -->
+        <template if:true={confirmDelete}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <!-- Modal/Confirmation Header -->
+                    <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={closePopupModal}>
+                        <lightning-icon icon-name="utility:close" size="small" alternative-text="close" class="slds-button__icon slds-button__icon_small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                        <h2 class="slds-text-heading_medium">Cancel Booking</h2>
+                    </header>
+
+                    <!-- Modal Body -->
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p>Are you sure you want to Cancel this booking?</p>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="No" class="encalmbg" onclick={closePopupModal} style="margin-right: 10px;"></lightning-button>
+                        <lightning-button variant="brand" label="Yes" class="encalmbg" onclick={handleFinalCancel}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+
+            <!-- Backdrop for Modal -->
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
 </template>

@@ -7,6 +7,10 @@
         <value xsi:type="xsd:string">Meet and assist,meet and greet, airport assistance, security assistance, welcome agent, greet and assist, atithya, Required Gate to Gate Service, Booking confirmation, Airport service, VIP Service &amp; Assistance,Group, Personal Assistance, GMR, meet &amp; greet</value>
     </values>
     <values>
+        <field>Service_Email__c</field>
+        <value xsi:type="xsd:string">saurabhmaxify@gmail.com</value>
+    </values>
+    <values>
         <field>Type__c</field>
         <value xsi:type="xsd:string">Service</value>
     </values>

@@ -5,19 +5,19 @@
  */
 @RestResource(urlMapping='/get_product_with_availablity/*')	
 global class MDEN_GetProductMaster {
-	@HttpGet
+	@HttpPost
     global static MDEN_GetResponseWrapper getProductWithAvailablity(){
         //Initialize the response wrapper with blank status and blank message
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '');
                 
         try{
             //Uncomment below to call via Postman
-            /*RestRequest request = RestContext.request;
+            RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestbody.toString(), MDEN_GetRequestWrapper.class);
-            */
+           
             
             //Uncomment below to call via Developer console using : MDEN_GetProductMaster.getProductWithAvailablity();
-            String reqBody =' { ' +
+            /*String reqBody =' { ' +
                             ' "category" : "Arrival", ' +
                             ' "sector" : "Domestic", ' +
                             ' "airport_code" : "8008", ' +
@@ -28,8 +28,8 @@ global class MDEN_GetProductMaster {
                             ' "no_of_adult" : "2", ' +
                             ' "no_of_children" : "1", ' +
                             ' "no_of_infants" : "0"' +
-            ' } ';	
-            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);
+            ' } ';
+            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);*/	
 			
             system.debug('requestMap==>'+requestMap);
             //Parsing data from requestMap
@@ -96,14 +96,11 @@ global class MDEN_GetProductMaster {
                 }
             
                 mden_responseWrapper.datalist = datalist;
-                //gtba.id = terminal.name;
-                //gtba.name = terminal.Airport__r.name;
-                //gtba.value = terminal.name;
-                //gtba.code = terminal.Code__c;
             }
             else{
                 mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
             }
+            
             system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper));
             
         }catch(Exception e){

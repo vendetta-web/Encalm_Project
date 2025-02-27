@@ -7,6 +7,10 @@
         <value xsi:type="xsd:string">Baggage assistance, baggage carrier, luggage assistance, suitcases, luggage carrier</value>
     </values>
     <values>
+        <field>Service_Email__c</field>
+        <value xsi:type="xsd:string">girish.sfdc10@gmail.com</value>
+    </values>
+    <values>
         <field>Type__c</field>
         <value xsi:type="xsd:string">Service</value>
     </values>

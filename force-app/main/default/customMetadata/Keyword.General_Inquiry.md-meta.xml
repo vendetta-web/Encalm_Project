@@ -7,6 +7,10 @@
         <value xsi:nil="true"/>
     </values>
     <values>
+        <field>Service_Email__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
         <field>Type__c</field>
         <value xsi:type="xsd:string">Service</value>
     </values>

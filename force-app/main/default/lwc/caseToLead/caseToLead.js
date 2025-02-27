@@ -58,6 +58,8 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             this.isSuccess = false;
         }
     }
+
+    
     openCaseClosedScreenStart() {
         this.openCaseClosedScreen = true;
     }
@@ -88,6 +90,8 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         this.dispatchEvent(new CloseActionScreenEvent());
 
     }
+
+   
     renderedCallback() {
         // Insert HTML for success messages
         if (this.isSuccess && this.actionMessage) {

@@ -70,7 +70,8 @@ public with sharing class LeadFromCaseController {
                 System.debug('Lead ID is null');
             }
         } catch (Exception e) {
-            System.debug('Error message: ' + e.getMessage() + ' at line number: ' + e.getLineNumber());
+            System.debug('Error occurred in populateLeadFromCase method: ' + e.getMessage());
+            LogErrorUtil.logError(e, 'LeadFromCaseController', 'populateLeadFromCase');            
         }
     }
     
@@ -105,20 +106,26 @@ public with sharing class LeadFromCaseController {
                 isErrorMessage = true;
             }
             showForm = false;
-            System.debug('Error: ' + e.getMessage());
+            System.debug('Error occurred in saveLead method: ' + e.getMessage());
+            LogErrorUtil.logError(e, 'LeadFromCaseController', 'saveLead');
         }
         return null;
     }
     
-    
     // Fetch Leads associated with a Case
     @AuraEnabled(cacheable=true)
     public static List<Lead> getLeadsForCase(Id caseId) {
-        if (String.isBlank(caseId)) {
-            throw new IllegalArgumentException('Case ID cannot be null or empty.');
+        try {
+            if (String.isBlank(caseId)) {
+                throw new IllegalArgumentException('Case ID cannot be null or empty.');
+            }
+            
+            return [SELECT Id, Name, Case__c FROM Lead WHERE Case__c = :caseId];
+        } catch (Exception e) {
+            System.debug('Error occurred in getLeadsForCase method: ' + e.getMessage());
+            LogErrorUtil.logError(e, 'LeadFromCaseController', 'getLeadsForCase');
+            return null;
         }
-        
-        return [SELECT Id, Name, Case__c FROM Lead WHERE Case__c = :caseId];
     }
     
     // Close the associated case
@@ -135,38 +142,39 @@ public with sharing class LeadFromCaseController {
                 update caseRecord;
             }
         } catch (Exception e) {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error closing Case: ' + e.getMessage()));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error occurred in closeAssociatedCase method: ' + e.getMessage()));
+            LogErrorUtil.logError(e, 'LeadFromCaseController', 'closeAssociatedCase');
         }
     }
     
-    //Use to send the Inquiry Mail from Lead
+    // Use to send the Inquiry Mail from Lead
     @AuraEnabled
     public static void sendEmailToLead(Id leadId) {
-        if (String.isBlank(leadId)) {
-            throw new AuraHandledException('Lead Id is required to send email.');
-        }
-        
-        // Fetch the Lead record
-        Lead leadRecord = [SELECT Id, Email, Status FROM Lead WHERE Id = :leadId LIMIT 1];
-        if (String.isBlank(leadRecord.Email)) {
-            throw new AuraHandledException('The Lead does not have an email address.');
-        }
-        
-        // Fetch the specified email template
-        EmailTemplate emailTemplate = [
-            SELECT Id, DeveloperName 
-            FROM EmailTemplate 
-            WHERE DeveloperName = 'Shopping_Email_on_Lead_Creation' 
-            LIMIT 1
-        ];
-        
-        // Prepare the email message
-        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-        email.setTargetObjectId(leadRecord.Id); // Set Lead Id as target object
-        email.setTemplateId(emailTemplate.Id); // Use the specified template
-        email.setSaveAsActivity(false); // Prevent saving as an activity to avoid conflicts
-        
         try {
+            if (String.isBlank(leadId)) {
+                throw new AuraHandledException('Lead Id is required to send email.');
+            }
+            
+            // Fetch the Lead record
+            Lead leadRecord = [SELECT Id, Email, Status FROM Lead WHERE Id = :leadId LIMIT 1];
+            if (String.isBlank(leadRecord.Email)) {
+                throw new AuraHandledException('The Lead does not have an email address.');
+            }
+            
+            // Fetch the specified email template
+            EmailTemplate emailTemplate = [
+                SELECT Id, DeveloperName 
+                FROM EmailTemplate 
+                WHERE DeveloperName = 'Shopping_Email_on_Lead_Creation' 
+                LIMIT 1
+            ];
+            
+            // Prepare the email message
+            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+            email.setTargetObjectId(leadRecord.Id); // Set Lead Id as target object
+            email.setTemplateId(emailTemplate.Id); // Use the specified template
+            email.setSaveAsActivity(false); // Prevent saving as an activity to avoid conflicts
+            
             // Send the email
             Messaging.SendEmailResult[] emailResults = Messaging.sendEmail(new List<Messaging.SingleEmailMessage> { email });
             
@@ -180,6 +188,8 @@ public with sharing class LeadFromCaseController {
             update leadRecord;
             
         } catch (Exception ex) {
+            System.debug('Error occurred in sendEmailToLead method: ' + ex.getMessage());
+            LogErrorUtil.logError(ex, 'LeadFromCaseController', 'sendEmailToLead'); 
             throw new AuraHandledException('An error occurred while sending the email: ' + ex.getMessage());
         }
     }

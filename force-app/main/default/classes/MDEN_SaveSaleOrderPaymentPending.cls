@@ -13,13 +13,11 @@ global class MDEN_SaveSaleOrderPaymentPending {
             //MDEN_SaveSaleGuest.saveSaleGuest();
             
             //Uncomment below code to test in Postman
-            
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
             
             
             //Uncomment below to call via Developer console using : MDEN_GetAirportTerminalByAirport.getAiportTerminals();
-            
             /*
             String reqBody =' { ' +
                                 ' "id" : "006Su00000AOxScIAL" '+
@@ -34,7 +32,8 @@ global class MDEN_SaveSaleOrderPaymentPending {
                 
             if(oppList != null & !oppList.isEmpty())
             {
-                mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data updated.');
+                //Initialize the wrapper with status and message
+                mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
                 mden_responseWrapper.id = 'true';
                 oppList[0].StageName = 'Pending Payment';
 
@@ -45,6 +44,7 @@ global class MDEN_SaveSaleOrderPaymentPending {
                 mden_responseWrapper.id = 'false';
                 system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
             }
+			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
             mden_responseWrapper.id = 'false';

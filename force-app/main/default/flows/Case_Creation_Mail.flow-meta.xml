@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Acknowledgement_Mail</name>
         <label>Acknowledgement Mail</label>
-        <locationX>1180</locationX>
-        <locationY>502</locationY>
+        <locationX>50</locationX>
+        <locationY>384</locationY>
         <actionName>EmailUtility</actionName>
         <actionType>apex</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -36,49 +36,57 @@
         <offset>0</offset>
     </actionCalls>
     <actionCalls>
-        <name>Send_shopping_email</name>
-        <label>Send shopping email</label>
-        <locationX>576</locationX>
-        <locationY>479</locationY>
-        <actionName>EmailUtility</actionName>
-        <actionType>apex</actionType>
-        <connector>
-            <targetReference>Case_Update_Records</targetReference>
-        </connector>
+        <name>Send_Escalation_Alert</name>
+        <label>Send Escalation Alert</label>
+        <locationX>1106</locationX>
+        <locationY>384</locationY>
+        <actionName>Case.Case_Creation_Shopping_Email</actionName>
+        <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
-            <name>fromAddress</name>
-            <value>
-                <stringValue>encalmreservation@gmail.com</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>recordId</name>
+            <name>SObjectRowId</name>
             <value>
                 <elementReference>$Record.Id</elementReference>
             </value>
         </inputParameters>
-        <inputParameters>
-            <name>templateName</name>
-            <value>
-                <stringValue>Shopping Email on Case Creation</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>toAddresses</name>
-            <value>
-                <elementReference>$Record.SuppliedEmail</elementReference>
-            </value>
-        </inputParameters>
-        <nameSegment>EmailUtility</nameSegment>
+        <nameSegment>Case.Case_Creation_Shopping_Email</nameSegment>
         <offset>0</offset>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <decisions>
+        <name>Check_if_Case_is_Open</name>
+        <label>Check if Case is Open</label>
+        <locationX>710</locationX>
+        <locationY>276</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Escalate_if_Case_is_open</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>New</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_status_to_Escalated</targetReference>
+            </connector>
+            <label>Escalate if Case is open</label>
+        </rules>
+    </decisions>
+    <decisions>
         <name>Email_Decision</name>
         <label>Email Decision</label>
-        <locationX>984</locationX>
-        <locationY>382</locationY>
+        <locationX>50</locationX>
+        <locationY>276</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>Inquiry_Type</name>
@@ -130,6 +138,29 @@
             <label>New Case</label>
         </rules>
     </decisions>
+    <decisions>
+        <name>Supervisor_not_reassigned</name>
+        <label>Supervisor not reassigned</label>
+        <locationX>1238</locationX>
+        <locationY>276</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Escalate_to_Shift_Incharge1</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.OwnerId</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>pr</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Send_Escalation_Alert</targetReference>
+            </connector>
+            <label>Escalate to Shift-Incharge</label>
+        </rules>
+    </decisions>
+    <description>Updated by supriya  - Escalated to Supervisor Added</description>
     <environments>Default</environments>
     <formulas>
         <name>isNew</name>
@@ -147,7 +178,7 @@
     <processMetadataValues>
         <name>CanvasMode</name>
         <value>
-            <stringValue>FREE_FORM_CANVAS</stringValue>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
         </value>
     </processMetadataValues>
     <processMetadataValues>
@@ -158,35 +189,67 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordUpdates>
-        <name>Case_Update_Records</name>
-        <label>Case Update Records</label>
-        <locationX>576</locationX>
-        <locationY>587</locationY>
-        <filterLogic>and</filterLogic>
-        <filters>
-            <field>Inquiry_Type__c</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>Booking</stringValue>
-            </value>
-        </filters>
+        <name>Update_status_to_Escalated</name>
+        <label>Update status to Escalated</label>
+        <locationX>578</locationX>
+        <locationY>384</locationY>
         <inputAssignments>
-            <field>Email_Alert_Send__c</field>
+            <field>Status</field>
             <value>
-                <booleanValue>true</booleanValue>
+                <stringValue>Escalated</stringValue>
             </value>
         </inputAssignments>
         <inputReference>$Record</inputReference>
     </recordUpdates>
     <start>
-        <locationX>714</locationX>
-        <locationY>48</locationY>
+        <locationX>518</locationX>
+        <locationY>0</locationY>
         <connector>
             <targetReference>Email_Decision</targetReference>
         </connector>
         <object>Case</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <scheduledPaths>
+            <name>Escalate_to_Supervisor_TAT_30_min</name>
+            <connector>
+                <targetReference>Check_if_Case_is_Open</targetReference>
+            </connector>
+            <label>Escalate to Supervisor (TAT 30 min)</label>
+            <offsetNumber>2</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>Assigned_To_Associate__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
+        <scheduledPaths>
+            <name>Escalate_to_Shift_Incharge</name>
+            <connector>
+                <targetReference>Supervisor_not_reassigned</targetReference>
+            </connector>
+            <label>Escalate to Shift-Incharge</label>
+            <offsetNumber>2</offsetNumber>
+            <offsetUnit>Minutes</offsetUnit>
+            <recordField>Assigned_To_Supervisor__c</recordField>
+            <timeSource>RecordField</timeSource>
+        </scheduledPaths>
         <triggerType>RecordAfterSave</triggerType>
     </start>
     <status>Active</status>
+    <variables>
+        <name>PriorOwner</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <elementReference>$Record__Prior.OwnerId</elementReference>
+        </value>
+    </variables>
+    <variables>
+        <name>PriorRecord</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Case</objectType>
+    </variables>
 </Flow>

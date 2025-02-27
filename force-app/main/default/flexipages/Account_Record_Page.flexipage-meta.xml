@@ -71,6 +71,16 @@
                 <identifier>RecordAnnualRevenueField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Source__c</fieldItem>
+                <identifier>RecordSource__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-0106a84e-d83f-44e6-9890-9915add9cab0</name>
         <type>Facet</type>
     </flexiPageRegions>

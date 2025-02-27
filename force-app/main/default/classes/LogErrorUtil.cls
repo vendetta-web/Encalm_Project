@@ -11,6 +11,7 @@ public class LogErrorUtil {
         errorLog.User__c = UserInfo.getUserId();
         errorLog.Log_Level__c = 'ERROR'; 
         
+        
         // Determine the error type based on the exception
         String errorType = getErrorType(e);
         errorLog.Error_Type__c = errorType;

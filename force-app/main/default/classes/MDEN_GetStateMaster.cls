@@ -12,15 +12,15 @@ global class MDEN_GetStateMaster {
 		
         try{
             //Uncomment below to call via Postman
-            /*RestRequest request = RestContext.request;
+            RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestbody.toString(), MDEN_GetRequestWrapper.class);
-            */
+            
             
             //Uncomment below to call via Developer console using : MDEN_GetStateMaster.getState();
-            String reqBody =' { ' +
+            /*String reqBody =' { ' +
                             ' "country_id" : "India"' +
             ' } ';	
-			MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);
+			MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);*/
 			 
             //Parsing data from requestMap
             system.debug('requestMap==>'+requestMap);

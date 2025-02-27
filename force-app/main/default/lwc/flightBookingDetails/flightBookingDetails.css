@@ -16,6 +16,7 @@
     align-items: center;  /* Center vertically */
     margin-top: 20px;
     padding-left: 10px;
+    padding-right: 10px;
 }
 
 /* Style for the box that shows the selected param2 */
@@ -247,4 +248,10 @@ span {
     max-width: 150px; /* Limit width of each field */
     word-wrap: break-word; /* Ensure text wraps within the container */
     margin-left: 10px; /* Adds space from first rows */
+}
+
+@media screen and (max-width: 600px) {
+    lightning-layout-item {
+        flex: 1 1 100%; /* On small screens, items can stack */
+    }
 }

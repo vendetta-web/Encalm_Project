@@ -1,20 +1,23 @@
 /* Created by 	: Maxify Development Team
  * Created Date : 14th Jan, 2025
- * Input 		: None
- * Purpose 		: This API class returns all the salutations
+ * Input 		: category, airport_code, travel_date, service_time, product_id etc.
+ * Purpose 		: This API class returns all the product of category addOn with the filter of input parameters
  */
 @RestResource(urlMapping='/get_product_addon_list/*')	
 global class MDEN_GetAddonProductMaster {
 	@HttpGet
-    global static MDEN_GetResponseWrapper getProductAddonList(){
+    global static MDEN_GetResponseWrapper ProductDetailWrapper(){
         //Initialize the response wrapper with blank status and blank message
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '');
                 
         try{
-            RestRequest request = RestContext.request;
+            //Uncomment below to call via Postman
+            /*RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestbody.toString(), MDEN_GetRequestWrapper.class);
+			*/
             
-            /*String reqBody =' { ' +
+            //Uncomment below to call via Developer console using : MDEN_GetAddonProductMaster.ProductDetailWrapper();
+            String reqBody =' { ' +
                             ' "category" : "Arrival", ' +
                             ' "sector" : "Domestic", ' +
                             ' "airport_code" : "8008", ' +
@@ -25,11 +28,10 @@ global class MDEN_GetAddonProductMaster {
             ' } ';	
             
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);
-            */
-            system.debug('requestMap==>'+requestMap);
-              
-            system.debug('requestMap.get==>'+requestMap.travel_date);
             
+            system.debug('requestMap==>'+requestMap);
+            
+            //Parsing data from requestMap
             String category = (String)requestMap.category; 
 			String sector = (String)requestMap.sector;  
             String airport_code = (String)requestMap.airport_code;  
@@ -43,10 +45,21 @@ global class MDEN_GetAddonProductMaster {
             system.debug('airport_code==>'+airport_code);
             system.debug('travel_date==>'+travel_date);
             
+            //Reseting the 'Add-On' value to the 'Add Ons' as it is the correct product category value for Add Ons under product table
             if(basetype == 'Add-On'){
                 basetype = 'Add Ons';
             }
-             List<PricebookEntry> productPrice = [select id, product2.name, product2.id, unitPrice, product2.ProductCode, product2.family, Tax_Price__c, product2.Description, product2.Service_Type__c, product2.Sector__c, product2.Is_Available__c  
+             List<PricebookEntry> productPrice = [select id,
+                                                        product2.name,
+                                                        product2.id,
+                                                        unitPrice,
+                                                        product2.ProductCode,
+                                                        product2.family,
+                                                        Tax_Price__c,
+                                                        product2.Description,
+                                                        product2.Service_Type__c,
+                                                        product2.Sector__c,
+                                                        product2.Is_Available__c  
                                                     From PricebookEntry 
                                                     Where product2.Service_Type__c = :category AND 
                                               			  product2.Sector__c = :sector AND
@@ -56,34 +69,33 @@ global class MDEN_GetAddonProductMaster {
             
             system.debug('productPrice==>'+productPrice);
             
-            if(productPrice != null){
+            //Null check
+            if(productPrice != null && !productPrice.isEmpty()){
+                //Initialize the wrapper with status and message
                 mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
-                List<getProductAddonList> datalist = new List<getProductAddonList>();
+                
+                List<ProductDetailWrapper> datalist = new List<ProductDetailWrapper>();
+                
                 for(PricebookEntry pbe: productPrice){
-            		getProductAddonList gpwa = new getProductAddonList();
+            		ProductDetailWrapper pdw = new ProductDetailWrapper();
           
-                    gpwa.id = pbe.product2.id;
-                    gpwa.name = pbe.product2.name;
-                    gpwa.list_price = pbe.unitPrice;
-                    gpwa.tax_string = '(= ₹ '+pbe.Tax_Price__c+' Incl. Taxes)';
-                    gpwa.tax_price = pbe.Tax_Price__c;
-                    gpwa.categ_id = new List<String>{pbe.product2.ProductCode, 'Welcome and Assist / '+ pbe.product2.Service_Type__c + ' / ' + pbe.product2.Sector__c};
-                    gpwa.description = pbe.product2.Description;
+                    pdw.id = pbe.product2.id;
+                    pdw.name = pbe.product2.name;
+                    pdw.list_price = pbe.unitPrice;
+                    pdw.tax_string = '(= ₹ '+pbe.Tax_Price__c+' Incl. Taxes)';
+                    pdw.tax_price = pbe.Tax_Price__c;
+                    pdw.categ_id = new List<String>{pbe.product2.ProductCode, 'Welcome and Assist / '+ pbe.product2.Service_Type__c + ' / ' + pbe.product2.Sector__c};
+                    pdw.description = pbe.product2.Description;
                     
-                    datalist.add(gpwa);
+                    datalist.add(pdw);
                 }
             
                 mden_responseWrapper.datalist = datalist;
-                //gtba.id = terminal.name;
-                //gtba.name = terminal.Airport__r.name;
-                //gtba.value = terminal.name;
-                //gtba.code = terminal.Code__c;
-                String jsonString = JSON.serialize(mden_responseWrapper);
-                system.debug('mden_responseWrapper==>'+jsonString);
             }
             else{
                 mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
             }
+            system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper));   
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
         }
@@ -110,14 +122,14 @@ global class MDEN_GetAddonProductMaster {
     global class MDEN_GetResponseWrapper {
         global String status; 
         global String message;
-        global List<getProductAddonList> datalist;
+        global List<ProductDetailWrapper> datalist;
         global MDEN_GetResponseWrapper(String status, String message) {
             this.status = status;
             this.message = message; 
         }        
     }
     
-    global class getProductAddonList{
+    global class ProductDetailWrapper{
         global string id;
         global string name;
         global Decimal list_price;
@@ -127,7 +139,7 @@ global class MDEN_GetAddonProductMaster {
         //global BLOB image_1920;
         global Decimal tax_price;
                 
-        global getProductAddonList(){
+        global ProductDetailWrapper(){
             
         }
     }

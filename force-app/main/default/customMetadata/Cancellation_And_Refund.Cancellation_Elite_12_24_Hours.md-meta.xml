@@ -27,6 +27,10 @@
         <value xsi:type="xsd:string">Elite</value>
     </values>
     <values>
+        <field>Refund_Policy__c</field>
+        <value xsi:type="xsd:string">50% of the Booking Amount applicable between 12-24 hours scheduled service time</value>
+    </values>
+    <values>
         <field>Sort_Order__c</field>
         <value xsi:type="xsd:double">3.0</value>
     </values>

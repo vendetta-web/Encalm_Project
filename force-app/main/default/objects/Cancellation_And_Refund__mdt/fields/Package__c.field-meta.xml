@@ -25,14 +25,19 @@
                 <label>Elite</label>
             </value>
             <value>
-                <fullName>Silver Gold Transit</fullName>
+                <fullName>Transit</fullName>
                 <default>false</default>
-                <label>Silver Gold Transit</label>
+                <label>Transit</label>
             </value>
             <value>
                 <fullName>General</fullName>
                 <default>false</default>
                 <label>General</label>
+            </value>
+            <value>
+                <fullName>Add Ons</fullName>
+                <default>false</default>
+                <label>Add Ons</label>
             </value>
         </valueSetDefinition>
     </valueSet>

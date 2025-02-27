@@ -1,17 +1,22 @@
 public class LeadStatusHelper {
     public static void handleBeforeUpdate(List<Lead> newLeads, Map<Id, Lead> oldLeadMap) {
-        // Query the queue once and reuse it
-        Group queue = [SELECT Id FROM Group WHERE Type = 'Queue' AND Name = 'Sales Team' LIMIT 1];
-        system.debug('----queue-------' + queue);
+        // Query the Reservation Queue once and reuse it
+        Group reservationQueue = [SELECT Id FROM Group WHERE Type = 'Queue' AND Name = 'Reservation Queue' LIMIT 1];
+        System.debug('----Reservation Queue ID: ' + reservationQueue.Id);
+        
+          // Query the Customer Support Workflow Queue once and reuse it
+         //Group customerSupportWorkflowQueue = [SELECT Id FROM Group WHERE Type = 'Queue' AND Name = 'Customer Support Workflow' LIMIT 1];
+        //System.debug('----Customer Support Workflow Queue ID: ' + customerSupportWorkflowQueue.Id);
 
         // Loop through all the records being updated
         for (Lead newLead : newLeads) {
             Lead oldLead = oldLeadMap.get(newLead.Id);
-            
-            // Check if the Lead Status is changing to 'Sent to Sales' and it wasn't already 'Sent to Sales'
-            if (oldLead != null && newLead.Status == 'Sent to Sales' && oldLead.Status != 'Sent to Sales') {
-                newLead.OwnerId = queue.Id;
-                system.debug('----Updated OwnerId to Sales Queue: ' + newLead.OwnerId);
+
+            // Check if the Lead Status is changing to 'Follow-Up Complete' and it wasn't already 'Follow-Up Complete'
+            if (oldLead != null && newLead.Status == 'Awaiting Customer response' && oldLead.Status != 'Awaiting Customer response') {
+                newLead.OwnerId = reservationQueue.Id;
+                //newLead.OwnerId = customerSupportWorkflowQueue.Id;
+                System.debug('----Updated OwnerId to Customer Support Workflow Queue: ' + newLead.OwnerId);
             }
         }
     }

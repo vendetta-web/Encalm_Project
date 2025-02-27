@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Copy_2_of_Status_Changed</name>
         <label>Copy 2 of Status Changed</label>
-        <locationX>50</locationX>
-        <locationY>1379</locationY>
+        <locationX>578</locationX>
+        <locationY>1271</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -44,10 +44,13 @@
     <actionCalls>
         <name>Send_Email_to_Supervisor</name>
         <label>Send Email to Supervisor</label>
-        <locationX>578</locationX>
+        <locationX>1106</locationX>
         <locationY>647</locationY>
         <actionName>EmailUtility</actionName>
         <actionType>apex</actionType>
+        <connector>
+            <targetReference>Change_Owner_to_Manager</targetReference>
+        </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>templateName</name>
@@ -64,55 +67,11 @@
         <nameSegment>EmailUtility</nameSegment>
         <offset>0</offset>
     </actionCalls>
-    <actionCalls>
-        <name>Status_Changed</name>
-        <label>Status Changed</label>
-        <locationX>182</locationX>
-        <locationY>1163</locationY>
-        <actionName>emailSimple</actionName>
-        <actionType>emailSimple</actionType>
-        <connector>
-            <targetReference>Escalated_Status</targetReference>
-        </connector>
-        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
-        <inputParameters>
-            <name>emailAddresses</name>
-            <value>
-                <elementReference>$Record.Email</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailSubject</name>
-            <value>
-                <stringValue>Status Changed</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailBody</name>
-            <value>
-                <stringValue>Your Status is Changed</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>recipientId</name>
-            <value>
-                <elementReference>$Record.Id</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>logEmailOnSend</name>
-            <value>
-                <booleanValue>true</booleanValue>
-            </value>
-        </inputParameters>
-        <nameSegment>emailSimple</nameSegment>
-        <offset>0</offset>
-    </actionCalls>
     <apiVersion>62.0</apiVersion>
     <decisions>
         <name>Check_Follow_up_date</name>
         <label>Check Follow up date</label>
-        <locationX>644</locationX>
+        <locationX>1172</locationX>
         <locationY>431</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -166,7 +125,7 @@
     <decisions>
         <name>Check_followUp</name>
         <label>Check followUp</label>
-        <locationX>182</locationX>
+        <locationX>710</locationX>
         <locationY>755</locationY>
         <defaultConnector>
             <targetReference>Create_Reminder</targetReference>
@@ -202,7 +161,7 @@
     <decisions>
         <name>Check_Operation</name>
         <label>Check Operation</label>
-        <locationX>215</locationX>
+        <locationX>677</locationX>
         <locationY>323</locationY>
         <defaultConnector>
             <targetReference>Check_Follow_up_date</targetReference>
@@ -218,14 +177,42 @@
                     <booleanValue>true</booleanValue>
                 </rightValue>
             </conditions>
+            <connector>
+                <targetReference>Get_Case</targetReference>
+            </connector>
             <label>INSERT</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Decision_Account_Check</name>
+        <label>Decision Account Check</label>
+        <locationX>182</locationX>
+        <locationY>647</locationY>
+        <defaultConnector>
+            <targetReference>Create_Person_Account</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Not_Existing_Account</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Existing_Account_Email</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Associate_lead</targetReference>
+            </connector>
+            <label>Not Existing Account</label>
         </rules>
     </decisions>
     <decisions>
         <name>Escalated_Status</name>
         <label>Escalated Status</label>
-        <locationX>182</locationX>
-        <locationY>1271</locationY>
+        <locationX>710</locationX>
+        <locationY>1163</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>checkEscalated</name>
@@ -243,7 +230,7 @@
             <label>checkEscalated</label>
         </rules>
     </decisions>
-    <description>Lead Create &amp; Update After Flow</description>
+    <description>Saurabh 26 feb</description>
     <environments>Default</environments>
     <formulas>
         <name>IS_NEW</name>
@@ -277,9 +264,38 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordCreates>
+        <name>Create_Person_Account</name>
+        <label>Create Person Account</label>
+        <locationX>314</locationX>
+        <locationY>755</locationY>
+        <connector>
+            <targetReference>Update_Lead</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>FirstName</field>
+            <value>
+                <elementReference>$Record.FirstName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>LastName</field>
+            <value>
+                <elementReference>$Record.LastName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>PersonEmail</field>
+            <value>
+                <elementReference>$Record.Email</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Account</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <recordCreates>
         <name>Create_Reminder</name>
         <label>Create Reminder</label>
-        <locationX>314</locationX>
+        <locationX>842</locationX>
         <locationY>863</locationY>
         <connector>
             <targetReference>Change_stage_to_Follow_up_required</targetReference>
@@ -300,12 +316,6 @@
             <field>IsReminderSet</field>
             <value>
                 <booleanValue>true</booleanValue>
-            </value>
-        </inputAssignments>
-        <inputAssignments>
-            <field>OwnerId</field>
-            <value>
-                <elementReference>$Record.OwnerId</elementReference>
             </value>
         </inputAssignments>
         <inputAssignments>
@@ -336,9 +346,51 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
     <recordLookups>
+        <name>Existing_Account_Email</name>
+        <label>Existing Account Email</label>
+        <locationX>182</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Decision_Account_Check</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>PersonEmail</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Email</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Account</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Case</name>
+        <label>Get Case</label>
+        <locationX>182</locationX>
+        <locationY>431</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Existing_Account_Email</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Case__r.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Case</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
         <name>Get_FollowUp</name>
         <label>Get FollowUp</label>
-        <locationX>182</locationX>
+        <locationX>710</locationX>
         <locationY>539</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -359,7 +411,7 @@
     <recordLookups>
         <name>Get_Task</name>
         <label>Get Task</label>
-        <locationX>182</locationX>
+        <locationX>710</locationX>
         <locationY>647</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -373,6 +425,13 @@
                 <elementReference>$Record.Id</elementReference>
             </value>
         </filters>
+        <filters>
+            <field>Subject</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <stringValue>Email:</stringValue>
+            </value>
+        </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
         <object>Task</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
@@ -380,7 +439,7 @@
     <recordLookups>
         <name>Get_User</name>
         <label>Get User</label>
-        <locationX>578</locationX>
+        <locationX>1106</locationX>
         <locationY>539</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -394,14 +453,14 @@
                 <elementReference>$User.Id</elementReference>
             </value>
         </filters>
-        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
         <object>User</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
     <recordLookups>
         <name>SalesRecordType</name>
         <label>SalesRecordType</label>
-        <locationX>842</locationX>
+        <locationX>1370</locationX>
         <locationY>539</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -420,19 +479,39 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
     <recordUpdates>
-        <name>Change_stage_to_Follow_up_required</name>
-        <label>Change stage to Follow up required</label>
-        <locationX>182</locationX>
-        <locationY>1055</locationY>
-        <connector>
-            <targetReference>Status_Changed</targetReference>
-        </connector>
+        <name>Associate_lead</name>
+        <label>Associate lead</label>
+        <locationX>50</locationX>
+        <locationY>755</locationY>
         <inputAssignments>
-            <field>Status</field>
+            <field>Account__c</field>
             <value>
-                <stringValue>Follow up required</stringValue>
+                <elementReference>Existing_Account_Email.Id</elementReference>
             </value>
         </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Change_Owner_to_Manager</name>
+        <label>Change Owner to Manager</label>
+        <locationX>1106</locationX>
+        <locationY>755</locationY>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>$Record.Owner:User.ManagerId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Change_stage_to_Follow_up_required</name>
+        <label>Change stage to Follow up required</label>
+        <locationX>710</locationX>
+        <locationY>1055</locationY>
+        <connector>
+            <targetReference>Escalated_Status</targetReference>
+        </connector>
         <inputAssignments>
             <field>Trigger_Time_15__c</field>
             <value>
@@ -444,7 +523,7 @@
     <recordUpdates>
         <name>change_stage_to_Sales1</name>
         <label>Change record Type to Sales</label>
-        <locationX>842</locationX>
+        <locationX>1370</locationX>
         <locationY>647</locationY>
         <inputAssignments>
             <field>RecordTypeId</field>
@@ -461,9 +540,46 @@
         <inputReference>$Record</inputReference>
     </recordUpdates>
     <recordUpdates>
+        <name>Update_Case</name>
+        <label>Update Case</label>
+        <locationX>314</locationX>
+        <locationY>971</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Get_Case.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>AccountId</field>
+            <value>
+                <elementReference>Create_Person_Account</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Case</object>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Lead</name>
+        <label>Update Lead</label>
+        <locationX>314</locationX>
+        <locationY>863</locationY>
+        <connector>
+            <targetReference>Update_Case</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Account__c</field>
+            <value>
+                <elementReference>Create_Person_Account</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
         <name>Update_Task</name>
         <label>Update Task</label>
-        <locationX>50</locationX>
+        <locationX>578</locationX>
         <locationY>863</locationY>
         <connector>
             <targetReference>Change_stage_to_Follow_up_required</targetReference>
@@ -497,7 +613,7 @@
         <object>Task</object>
     </recordUpdates>
     <start>
-        <locationX>89</locationX>
+        <locationX>551</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Check_Operation</targetReference>

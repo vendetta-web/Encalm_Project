@@ -16,20 +16,10 @@ public without sharing class EmailUtility {
          @InvocableVariable
         public String Body; // Related record ID  //Saurabh
     }
-  /* @future
-    public static void updateEmailTemplateBody(String templateName, String newBody) {
-        if (String.isBlank(templateName) || String.isBlank(newBody)) {
-            throw new EmailTemplateException('Template name and body cannot be blank.');
-        }
-        EmailTemplate emailTemplate = getEmailTemplate(templateName);
-        emailTemplate.Body = newBody;
-        emailTemplate.HtmlValue = newBody;
-        update emailTemplate;
-    } */
-
 
     @InvocableMethod(label='Invoke Email Utility' description='Send Email')
     public static void sendEmail(List<FlowInputs> request) {
+        try{
         System.debug('Request Parameters ---> ' + request);
 
         // Extract the first input from the list
@@ -60,6 +50,11 @@ public without sharing class EmailUtility {
 		System.debug('EmailTempBody'+emailTemp.Body);
         // Render email using the template
         Messaging.SingleEmailMessage mail = Messaging.renderStoredEmailTemplate(emailTemp.Id, null, input.recordId);
+            
+            OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress where Address = 'supriya.bassi@maxify.digital'];
+            if ( owea.size() > 0 ) {
+                mail.setOrgWideEmailAddressId(owea.get(0).Id);
+            }
 
         // Set recipient addresses
         if (Test.isRunningTest()) {
@@ -90,7 +85,7 @@ public without sharing class EmailUtility {
  
          // Validate recordId for WhatId
         String recordPrefix = input.recordId?.substring(0, 3);
-        Boolean isValidWhatId = recordPrefix == '001' || recordPrefix == '003' || recordPrefix == '500'; // Account, Contact, Case 
+        Boolean isValidWhatId = recordPrefix == '001' || recordPrefix == '003' || recordPrefix == '500' || recordPrefix == '00Q' || recordPrefix == '006'; // Account, Contact, Case, Lead, Opportunity 
        // Set SaveAsActivity based on the validity of recordId
         if (isValidWhatId) {
             mail.setSaveAsActivity(true);
@@ -110,9 +105,12 @@ public without sharing class EmailUtility {
             }
         }
         System.debug('Email sent successfully.');
-        
+            } 
+        catch (Exception e) {
+            System.debug('Error occurred in sendEmail method: ' + e.getMessage());
+            LogErrorUtil.logError(e, 'EmailUtility', 'sendEmail');            
+        }        
     }
-
     // Custom Exception for better error handling
     public class EmailUtilityException extends Exception {}
 }

@@ -1,14 +1,28 @@
-import { LightningElement, api } from 'lwc';
+import { LightningElement, api, wire, track } from 'lwc';
 import { subscribe, unsubscribe, onError } from 'lightning/empApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getRecord, updateRecord } from 'lightning/uiRecordApi';
+import CASE_OBJECT from '@salesforce/schema/Case';
+import STATUS_FIELD from '@salesforce/schema/Case.Status';
+import INQUIRY_TYPE_FIELD from '@salesforce/schema/Case.Inquiry_Type__c';
+import OWNER_FIELD from '@salesforce/schema/Case.OwnerId';
 
 export default class CaseClosedOnInquryLWC extends LightningElement {
+    
+    //Change Data Capture
     channelName = '/data/CaseChangeEvent';
     subscription = {};
     @api recordId;
 
     subscribed;
-    openPopup = false;
+    @track openPopup = false;
+
+    @wire(getRecord, { recordId: '$recordId', fields: [INQUIRY_TYPE_FIELD] })
+    caseRecord;
+
+    get inquiryType() {
+        return this.caseRecord?.data?.fields?.Inquiry_Type__c?.value || '';
+    }
 
     // Tracks changes to channelName text field
     handleChannelName(event) {
@@ -119,19 +133,50 @@ export default class CaseClosedOnInquryLWC extends LightningElement {
      }
  } */
 
+    // handleSubmit(event) {
+    //     event.preventDefault();
+    //     // Get data from submitted form
+    //     const fields = event.detail.fields;
+    //     // Here you can execute any logic before submit
+    //     // and set or modify existing fields
+    //     fields.Status = 'Closed';
+
+    //     // You need to submit the form after modifications
+    //     this.template
+    //         .querySelector('lightning-record-edit-form').submit(fields);
+    //     this.openPopup = false;
+
+    // }
     handleSubmit(event) {
         event.preventDefault();
-        // Get data from submitted form
         const fields = event.detail.fields;
-        // Here you can execute any logic before submit
-        // and set or modify existing fields
-        fields.Status = 'Closed';
+        fields.Id = this.recordId;
+        fields[STATUS_FIELD.fieldApiName] = 'Closed';
+        this.template.querySelector('lightning-record-edit-form').submit(fields);
 
-        // You need to submit the form after modifications
-        this.template
-            .querySelector('lightning-record-edit-form').submit(fields);
-        this.openPopup = false;
+        // Case Update triggers Apex for Queue Assignment
+        const recordInput = { fields };
 
+        updateRecord(recordInput)
+            .then(() => {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Success',
+                        message: 'Case updated and assigned to the respective queue',
+                        variant: 'success'
+                    })
+                );
+                this.openPopup = false;
+            })
+            .catch(error => {
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error updating case',
+                        message: error.body.message,
+                        variant: 'error'
+                    })
+                );
+            });
     }
 
     handleError(event) {

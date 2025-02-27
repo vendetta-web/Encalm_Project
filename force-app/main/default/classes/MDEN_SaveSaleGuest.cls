@@ -13,6 +13,7 @@ global class MDEN_SaveSaleGuest {
             //MDEN_SaveSaleGuest.saveSaleGuest();
             
             //Uncomment below code to test in Postman            
+            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
             
@@ -51,6 +52,7 @@ global class MDEN_SaveSaleGuest {
             if(requestMap != null )
             {
                 //passenger.recordTypeId = personAccountRecordTypeId;
+                passenger.Source__c = requestMap.source;
             	passenger.Opportunity_ID__c = requestMap.parent_id;
                 passenger.Title__c  = (salutation[0].Salutation_Name__c <> null) ? salutation[0].Salutation_Name__c : '';
                 passenger.First_Name__c  = requestMap.first_name;   
@@ -68,7 +70,8 @@ global class MDEN_SaveSaleGuest {
             system.debug('passenger==>'+passenger);
             if(passenger != null){ // && !checkCustomerDuplicacy(acc.PersonEmail, null)){
             	insert passenger;    
-            	mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
+            	//Initialize the wrapper with status and message
+                mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
                 mden_responseWrapper.id = passenger.id;
                 system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
             }
@@ -80,9 +83,11 @@ global class MDEN_SaveSaleGuest {
                 mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
                 system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
             system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
+             system.debug('Line==>'+e.getLineNumber());
         }
         
         return mden_responseWrapper;
@@ -105,6 +110,7 @@ global class MDEN_SaveSaleGuest {
             }else{
                 return false;
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             System.debug('Error Message : '+e.getMessage());
             return false;
@@ -136,7 +142,7 @@ global class MDEN_SaveSaleGuest {
         global String class_type;
         global String mobile;
         global String country_code;
-        
+        global String source;
         global MDEN_GetRequestWrapper() {
         }
     }

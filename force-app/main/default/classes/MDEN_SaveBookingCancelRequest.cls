@@ -14,6 +14,7 @@ global class MDEN_SaveBookingCancelRequest {
             
             //Uncomment below code to test in Postman
             
+            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
             
@@ -33,7 +34,7 @@ global class MDEN_SaveBookingCancelRequest {
                 
             if(oppList != null & !oppList.isEmpty())
             {
-                mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data updated.');
+                //Initialize the wrapper with status and message
                 mden_responseWrapper.id = 'true';
                 oppList[0].StageName = 'Cancel Order';
 
@@ -44,6 +45,7 @@ global class MDEN_SaveBookingCancelRequest {
                 mden_responseWrapper.id = 'false';
                 system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
             mden_responseWrapper.id = 'false';

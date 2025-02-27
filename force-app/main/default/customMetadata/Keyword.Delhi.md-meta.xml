@@ -7,6 +7,10 @@
         <value xsi:type="xsd:string">DEL, Delhi Airport, Indira Gandhi Airport, Indira Gandhi, Delhi, DEL Airport</value>
     </values>
     <values>
+        <field>Service_Email__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
         <field>Type__c</field>
         <value xsi:type="xsd:string">Location</value>
     </values>

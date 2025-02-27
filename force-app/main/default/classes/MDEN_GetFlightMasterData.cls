@@ -5,25 +5,25 @@
  */
 @RestResource(urlMapping='/get_flight_list_for_booking/*')	
 global class MDEN_GetFlightMasterData {
-	@HttpGet
+	@HttpPost
     global static MDEN_GetResponseWrapper getFlightListForBooking(){
         //Initialize the response wrapper with blank status and blank message
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '');
 		
         try{
             //Uncomment below code to test in Postman
-            /*RestRequest request = RestContext.request;
+            RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestbody.toString(), MDEN_GetRequestWrapper.class);
-            */
+            
             //Uncomment below to call via Developer console using : MDEN_GetFlightMasterData.getFlightListForBooking();
-            String reqBody =' { ' +
+          /*  String reqBody =' { ' +
 	        ' "service_airport" : "Indira Gandhi International Airport", ' +
             ' "from_airport" : "Indira Gandhi International Airport", ' +
             ' "to_airport" : "Rajiv Gandhi International Airport", ' +
             ' "travel_date" : "2025-03-31" ' +
             ' } ';
             
-            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);		
+            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);	*/
             
             system.debug('requestMap==>'+requestMap);
             //Parsing data from requestMap

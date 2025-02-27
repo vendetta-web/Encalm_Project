@@ -10,6 +10,7 @@ global class MDEN_SaveSaleOrderItem {
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '','');
         try{
             
+            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
             OrderItem requestMap = (OrderItem)JSON.deserialize(request.requestBody.toString(), OrderItem.class);
             
@@ -32,6 +33,7 @@ global class MDEN_SaveSaleOrderItem {
             opLItem.Product2Id = requestMap.product_id;
             opLItem.Quantity    = requestMap.product_uom_qty ;
             opLItem.UnitPrice    = requestMap.price_unit ;
+            opLItem.Source__c = requestMap.source;
             // opLItem.Subtotal    = requestMap.price_subtotal ;
             //opLItem.PricebookEntryId = '01uSu0000013DzRIAU';
             system.debug('Order=order_id=>'+requestMap.order_id);
@@ -39,8 +41,10 @@ global class MDEN_SaveSaleOrderItem {
             mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.', opLItem.Id);
             system.debug('opLItem=>'+opLItem);
             
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.','Id');
+            System.debug('Line--->'+e.getLineNumber());
         }
         return mden_responseWrapper;
     }
@@ -63,6 +67,7 @@ global class MDEN_SaveSaleOrderItem {
         global Decimal product_uom_qty;
         global Decimal price_unit;
         global String price_subtotal;
+        global String source;
         global OrderItem() {
         }   
     }

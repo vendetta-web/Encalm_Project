@@ -7,11 +7,26 @@
         <locationY>566</locationY>
         <actionName>DemoEmailUtility</actionName>
         <actionType>apex</actionType>
+        <connector>
+            <targetReference>Status_Change</targetReference>
+        </connector>
         <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>bccAddresses</name>
+            <value>
+                <elementReference>Additional_Email_Addresses</elementReference>
+            </value>
+        </inputParameters>
         <inputParameters>
             <name>Body</name>
             <value>
                 <elementReference>bodyTemplate.value</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>ccAddresses</name>
+            <value>
+                <elementReference>CCEmailAddress.value</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -30,7 +45,7 @@
         <offset>0</offset>
     </actionCalls>
     <apiVersion>63.0</apiVersion>
-    <description>created by Supriya</description>
+    <description>Update by Saurabh _ Remove Richtext - 24 Feb</description>
     <environments>Default</environments>
     <interviewLabel>Lead Shopping Email {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Send Shopping Email</label>
@@ -91,10 +106,38 @@
                 <elementReference>recordId</elementReference>
             </value>
         </filters>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
         <object>Lead</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
+    <recordUpdates>
+        <name>Status_Change</name>
+        <label>Status Change</label>
+        <locationX>176</locationX>
+        <locationY>674</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Awaiting Customer response</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Lead</object>
+    </recordUpdates>
     <screens>
         <name>Send_Email_Preview</name>
         <label>Send Email Preview</label>
@@ -108,7 +151,7 @@
         </connector>
         <fields>
             <name>tempp</name>
-            <fieldText>&lt;p&gt;{!Template_Preview}&lt;/p&gt;</fieldText>
+            <fieldText>&lt;p&gt;{!bodyTemplate.value}&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
         </fields>
         <nextOrFinishButtonLabel>Send Email</nextOrFinishButtonLabel>
@@ -139,7 +182,7 @@
             <inputParameters>
                 <name>required</name>
                 <value>
-                    <booleanValue>false</booleanValue>
+                    <booleanValue>true</booleanValue>
                 </value>
             </inputParameters>
             <inputParameters>
@@ -151,7 +194,7 @@
             <inputParameters>
                 <name>disabled</name>
                 <value>
-                    <booleanValue>false</booleanValue>
+                    <booleanValue>true</booleanValue>
                 </value>
             </inputParameters>
             <inputParameters>
@@ -226,6 +269,16 @@
             <fieldType>LargeTextArea</fieldType>
             <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
             <isRequired>false</isRequired>
+            <visibilityRule>
+                <conditionLogic>1</conditionLogic>
+                <conditions>
+                    <leftValueReference>htmltest</leftValueReference>
+                    <operator>EqualTo</operator>
+                    <rightValue>
+                        <stringValue>{$GlobalConstant.EmptyString}</stringValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
         </fields>
         <fields>
             <name>bodyTemplate</name>
@@ -252,11 +305,16 @@
             <targetReference>Get_Lead_Record_Details</targetReference>
         </connector>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
+    <textTemplates>
+        <name>htmltest</name>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>&lt;p&gt;&amp;lt;p&amp;gt;Hello &amp;lt;/p&amp;gt;&amp;lt;img src=&quot;https://your-image-url.com/image.jpg&quot; alt=&quot;Company Logo&quot; width=&quot;200&quot;/&amp;gt;&amp;lt;p&amp;gt;Best Regards,&amp;lt;/p&amp;gt;&amp;lt;p&amp;gt;Usfdfdsfdsfdfdsfdsfdsdsfds&amp;lt;/p&amp;gt;&lt;/p&gt;</text>
+    </textTemplates>
     <textTemplates>
         <name>ShoppingEmail</name>
-        <isViewedAsPlainText>false</isViewedAsPlainText>
-        <text>&lt;p&gt;{!Get_EmailTemplates.HtmlValue}&lt;/p&gt;</text>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>&lt;p&gt;Dear {!Get_Lead_Record_Details.FirstName} &lt;span style=&quot;color: rgb(68, 68, 68); background-color: rgb(255, 255, 255);&quot;&gt;{!Get_Lead_Record_Details.LastName}&lt;/span&gt;,&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Thank you for choosing Atithya Meet and Assist Services for your guest&apos;s forthcoming travel. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;We kindly request you to update the required details via the link below and share a copy of the flight ticket to enable us to proceed with the booking. Thank you, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Regards, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;www.encalm.com &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Neha Soni Deputy Manager - Reservations &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;M: +91 9582580773 E: neha.soni@encalm.com &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Encalm Hospitality Pvt. Ltd. Tag Tower, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;7th Floor, 17-18, Phase IV, Udyog Vihar, Sector 18, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Gurugram, Haryana 122015&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://encalm--encalmdev.sandbox.my.salesforce-sites.com/resource/Encalm_Logo?&quot; alt=&quot;Atithya Meet and Assist Logo&quot;&gt;&lt;/p&gt;</text>
     </textTemplates>
     <variables>
         <name>EmailTemplatesCollection</name>

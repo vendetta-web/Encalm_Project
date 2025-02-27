@@ -4,7 +4,7 @@
         <name>Lead_Creation_Shopping_Email</name>
         <label>Lead Creation Shopping Email</label>
         <locationX>516</locationX>
-        <locationY>1056</locationY>
+        <locationY>1142</locationY>
         <actionName>Lead.Lead_Creation_Shopping_Email</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -22,7 +22,7 @@
         <name>Decision_Account_Check</name>
         <label>Decision Account Check</label>
         <locationX>795</locationX>
-        <locationY>595</locationY>
+        <locationY>681</locationY>
         <defaultConnector>
             <targetReference>Create_Person_Account</targetReference>
         </defaultConnector>
@@ -43,6 +43,7 @@
             <label>Not Existing Account</label>
         </rules>
     </decisions>
+    <description>Updated case status by Saurabh - 18 Feb</description>
     <environments>Default</environments>
     <interviewLabel>Lead Creation Mail {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Lead Creation Mail</label>
@@ -69,7 +70,7 @@
         <name>Create_Person_Account</name>
         <label>Create Person Account</label>
         <locationX>708</locationX>
-        <locationY>695</locationY>
+        <locationY>781</locationY>
         <connector>
             <targetReference>Update_Lead</targetReference>
         </connector>
@@ -98,7 +99,7 @@
         <name>Existing_Account_Email</name>
         <label>Existing Account Email</label>
         <locationX>927</locationX>
-        <locationY>529</locationY>
+        <locationY>615</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Decision_Account_Check</targetReference>
@@ -119,7 +120,7 @@
         <name>Get_Case</name>
         <label>Get Case</label>
         <locationX>840</locationX>
-        <locationY>371</locationY>
+        <locationY>457</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Existing_Account_Email</targetReference>
@@ -140,7 +141,7 @@
         <name>Associate_lead</name>
         <label>Associate lead</label>
         <locationX>972</locationX>
-        <locationY>695</locationY>
+        <locationY>781</locationY>
         <inputAssignments>
             <field>Account__c</field>
             <value>
@@ -153,7 +154,7 @@
         <name>Update_Case</name>
         <label>Update Case</label>
         <locationX>708</locationX>
-        <locationY>911</locationY>
+        <locationY>997</locationY>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Id</field>
@@ -174,7 +175,7 @@
         <name>Update_Lead</name>
         <label>Update Lead</label>
         <locationX>708</locationX>
-        <locationY>803</locationY>
+        <locationY>889</locationY>
         <connector>
             <targetReference>Update_Case</targetReference>
         </connector>
@@ -190,10 +191,7 @@
         <name>Update_Related_Case_Status</name>
         <label>Update Related Case Status</label>
         <locationX>1095</locationX>
-        <locationY>372</locationY>
-        <connector>
-            <targetReference>Get_Case</targetReference>
-        </connector>
+        <locationY>458</locationY>
         <inputAssignments>
             <field>Status</field>
             <value>
@@ -203,14 +201,14 @@
         <inputReference>$Record.Case__r</inputReference>
     </recordUpdates>
     <start>
-        <locationX>714</locationX>
-        <locationY>48</locationY>
+        <locationX>718</locationX>
+        <locationY>50</locationY>
         <connector>
-            <targetReference>Update_Related_Case_Status</targetReference>
+            <targetReference>Get_Case</targetReference>
         </connector>
         <object>Lead</object>
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
 </Flow>

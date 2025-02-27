@@ -15,8 +15,12 @@ export default class FlightBookingPreview extends NavigationMixin(LightningEleme
     isTransit=false;
 
     connectedCallback() {
-        
+        window.scrollTo({top: 0, behavior:'smooth'});
         this.loadBookingData();
+    }
+
+    renderedCallback() {
+        window.scrollTo({top: 0, behavior:'smooth'});
     }
 
     loadBookingData() {

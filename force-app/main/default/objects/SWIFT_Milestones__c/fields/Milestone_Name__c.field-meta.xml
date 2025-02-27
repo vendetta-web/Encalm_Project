@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Milestone_Name__c</fullName>
+    <label>Milestone Name</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Aerobridge/Bus Gate</fullName>
+                <default>false</default>
+                <label>Aerobridge/Bus Gate</label>
+            </value>
+            <value>
+                <fullName>Boarding Gate</fullName>
+                <default>false</default>
+                <label>Boarding Gate</label>
+            </value>
+            <value>
+                <fullName>Checkin Counter</fullName>
+                <default>false</default>
+                <label>Checkin Counter</label>
+            </value>
+            <value>
+                <fullName>Curbside</fullName>
+                <default>false</default>
+                <label>Curbside</label>
+            </value>
+            <value>
+                <fullName>Guest Welcomed</fullName>
+                <default>false</default>
+                <label>Guest Welcomed</label>
+            </value>
+            <value>
+                <fullName>Immigration</fullName>
+                <default>false</default>
+                <label>Immigration</label>
+            </value>
+            <value>
+                <fullName>Lounge</fullName>
+                <default>false</default>
+                <label>Lounge</label>
+            </value>
+            <value>
+                <fullName>Security Check</fullName>
+                <default>false</default>
+                <label>Security Check</label>
+            </value>
+            <value>
+                <fullName>Service Completed</fullName>
+                <default>false</default>
+                <label>Service Completed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

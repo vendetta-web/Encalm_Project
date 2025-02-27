@@ -10,7 +10,13 @@
         <lightning-layout-item size="6" class="slds-p-around_small">
             <lightning-card title="Account Search">
                 <div class="slds-p-horizontal_medium">
-                    <c-test-custom-lookups onaccountselect={handleAccountRecord}></c-test-custom-lookups>
+                    <!-- Conditionally render the child component only when selectedAccount is populated -->
+            <template if:true={selectedAccount}>
+                <c-test-custom-lookups selected-account={selectedAccount} onaccountselect={handleAccountRecord}></c-test-custom-lookups>
+            </template>
+            <template if:false={selectedAccount}>
+                <c-test-custom-lookups onaccountselect={handleAccountRecord}></c-test-custom-lookups>
+            </template>
                 </div>
             </lightning-card>
         </lightning-layout-item>

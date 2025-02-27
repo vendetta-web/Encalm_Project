@@ -1,33 +1,34 @@
 /* Created by 	: Maxify Development Team
  * Created Date : 14th Jan, 2025
- * Input 		: None
- * Purpose 		: This API class returns all the salutations
+ * Input 		: user email id
+ * Purpose 		: This API class check if user exists or not based on request user email. If user does not exist then it returns false.
  */
 @RestResource(urlMapping='/get_customer_duplicacy/*')	
 global class MDEN_CheckCustomerDuplicacy {
 	@HttpGet
     global static MDEN_GetResponseWrapper checkCustomerDuplicacy(){
         //Initialize the response wrapper with blank status and blank message
-        MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '');
+        MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', ''	);
         
         try{
+            //Map of salutation name as key and salutation record as value
             Map<String, Salutation__c> titleMap = new Map<String, Salutation__c>();
-            
-            //MDEN_RegisterCustomer.registerCustomer();
+            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
-            
+           
+            //Uncomment below to call via Developer console using : MDEN_CheckCustomerDuplicacy.checkCustomerDuplicacy();
             /*String reqBody =' { ' +
-	            ' "email_id": "namita.jain@encalm.com", '+
+	            ' "email_id": "vijay.garg@maxify.digital" '+
             ' } ';
-            Customer requestMap = (Customer) JSON.deserialize(reqBody, Customer.class);
+            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);
             */
             
             
             system.debug('requestMap==>'+requestMap);
             
             if(requestMap <> null && requestMap.email_id <> null){
-                List<Customer> customerList = new List<Customer>();
+                List<CustomerWrapper> customerList = new List<CustomerWrapper>();
                 List<Account> accounts = [Select id, 
                        		  firstname, 
                        		  lastname, 
@@ -54,7 +55,7 @@ global class MDEN_CheckCustomerDuplicacy {
                        From Account 
                        Where PersonEmail = :requestMap.email_id];
            		                
-                //Get map of titles, countries and states
+                //Get list of titles
                 if(accounts <> null && !accounts.isEmpty()){
                     List<String> titleList = new List<String>();
                     
@@ -78,28 +79,30 @@ global class MDEN_CheckCustomerDuplicacy {
                 }
                 
                 if(accounts <> null && !accounts.isEmpty()){
-                    mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
+                    //Initialize the wrapper with status and message
+                	mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
                 	system.debug('titleMap==>'+titleMap);
+                    
                     for(Account acc: accounts){
-                        Customer cust = new Customer();
-                        cust.id = acc.id;
-                        cust.name = acc.name;
-                        cust.first_name = acc.firstname;
-                        cust.last_name = acc.lastname;
-                        cust.email = acc.PersonEmail;
-                        cust.mobile = acc.PersonMobilePhone;
-                        cust.gender = acc.PersonGenderIdentity;
-                        cust.dob = String.valueOf(acc.PersonBirthdate);
-                        cust.country_id = new List<String>{acc.Country__r.name, acc.Country__r.Country_Name__c};
-                        cust.parent_name = acc.Parent.name;
-                        cust.title = new List<String>{(acc.PersonTitle <> null && !titleMap.isEmpty()) ? titleMap.get(acc.PersonTitle).name : '', (acc.PersonTitle <> null && !titleMap.isEmpty()) ? titleMap.get(acc.PersonTitle).Salutation_Name__c : ''};
-                        cust.street2 = acc.BillingStreet;
-                        cust.city = acc.BillingCity;
-                        cust.state_id = new List<String>{acc.State__r.name, acc.State__r.State_Name__c};
-                        cust.zip = acc.BillingPostalCode;
-                        //cust.cust_type = acc.;
+                        CustomerWrapper customer = new CustomerWrapper();
+                        customer.id = acc.id;
+                        customer.name = acc.name;
+                        customer.first_name = acc.firstname;
+                        customer.last_name = acc.lastname;
+                        customer.email = acc.PersonEmail;
+                        customer.mobile = acc.PersonMobilePhone;
+                        customer.gender = acc.PersonGenderIdentity;
+                        customer.dob = String.valueOf(acc.PersonBirthdate);
+                        customer.country_id = new List<String>{acc.Country__r.name, acc.Country__r.Country_Name__c};
+                        customer.parent_name = acc.Parent.name;
+                        customer.title = new List<String>{(acc.PersonTitle <> null && !titleMap.isEmpty()) ? titleMap.get(acc.PersonTitle).name : '', (acc.PersonTitle <> null && !titleMap.isEmpty()) ? titleMap.get(acc.PersonTitle).Salutation_Name__c : ''};
+                        customer.street2 = acc.BillingStreet;
+                        customer.city = acc.BillingCity;
+                        customer.state_id = new List<String>{acc.State__r.name, acc.State__r.State_Name__c};
+                        customer.zip = acc.BillingPostalCode;
+                        //customer.cust_type = acc.;
                         
-                        customerList.add(cust);
+                        customerList.add(customer);
                     }
                     
                     mden_responseWrapper.datalist = customerList;
@@ -107,12 +110,12 @@ global class MDEN_CheckCustomerDuplicacy {
                     mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
                 }
                                       
-            }            
+            }                    			
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', e.getMessage());
             system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }
-        
+		system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper));         
         return mden_responseWrapper;
     }	     
 
@@ -124,14 +127,14 @@ global class MDEN_CheckCustomerDuplicacy {
     global class MDEN_GetResponseWrapper {
         global String status; 
         global String message;
-        global List<Customer> datalist;
+        global List<CustomerWrapper> datalist;
         global MDEN_GetResponseWrapper(String status, String message) {
             this.status = status;
             this.message = message; 
         }        
     }
     
-    global class Customer{
+    global class CustomerWrapper{
         global String id;
         global String name;
         global String first_name;
@@ -149,7 +152,7 @@ global class MDEN_CheckCustomerDuplicacy {
         global String zip;
         global String customer_type;
         
-        global Customer() {
+        global CustomerWrapper() {
         }
     }
 }

@@ -20,10 +20,12 @@ global class MDEN_GetSaleOrdersForCustomer {
                     };
                         
                                                 
+            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
             
-			/*
+			//Uncomment below to call via Developer console using : MDEN_GetAirportTerminalByAirport.getAiportTerminals();
+            /*
             String reqBody =' { ' +
                             ' "partner_id": "006Su00000AQldRIAT" '+
                             ' } ';
@@ -101,7 +103,8 @@ global class MDEN_GetSaleOrdersForCustomer {
                 
                 System.debug('oppList==>'+oppList);
                 if(oppList <> null && !oppList.isEmpty()){
-                    mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
+                    //Initialize the wrapper with status and message
+                mden_responseWrapper = new MDEN_GetResponseWrapper('true', 'data found.');
                     if(oppList[0].Account.PersonTitle <> null)
                 		salutationList = [select id, name, Salutation_Name__c from Salutation__c Where Salutation_Name__c =:oppList[0].Account.PersonTitle limit 1];
                     
@@ -148,6 +151,7 @@ global class MDEN_GetSaleOrdersForCustomer {
                     mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
                 }
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
         }
@@ -172,6 +176,7 @@ global class MDEN_GetSaleOrdersForCustomer {
             }else{
                 return false;
             }
+        			system.debug('mden_responseWrapper==>'+JSON.serialize(mden_responseWrapper)); 
         }catch(Exception e){
             System.debug('Error Message : '+e.getMessage());
             return false;
