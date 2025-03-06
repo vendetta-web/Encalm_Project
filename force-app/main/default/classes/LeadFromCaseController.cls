@@ -71,7 +71,6 @@ public with sharing class LeadFromCaseController {
             }
         } catch (Exception e) {
             System.debug('Error occurred in populateLeadFromCase method: ' + e.getMessage());
-            LogErrorUtil.logError(e, 'LeadFromCaseController', 'populateLeadFromCase');            
         }
     }
     
@@ -107,7 +106,6 @@ public with sharing class LeadFromCaseController {
             }
             showForm = false;
             System.debug('Error occurred in saveLead method: ' + e.getMessage());
-            LogErrorUtil.logError(e, 'LeadFromCaseController', 'saveLead');
         }
         return null;
     }
@@ -123,7 +121,6 @@ public with sharing class LeadFromCaseController {
             return [SELECT Id, Name, Case__c FROM Lead WHERE Case__c = :caseId];
         } catch (Exception e) {
             System.debug('Error occurred in getLeadsForCase method: ' + e.getMessage());
-            LogErrorUtil.logError(e, 'LeadFromCaseController', 'getLeadsForCase');
             return null;
         }
     }
@@ -143,7 +140,6 @@ public with sharing class LeadFromCaseController {
             }
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error occurred in closeAssociatedCase method: ' + e.getMessage()));
-            LogErrorUtil.logError(e, 'LeadFromCaseController', 'closeAssociatedCase');
         }
     }
     
@@ -189,7 +185,6 @@ public with sharing class LeadFromCaseController {
             
         } catch (Exception ex) {
             System.debug('Error occurred in sendEmailToLead method: ' + ex.getMessage());
-            LogErrorUtil.logError(ex, 'LeadFromCaseController', 'sendEmailToLead'); 
             throw new AuraHandledException('An error occurred while sending the email: ' + ex.getMessage());
         }
     }

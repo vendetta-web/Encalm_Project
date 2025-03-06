@@ -5,9 +5,20 @@
             aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
 
+                <!-- modal header with close icon -->
+                <header class="slds-modal__header">
+                    <lightning-button-icon
+                        class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse slds-position_absolute slds-top_medium slds-right_medium"
+                        icon-name="utility:close"
+                        alternative-text="Close"
+                        variant="bare"
+                        onclick={hideModalBox}>
+                    </lightning-button-icon>
+                </header>
+
                 <!-- modal body start -->
                 <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
-                    <lightning-record-edit-form onerror={handleError} record-id={recordId} object-api-name="Case" onsubmit={handleSubmit}>
+                    <lightning-record-edit-form record-id={recordId} object-api-name="Case" onsubmit={handleSubmit}>
                         <lightning-messages></lightning-messages>
 
                         <div class="slds-grid slds-wrap slds-gutters">
@@ -24,7 +35,7 @@
                         <!-- class="slds-popover__footer slds-text-align_right" -->
                         <footer class="slds-text-align_right"
                             style="margin-top: 1rem; padding: 0.5rem 1rem;">
-                            <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Close</button>
+                            <!-- <lightning-button class="slds-button slds-button_neutral" onclick={hideModalBox}>Close</lightning-button> -->
                             <lightning-button class="slds-m-left_small" variant="brand" type="submit"
                                 name="update" label="Save">
                             </lightning-button>

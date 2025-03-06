@@ -129,7 +129,6 @@ public class EmailParser {
             }
         } catch (Exception e) {
             System.debug('Error occurred in parseAndSetPicklistFromEmail method: ' + e.getMessage());
-            LogErrorUtil.logError(e, 'EmailParser', 'parseAndSetPicklistFromEmail');            
         }
     }
     

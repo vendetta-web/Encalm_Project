@@ -91,63 +91,63 @@
                     <div class="param2-container">
                         <div class="param2-box"> 
                                     <lightning-layout multiple-rows="true">
-                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                            Policy Applied:
+                                        <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
+                                            <b>Policy Applied:</b>
                                         </lightning-layout-item>
-                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                        <lightning-layout-item size="8" class="slds-p-around_small">
                                             <p>{cancellationOrder.refundPolicyApplicable}</p> <!-- Show the policy applied of the selected row -->
                                         </lightning-layout-item>
                                     </lightning-layout>
                                     <lightning-layout multiple-rows="true">
-                                            <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                                Booking Amount:
+                                            <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
+                                                <b>Booking Amount:</b>
                                             </lightning-layout-item>
-                                            <lightning-layout-item size="3" class="slds-p-around_small">
+                                            <lightning-layout-item size="8" class="slds-p-around_small">
                                                 <p>&#8377; {cancellationOrder.bookingAmount}</p> <!-- Show the param2 of the selected row -->
                                             </lightning-layout-item>
                                     </lightning-layout>
                                     <lightning-layout multiple-rows="true">
-                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                            Refund Amount:
+                                        <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
+                                            <b>Amount deducted:</b>
                                         </lightning-layout-item>
-                                        <lightning-layout-item size="3" class="slds-p-around_small">
-                                            <p>&#8377; {cancellationOrder.refundAmount}</p> <!-- Show the param2 of the selected row -->
-                                        </lightning-layout-item>
-                                    </lightning-layout>
-                                    <lightning-layout multiple-rows="true">
-                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                            Amount deducted:
-                                        </lightning-layout-item>
-                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                        <lightning-layout-item size="8" class="slds-p-around_small">
                                             <p>&#8377; {cancellationOrder.deductedAmount}</p> <!-- Show the param2 of the selected row -->
                                         </lightning-layout-item>
                                     </lightning-layout>
                                     <lightning-layout multiple-rows="true">
-                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                            Refund Method:
+                                        <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
+                                            <b>Refund Amount:</b>
                                         </lightning-layout-item>
-                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                        <lightning-layout-item size="8" class="slds-p-around_small">
+                                            <p>&#8377; {cancellationOrder.refundAmount}</p> <!-- Show the param2 of the selected row -->
+                                        </lightning-layout-item>
+                                    </lightning-layout>
+                                    <lightning-layout multiple-rows="true">
+                                        <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
+                                            <b>Refund Method:</b>
+                                        </lightning-layout-item>
+                                        <lightning-layout-item size="8" class="slds-p-around_small">
                                             <p>{cancellationOrder.refundMethod}</p> <!-- Show the param2 of the selected row -->
                                         </lightning-layout-item>
                                     </lightning-layout>
                                     <lightning-layout multiple-rows="true">
-                                        <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                            Cancellation for Persons:
+                                        <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
+                                            <b>Cancellation for Persons:</b>
                                         </lightning-layout-item>
-                                        <lightning-layout-item size="3" class="slds-p-around_small">
+                                        <lightning-layout-item size="8" class="slds-p-around_small">
                                             <p>{cancellationOrder.numberOfPaxCancelled}</p> <!-- Show the param2 of the selected row -->
                                         </lightning-layout-item>
                                     </lightning-layout>
                                 
                             
-                            <strong>Total Refund Amount: &#8377; {cancellationOrder.refundAmount}</strong> <!-- Show the param2 of the selected row --> 
+                            <div style="font-size: 18px;font-weight: bolder;">Total Refund Amount: &#8377; {cancellationOrder.refundAmount}</div> <!-- Show the param2 of the selected row --> 
                         </div>
                     </div>
                 </template>
                 <template lwc:else>
                     <!-- Modal Body -->
                     <div class="slds-modal__content slds-p-around_medium">
-                        <p>No booking available for cancellation</p>
+                        <p>{noBookingFound}</p>
                     </div>
                 </template>
             </div>

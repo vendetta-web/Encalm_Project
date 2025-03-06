@@ -1,105 +1,95 @@
 public class CaseTriggerHandler {
-    public static void handleBeforeInsertOrUpdate(List<Case> newCases, Map<Id, Case> oldCases) {
+    public static void handleBeforeInsert(List<Case> newCases) {
         try {
-            //Group reservationQueue = [SELECT Id FROM Group WHERE DeveloperName = 'Reservation_Queue' LIMIT 1];
-            Group customerSupportWorkflowQueue = [SELECT Id FROM Group WHERE DeveloperName = 'Customer_Support_Workflow' LIMIT 1];
             
-            // Fetch Queue IDs for Inquiry Types
-            Map<String, Id> queueMap = new Map<String, Id>();
-            for (Group g : [SELECT Id, DeveloperName FROM Group WHERE DeveloperName IN ('Feedback', 'Query') AND Type = 'Queue']) {
-                queueMap.put(g.DeveloperName, g.Id);
-            }
-            
-            for (Case caseRecord : newCases) {
-                Case oldCase = oldCases != null ? oldCases.get(caseRecord.Id) : null;
+            for (Case caseRecord : newCases) {               
                 
-                // Check if the Description or Subject is not blank
-                if (String.isNotBlank(caseRecord.Description) || String.isNotBlank(caseRecord.Subject)) {
-                    String emailBody = caseRecord.Description;
-                    String emailSubject = caseRecord.Subject;
-                    
-                    // Only parse and set picklist values if manual fields are not set
-                    if (oldCase == null || 
-                        (caseRecord.Priority == null || caseRecord.Priority == 'Low') && 
-                        (caseRecord.Priority == oldCase.Priority 
-                         && 
-                         (String.isBlank(oldCase.Services__c) || oldCase.Services__c == caseRecord.Services__c) 
-                         &&
-                         (String.isBlank(oldCase.Location__c) || oldCase.Location__c == caseRecord.Location__c)
-                        )) {
-                            EmailParser.parseAndSetPicklistFromEmail(caseRecord, emailBody, emailSubject);
-                            
-                            // Remove logic setting 'Choose option(s)' or any default value
-                            if (String.isBlank(caseRecord.Services__c)) {
-                                caseRecord.Services__c = ''; 
-                            }
-                            
-                            // Explicitly set to blank if no location is found
-                            if (String.isBlank(caseRecord.Location__c)) {
-                                caseRecord.Location__c = ''; 
-                            }
-                        }
-                }
-                
-                // Assign to Customer Support Workflow Queue if criteria met
-                if ((caseRecord.Origin == 'Email' || caseRecord.Origin == 'Web') && 
-                    caseRecord.Status == 'New' && 
-                    (oldCase == null || caseRecord.OwnerId == oldCase.OwnerId)) {
-                        //caseRecord.OwnerId = reservationQueue.Id;
-                         caseRecord.OwnerId = customerSupportWorkflowQueue.Id;
+                if (caseRecord.Origin == 'Email') {
+                            EmailParser.parseAndSetPicklistFromEmail(caseRecord, caseRecord.Description, caseRecord.Subject);
                     }
                 
-                // Reassign Closed Booking Cases to Reservation Queue
-                /*if (caseRecord.Status == 'Closed' && 
-                    oldCase != null && oldCase.Status != 'Closed' && 
-                    caseRecord.Inquiry_Type__c == 'Booking') {
-                        System.debug('Reassigning closed booking case to Reservation Queue.');
-                        caseRecord.OwnerId = reservationQueue.Id;
-                    } 
-                else if (caseRecord.Inquiry_Type__c != null && queueMap.containsKey(caseRecord.Inquiry_Type__c)) {
-                    caseRecord.OwnerId = queueMap.get(caseRecord.Inquiry_Type__c);
-                }*/
             }
         } catch (Exception e) {
             System.debug('Error occurred in handleBeforeInsertOrUpdate method: ' + e.getMessage());
-            LogErrorUtil.logError(e, 'CaseTriggerHandler', 'handleBeforeInsertOrUpdate');            
         }
     }
     
-    public static void handleAfterInsertOrUpdate(Map<Id, Case> caseIdToCase) {
-        try {
-            if (caseIdToCase.isEmpty()) return;
-            
-            Map<Id, String> caseIdToOrigin = new Map<Id, String>();
-            for (Case caseRec : caseIdToCase.values()) {
-                caseIdToOrigin.put(caseRec.Id, caseRec.Origin);
+    public static void beforeUpdateAddEntitlementOnCase(List<Case> newCases, Map<Id, Case> oldCasesMap) { // Added by Sidhant
+        Set<Id> ownerIds = new Set<Id>();
+        for (Case c : newCases) {
+        if (oldCasesMap != null && oldCasesMap.containsKey(c.Id)) {
+            Case oldCase = oldCasesMap.get(c.Id); 
+            if (c.OwnerId != oldCase.OwnerId && c.Status == 'New') {
+                ownerIds.add(c.OwnerId);
             }
-            
-            if (!caseIdToOrigin.isEmpty()) {
-                List<Lead> leadListToUpdate = new List<Lead>();
-                List<Lead> listOfLead = [SELECT Id, Case__c, LeadSource FROM Lead WHERE Case__c IN :caseIdToOrigin.keySet()];
-                
-                for (Lead leadRec : listOfLead) {
-                    if (caseIdToOrigin.containsKey(leadRec.Case__c)) {
-                        Lead leadUpdate = new Lead();
-                        leadUpdate.Id = leadRec.Id;
-                        leadUpdate.LeadSource = caseIdToOrigin.get(leadRec.Case__c);
-                        leadListToUpdate.add(leadUpdate);
-                    }
-                }
-                
-                if (!leadListToUpdate.isEmpty()) {
-                    update leadListToUpdate;
-                }
-            }
-        } catch (Exception e) {
-            System.debug('Error occurred in handleAfterInsertOrUpdate method: ' + e.getMessage());
-            LogErrorUtil.logError(e, 'CaseTriggerHandler', 'handleAfterInsertOrUpdate'); 
+        }
+        else if (c.Status == 'New') {
+            ownerIds.add(c.OwnerId);
         }
     }
+
+        if (!ownerIds.isEmpty()) {
+            Map<Id, String> ownerProfileMap = new Map<Id, String>();
+            for (User u : [SELECT Id, Profile.Name FROM User WHERE Id IN :ownerIds]) {
+                ownerProfileMap.put(u.Id, u.Profile.Name);
+            }
+
+            for (Case c : newCases) {
+               // Case oldCase = oldCasesMap.get(c.Id);
+                if (ownerProfileMap.containsKey(c.OwnerId) && ownerProfileMap.get(c.OwnerId) == 'Reservation') {
+                    c.TAT_Start__c = System.now();
+                    c.EntitlementId =  System.Label.EntitlementId;
+                }
+            }
+        }
+    }
+    public static void afterUpdateReopenMilestone(List<Case> newCases, Map<Id, Case> oldCasesMap) { 
+    Set<Id> ownerIds = new Set<Id>();
+    Set<Id> caseIds = new Set<Id>(); 
+    for (Case c : newCases) {
+        Case oldCase = oldCasesMap.get(c.Id); 
+        if (c.Status != oldCase.Status && c.Status == 'New') {
+            ownerIds.add(c.OwnerId);
+            caseIds.add(c.Id); // Add case ID for milestone query
+        }
+    }
+
+    if (!ownerIds.isEmpty()) {
+        // Query users and their profiles to check if they are 'Reservation' users
+        Map<Id, String> ownerProfileMap = new Map<Id, String>();
+        for (User u : [SELECT Id, Profile.Name FROM User WHERE Id IN :ownerIds]) {
+            ownerProfileMap.put(u.Id, u.Profile.Name);
+        }
+        // Query all CaseMilestone records related to the cases whose status changed to 'New'
+        List<CaseMilestone> milestonesToUpdate = [SELECT Id, CaseId, IsCompleted FROM CaseMilestone WHERE CaseId IN :caseIds AND IsCompleted = true];
+        System.debug('Test 3'+ milestonesToUpdate);
+        Map<Id, List<CaseMilestone>> caseMilestoneMap = new Map<Id, List<CaseMilestone>>();
+        for (CaseMilestone cm : milestonesToUpdate) {
+            if (!caseMilestoneMap.containsKey(cm.CaseId)) {
+                caseMilestoneMap.put(cm.CaseId, new List<CaseMilestone>());
+            }
+            caseMilestoneMap.get(cm.CaseId).add(cm);
+        }
+        // Loop through each case and reopen milestones if needed
+        List<CaseMilestone> milestoneToUpdate = new List<CaseMilestone>();
+        for (Case c : newCases) {
+            if (ownerProfileMap.containsKey(c.OwnerId) && ownerProfileMap.get(c.OwnerId) == 'Reservation' && caseMilestoneMap.containsKey(c.Id)) {
+               milestoneToUpdate = caseMilestoneMap.get(c.Id);
+                milestoneToUpdate[0].StartDate = System.now();
+                milestoneToUpdate[0].CompletionDate = null;
+            }
+        }
+
+        // Update the CaseMilestones to reflect the changes
+        if (!milestoneToUpdate.isEmpty()) {
+            update milestoneToUpdate;
+        }
+    }
+}
+
     
     // Method to send and process service emails
-    public static void processCaseInsert(List<Case> newCases) {
+   /* public static void processCaseInsert(List<Case> newCases) {
         try{
             if (newCases.isEmpty()) return;  // Avoid unnecessary execution
             
@@ -118,7 +108,6 @@ public class CaseTriggerHandler {
                 sendServiceEmails(new List<String>(selectedServices));
             }
         } catch (Exception e) {
-            LogErrorUtil.logError(e, 'CaseTriggerHandler', 'processCaseInsert'); 
         }
     }
     
@@ -183,7 +172,6 @@ public class CaseTriggerHandler {
                 System.debug('Emails sent successfully.');
             } } 
         catch (Exception e) {
-            LogErrorUtil.logError(e, 'CaseTriggerHandler', 'sendServiceEmails'); 
         }
-    }
+    } */
 }

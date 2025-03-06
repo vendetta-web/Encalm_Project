@@ -92,15 +92,15 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
     }
 
    
-    renderedCallback() {
-        // Insert HTML for success messages
-        if (this.isSuccess && this.actionMessage) {
-            const container = this.template.querySelector('.message-container');
-            if (container) {
-                container.innerHTML = this.actionMessage;
-            }
-        }
-    }
+    // renderedCallback() {
+    //     // Insert HTML for success messages
+    //     if (this.isSuccess && this.actionMessage) {
+    //         const container = this.template.querySelector('.message-container');
+    //         if (container) {
+    //             container.innerHTML = this.actionMessage;
+    //         }
+    //     }
+    // }
 
     /*checkIfLeadExists() {
         getLeadsForCase({ caseId: this.caseData.Id.value })
@@ -170,25 +170,25 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         // this.updateCaseStatus(caseId);
     }
 
-    updateCaseStatus(caseId) {
-        const fields = {};
-        fields[CASE_ID.fieldApiName] = caseId;
-        fields[CASE_STATUS.fieldApiName] = 'Closed';
+    // updateCaseStatus(caseId) {
+    //     const fields = {};
+    //     fields[CASE_ID.fieldApiName] = caseId;
+    //     fields[CASE_STATUS.fieldApiName] = 'Closed';
 
-        const recordInput = { fields };
+    //     const recordInput = { fields };
 
-        updateRecord(recordInput)
-            .then(() => {
-                console.log('Case status updated to Closed');
-                this.actionMessage = 'Case status updated to Closed.';
-                this.isSuccess = true;
-            })
-            .catch(error => {
-                console.error('Error updating Case status:', error);
-                this.actionMessage = 'Error updating Case status.';
-                this.isSuccess = false;
-            });
-    }
+    //     updateRecord(recordInput)
+    //         .then(() => {
+    //             console.log('Case status updated to Closed');
+    //             this.actionMessage = 'Case status updated to Closed.';
+    //             this.isSuccess = true;
+    //         })
+    //         .catch(error => {
+    //             console.error('Error updating Case status:', error);
+    //             this.actionMessage = 'Error updating Case status.';
+    //             this.isSuccess = false;
+    //         });
+    // }
 
     getDefaultFieldValues(defaultValues) {
         return Object.entries(defaultValues)

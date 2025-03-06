@@ -1,128 +1,94 @@
-/**
-* @File Name : DemoEmailUtility.cls
-* @Description :
-* @Author :
-* @Last Modified By : ChangeMeIn@UserSettingsUnder.SFDoc
-* @Last Modified On : 02-24-2025
-* @Modification Log :
-*==============================================================================
-* Ver | Date | Author | Modification
-*==============================================================================
-* 1.0 | January 29, 2025 |   | Initial Version
-**/
-
 public class DemoEmailUtility {
-    public static String bodyUpdated='';
+    public static String bodyUpdated = '';
     public class FlowInputs {    
         @InvocableVariable
-        public String templateName; // Email template name
+        public String templateName; 
         @InvocableVariable
-        public String toAddresses; // Comma-separated recipient addresses
+        public String toAddresses;
         @InvocableVariable
-        public String ccAddresses; // Comma-separated CC addresses
+        public String ccAddresses;
         @InvocableVariable
-        public String bccAddresses; // Comma-separated BCC addresses
+        public String bccAddresses;
         @InvocableVariable
-        public String fromAddress; // Reply-To address
+        public String fromAddress;
         @InvocableVariable
-        public String recordId; // Related record ID
+        public String recordId;
         @InvocableVariable
-        public String Body; // Related record ID  //Saurabh
+        public String Body;
     }
-    
-    
-    @InvocableMethod(label='Invoke Email Utility' description='Send Email')
-    public static void sendEmail(List<FlowInputs> request) {
-        System.debug('Request Parameters ---> ' + request);
-        
-        // Extract the first input from the list
-        FlowInputs input = request[0];
-        System.debug('36 '+bodyUpdated);
-        // Prepare recipient email addresses
-        List<String> toAddress = input.toAddresses?.split(',');
-        if (toAddress == null) {
-            toAddress = new List<String>();
+
+    @InvocableMethod(label='Invoke Email Utility' description='Send Bulk Emails')
+    public static void sendEmail(List<FlowInputs> requests) {
+        if (requests == null || requests.isEmpty()) return;
+
+        System.debug('Request Parameters ---> ' + requests);
+        List<Messaging.SingleEmailMessage> emailList = new List<Messaging.SingleEmailMessage>();
+
+        // Fetch Org-Wide Email Address
+        String orgWideEmail = System.Label.OrgWideEmailAddress;
+        Map<String, OrgWideEmailAddress> oweaMap = new Map<String, OrgWideEmailAddress>();
+        for (OrgWideEmailAddress owea : [SELECT Id, Address FROM OrgWideEmailAddress WHERE Address = :orgWideEmail]) {
+            oweaMap.put(owea.Address, owea);
         }
-        toAddress.add('supriya.bassi@maxify.digital'); // Ensure a default address is always added
-        
-        // Retrieve the email template
-        EmailTemplate emailTemp;
-        
-        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
-        //   Messaging.SingleEmailMessage mail = Messaging.renderStoredEmailTemplate(emailTemp.Id, null, input.recordId);
-        
-        // Set recipient addresses
-        if (Test.isRunningTest()) {
-            mail.setToAddresses(new List<String>{'test123xyz@test.com'});
-        } else {
-            mail.setToAddresses(toAddress);
+
+        for (FlowInputs input : requests) {
+            if (input == null) continue;
+
+            List<String> toAddressList = new List<String>();
+            if (String.isNotBlank(input.toAddresses)) {
+                toAddressList = input.toAddresses.split(',');
+            }
+            toAddressList.add(System.Label.DefaultToAddress);
+
+            Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+            mail.setToAddresses(Test.isRunningTest() ? new List<String>{'test123xyz@test.com'} : toAddressList);
+
+            if (String.isNotBlank(input.ccAddresses)) {
+                mail.setCcAddresses(input.ccAddresses.split(','));
+            }
+            if (String.isNotBlank(input.bccAddresses)) {
+                mail.setBccAddresses(input.bccAddresses.split(','));
+            }
+
+            // Set Org-Wide Email Address
+            if (oweaMap.containsKey(orgWideEmail)) {
+                mail.setOrgWideEmailAddressId(oweaMap.get(orgWideEmail).Id);
+            }
+
+            mail.setHtmlBody(input.Body);
+            mail.setReplyTo(String.isNotBlank(input.fromAddress) ? input.fromAddress : System.Label.DefaultLeadReplyToEmail);
+
+            // Determine if SaveAsActivity should be set
+            if (String.isNotBlank(input.recordId)) {
+                String recordPrefix = input.recordId.substring(0, 3);
+                if (recordPrefix == '001' || recordPrefix == '003' || recordPrefix == '500') // Account, Contact, Case
+                { 
+                    mail.setSaveAsActivity(true);
+                    mail.setWhatId(input.recordId);
+                } else if (recordPrefix == '00Q') {  
+                    mail.setSaveAsActivity(true);
+                    mail.setTargetObjectId(input.recordId);
+                } else {
+                    mail.setSaveAsActivity(false);
+                }
+            }
+
+            emailList.add(mail);
         }
-        
-        // Set CC and BCC addresses
-        if (String.isNotBlank(input.ccAddresses)) {
-            mail.setCcAddresses(input.ccAddresses.split(','));
-        }
-        if (String.isNotBlank(input.bccAddresses)) {
-            mail.setBccAddresses(input.bccAddresses.split(','));
-        }
-        
-        // Set Reply-To address
-        // if (String.isNotBlank(input.fromAddress)) {
-        //     mail.setReplyTo(input.fromAddress);
-        // } else {
-        //     mail.setReplyTo('encalmreservation@gmail.com'); // Default Reply-To address
-        // }
-        
-        OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress where Address = 'supriya.bassi@maxify.digital'];
-        System.debug('owea -> ' + owea);
-        if ( owea.size() > 0 ) {
-            mail.setOrgWideEmailAddressId(owea.get(0).Id);
-        }
-        System.debug(input.Body);
-        mail.setHtmlBody(input.Body);
-        // Ensure email is logged as an activity
-        //mail.setSaveAsActivity(true);
-        
-        // Set Reply-To address
-        if (String.isNotBlank(input.fromAddress)) {
-            mail.setReplyTo(input.fromAddress);
-        } else {
-            mail.setReplyTo('emailtoleadreply@j-21ftn1yqpv9fni7icpxxl2w0cz1lxtazxrtnprq8bz96pq4y1f.h3-mpwmay.cs314.apex.sandbox.salesforce.com'); // Default Reply-To address
-        }
-        
-        // Validate recordId for WhatId
-        String recordPrefix = input.recordId?.substring(0, 3);
-        Boolean isValidWhatId = recordPrefix == '001' || recordPrefix == '003' || recordPrefix == '500'; //  Account, Contact, Case 
-        // Set SaveAsActivity based on the validity of recordId
-        System.debug('isValidWhatId '+isValidWhatId);
-        
-        if (isValidWhatId) {
-            mail.setSaveAsActivity(true);
-            mail.setWhatId(input.recordId); 
-        } else if(recordPrefix == '00Q'){ //Saurabh 26/02/2025 
-            System.debug('103');
-            mail.setSaveAsActivity(true);
-            mail.setTargetObjectId(input.recordId);
-            System.debug('106');
-            
-        } else {
-            mail.setSaveAsActivity(false);
-        }
-        
-        // Send the email
-        List<Messaging.SingleEmailMessage> emailList = new List<Messaging.SingleEmailMessage>{mail};
+
+        // Send all emails in a single call
+        if (!emailList.isEmpty()) {
             Messaging.SendEmailResult[] results = Messaging.sendEmail(emailList);
-        
-        // Log results for debugging
-        for (Messaging.SendEmailResult result : results) {
-            if (!result.isSuccess()) {
-                throw new EmailUtilityException('Failed to send email: ' + result.getErrors()[0].getMessage());
+            for (Messaging.SendEmailResult result : results) {
+                if (!result.isSuccess()) {
+                    System.debug('Failed to send email: ' + result.getErrors()[0].getMessage());
+                }
             }
         }
-        System.debug('Email sent successfully.');
-        
+
+        System.debug('Bulk email processing completed.');
     }
-    
+
     // Custom Exception for better error handling
     public class EmailUtilityException extends Exception {}
 }

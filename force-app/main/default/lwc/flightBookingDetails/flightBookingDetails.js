@@ -14,6 +14,7 @@ import getFlightTerminalInfo from '@salesforce/apex/PackageSelectionController.g
 import jsPDFLibrary from '@salesforce/resourceUrl/jsPDFLibrary';
 import { loadScript } from 'lightning/platformResourceLoader';
 import { RefreshEvent } from 'lightning/refresh';
+import getPicklistValues from '@salesforce/apex/CustomPicklistController.getNationalityPicklistValues';
 
 export default class FlightBookingDetails extends NavigationMixin(LightningElement) {
     @api recordId; // Opportunity record ID
@@ -45,6 +46,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     flightNumber;
     flightDate;
     selectedPassenger;
+    nationalityOptions = [];
+    selectedNationality;
 
 
     //Individual Passenger Details
@@ -97,15 +100,27 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     //for generating PDF
     renderedCallback(){
         if(!this.jsPDFInitialized){
-        this.jsPDFInitialized = true;
-        loadScript(this, jsPDFLibrary).then(() => {
-            console.log('jsPDF library loaded successfully');
-        }).catch((error) => {
-            console.log('Error loading jsPDF library', error);
-        });
-
+            this.jsPDFInitialized = true;
+            loadScript(this, jsPDFLibrary).then(() => {
+                console.log('jsPDF library loaded successfully');
+            }).catch((error) => {
+                console.log('Error loading jsPDF library', error);
+            });
+        }
     }
-}
+
+    @wire(getPicklistValues)
+    wiredPicklistValues({ error, data }) {
+        if (data) {
+            // Map the string values to the required object format for the combobox
+            this.nationalityOptions = data.map((value) => ({
+                label: value,
+                value: value
+            }));
+        } else if (error) {
+            console.error('Error fetching picklist values: ', error);
+        }
+    }
 
     loadDetailsAfterUpdate() {
         this.showModal = true;
@@ -208,7 +223,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         .filter(wrapper => wrapper.buttonLabel === 'Selected') // Filter condition
         .map(wrapper => {
             const numberOfRecords = this.numberOfAdults > this.numberOfChildren ? this.numberOfAdults : this.numberOfChildren; // or any other condition to determine number of records
-            
+            console.log('log->> ',wrapper.infantPackageWrapper);
             // Create an array of records based on the number of adults
             const records = [];
                 records.push({
@@ -218,22 +233,37 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.priceTag,
-                    count: 1, // Set the count, potentially modify later based on adults
-                    isChild: false 
+                    count: this.numberOfAdults, // Set the count, potentially modify later based on adults
+                    isChild: false,
+                    isInfant: false
                 });
                 if (this.numberOfChildren > 0) {             
-                records.push({
-                    name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
-                    amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, // Calculate the amount
-                    totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren,
-                    productId: wrapper.productId,
-                    pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
-                    unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
-                    count: 1, // Set the count, potentially modify later based on children
-                    isChild: true,
-                    childCount: this.numberOfChildren  //to create child oli records
-                });
-            }            
+                    records.push({
+                        name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
+                        amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, // Calculate the amount
+                        totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren,
+                        productId: wrapper.productId,
+                        pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
+                        unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
+                        count: 1, // Set the count, potentially modify later based on children
+                        isChild: true,
+                        childCount: this.numberOfChildren  //to create child oli records
+                    });
+                } 
+                if (this.numberOfInfants > 0) {             
+                    records.push({
+                        name: wrapper.packageName + ' (' + this.numberOfInfants + ' Infant)', // Copy the 'name' value for infant
+                        amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfants, // Calculate the amount
+                        totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfants,
+                        productId: wrapper.productId,
+                        pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
+                        unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
+                        count: 1, // Set the count, potentially modify later based on children
+                        isInfant: true,
+                        isChild: false,
+                        infantCount: this.numberOfInfants  //to create infant oli records
+                    });
+                }            
 
             return records; // Return the array of records
         })
@@ -250,6 +280,21 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
     handleAddOnSelect(event){
         const index = event.target.dataset.index;  // Get the index of the clicked row
+        // Get the data-id values for pickup and drop terminals based on the selected index
+        const pickupDataId = this.getAddonDetail[index].pickupDataId;
+        const dropDataId = this.getAddonDetail[index].dropDataId;
+
+        // Target the comboboxes for the selected index using the data-id attributes
+        const pickupCombobox = this.template.querySelector(`[data-id="${pickupDataId}"]`);
+        const dropCombobox = this.template.querySelector(`[data-id="${dropDataId}"]`);
+
+        // Validate pickup and drop terminals for the selected index
+        const All_Compobox_Valid = [pickupCombobox, dropCombobox].reduce((validSoFar, input_Field_Reference) => {
+            input_Field_Reference.reportValidity();
+            return validSoFar && input_Field_Reference.checkValidity();
+        }, true);
+
+        if (All_Compobox_Valid) {
         this.selectedAddonRowIndex = index;  // Update selected row
         this.updateButtonAddonLabels(index);
         this.selectedAddon=this.getAddonDetail[index].addOnName;
@@ -270,12 +315,17 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                     count: wrapper.adddOnCount,
                     pickup: wrapper.pickup,
                     drop: wrapper.drop,
-                    isChild: false
+                    isChild: false,
+                    isInfant: false
                 };
             });
             
             this.orderSummary = [...this.orderSummaryPackage, ...this.orderSummaryAddon];
             this.calculateTotalPackage();
+        } else {
+            this.showToast('Error', 'Please select terminals', 'error');
+        }
+        
     }
 
     // Precompute button labels for each row
@@ -330,10 +380,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
 
     // Method to call Apex and create Opportunity Line Items
     createOLIs() {
+        console.log('order->> ', JSON.stringify(this.orderSummary));
         createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmount })
             .then(result => {
                 //this.showToast('Success', 'Opportunity Line Items created successfully: !', 'success');
-                //console.log('Opportunity Line Items created successfully: ', result);
+                console.log('Opportunity Line Items created successfully: ', result);
             })
             .catch(error => {
                 console.error('Error creating Opportunity Line Items: ', error);
@@ -377,7 +428,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 travelclass: '',
                 travelpnrno: '',
                 nationality: '',
-                passport: '',
+                passportnumber: '',
                 phone: '',
                 isPlacard: i==0 && type == 'Adult' ? true : false
             });
@@ -464,10 +515,15 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 input_Field_Reference.reportValidity();
                 return validSoFar && input_Field_Reference.checkValidity();
             }, true);
+        const All_Compobox_Valid = [...this.template.querySelectorAll('lightning-combobox')]
+        .reduce((validSoFar, input_Field_Reference) => {
+            input_Field_Reference.reportValidity();
+            return validSoFar && input_Field_Reference.checkValidity();
+        }, true);
         var errorMessage = 'Please resolve all the required checks.'
-        var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter atleast one contact number';
+        var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter phone number of minimum 1 adult passenger';
 
-        if(All_Input_Valid) {
+        if(All_Input_Valid && All_Compobox_Valid) {
             if (this.checkPhoneNumber()) {
                 savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
                 .then(() => {
@@ -491,9 +547,15 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     checkPhoneNumber() {
-        // Check if at least one row has a non-empty phone number
-        const isPhonePresent = this.guestRows.some(row => row.phone == '');
-        if (isPhonePresent) {
+        // Check if at least one adult has a filled phone
+        let isValid = false;
+        for (let guest of this.guestRows) {
+            if (guest.type == 'Adult' && guest.phone != '') {
+                isValid = true;
+                break; // Exit the loop as soon as one adult has a phone
+            }
+        }
+        if (isValid) {
             return true;
         } else {
             return false;
@@ -614,11 +676,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             // Call Apex method to create a ContentVersion and associate it with the current record
             createContentVersion({ recordId: this.recordId, base64Data: pdfBase64 })
                 .then((result) => {
-                    this.showToast('Success', 'PDF has been attached successfully', 'success');
+                    this.showToast('Success', 'Booking Voucher created successfully', 'success');
                     this.dispatchEvent(new RefreshEvent());
                 })
                 .catch((error) => {
-                    this.showToast('Error', 'Error while attaching PDF', 'error');
+                    this.showToast('Error', 'Error while generating Voucher', 'error');
                     console.error(error);
                 });
         } else {

@@ -111,6 +111,7 @@ public with sharing class Encalm_BookingEngine {
                     Map<String, String> flightValueMap = new Map<String, String>();
                     flightValueMap.put('label', fly.Flight_Detail__r.Name);
                     flightValueMap.put('value', fly.Flight_Detail__r.Name);
+                    flightValueMap.put(fly.Flight_Detail__r.Name,fly.Id);
                     flightListValues.add(flightValueMap);
                     flightStaMap.put(fly.Flight_Detail__r.Name, fly.STA__c);
                     flightDtaMap.put(fly.Flight_Detail__r.Name, fly.STD__c);

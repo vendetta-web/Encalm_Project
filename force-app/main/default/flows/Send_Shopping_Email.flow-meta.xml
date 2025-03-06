@@ -45,7 +45,7 @@
         <offset>0</offset>
     </actionCalls>
     <apiVersion>63.0</apiVersion>
-    <description>Update by Saurabh _ Remove Richtext - 24 Feb</description>
+    <description>Update by Saurabh _ Added the email validation - 5 March</description>
     <environments>Default</environments>
     <interviewLabel>Lead Shopping Email {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Send Shopping Email</label>
@@ -232,6 +232,14 @@
             <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
             <isRequired>true</isRequired>
             <storeOutputAutomatically>true</storeOutputAutomatically>
+            <validationRule>
+                <errorMessage>&lt;p&gt;Invalid Formate&lt;/p&gt;</errorMessage>
+                <formulaExpression>IF(
+    NOT(ISBLANK({!CCEmailAddress.value})),
+    REGEX({!CCEmailAddress.value},&quot;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}&quot;),
+    true
+)</formulaExpression>
+            </validationRule>
         </fields>
         <fields>
             <name>Additional_Emails</name>
@@ -249,6 +257,14 @@
             <helpText>&lt;p&gt;Please enter additional email with comma separated values (ex johndee@gmail.com, larrythron@gmail.com)&lt;/p&gt;</helpText>
             <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
             <isRequired>false</isRequired>
+            <validationRule>
+                <errorMessage>&lt;p&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(68, 68, 68);&quot;&gt;Invalid Formate&lt;/span&gt;&lt;/p&gt;</errorMessage>
+                <formulaExpression>IF(
+    NOT(ISBLANK({!Additional_Email_Addresses})),
+    REGEX({!Additional_Email_Addresses},&quot;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}&quot;),
+    true
+)</formulaExpression>
+            </validationRule>
             <visibilityRule>
                 <conditionLogic>and</conditionLogic>
                 <conditions>
@@ -305,7 +321,7 @@
             <targetReference>Get_Lead_Record_Details</targetReference>
         </connector>
     </start>
-    <status>Obsolete</status>
+    <status>Active</status>
     <textTemplates>
         <name>htmltest</name>
         <isViewedAsPlainText>false</isViewedAsPlainText>
@@ -313,8 +329,8 @@
     </textTemplates>
     <textTemplates>
         <name>ShoppingEmail</name>
-        <isViewedAsPlainText>true</isViewedAsPlainText>
-        <text>&lt;p&gt;Dear {!Get_Lead_Record_Details.FirstName} &lt;span style=&quot;color: rgb(68, 68, 68); background-color: rgb(255, 255, 255);&quot;&gt;{!Get_Lead_Record_Details.LastName}&lt;/span&gt;,&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Thank you for choosing Atithya Meet and Assist Services for your guest&apos;s forthcoming travel. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;We kindly request you to update the required details via the link below and share a copy of the flight ticket to enable us to proceed with the booking. Thank you, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Regards, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;www.encalm.com &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Neha Soni Deputy Manager - Reservations &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;M: +91 9582580773 E: neha.soni@encalm.com &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Encalm Hospitality Pvt. Ltd. Tag Tower, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;7th Floor, 17-18, Phase IV, Udyog Vihar, Sector 18, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-family: serif; font-size: medium; color: rgb(0, 0, 0);&quot;&gt;Gurugram, Haryana 122015&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://encalm--encalmdev.sandbox.my.salesforce-sites.com/resource/Encalm_Logo?&quot; alt=&quot;Atithya Meet and Assist Logo&quot;&gt;&lt;/p&gt;</text>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>&lt;p&gt;Dear {!Get_Lead_Record_Details.FirstName} &lt;span style=&quot;background-color: rgb(255, 255, 255); color: rgb(68, 68, 68);&quot;&gt;{!Get_Lead_Record_Details.LastName}&lt;/span&gt;,&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;Thank you for choosing Atithya Meet and Assist Services for your guest&apos;s forthcoming travel. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;We kindly request you to share the required details and a copy of the flight ticket to enable us to proceed with the booking. Thank you, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;Regards, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;www.encalm.com &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;Neha Soni Deputy Manager - Reservations &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;M: +91 9582580773 E: neha.soni@encalm.com &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;Encalm Hospitality Pvt. Ltd. Tag Tower, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;7th Floor, 17-18, Phase IV, Udyog Vihar, Sector 18, &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: medium; font-family: serif;&quot;&gt;Gurugram, Haryana 122015&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;img src=&quot;https://encalm--encalmdev.sandbox.my.salesforce-sites.com/resource/Encalm_Logo?&quot; alt=&quot;Atithya Meet and Assist Logo&quot;&gt;&lt;/p&gt;</text>
     </textTemplates>
     <variables>
         <name>EmailTemplatesCollection</name>

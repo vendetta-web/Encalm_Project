@@ -189,6 +189,8 @@ sectorOption = [
                 this.flightNumberOptionsDeparture = tempFlightNumberOptions;
                 this.flightDtaMap = new Map(Object.entries(result.flightNumberToDtaMap));
             }
+            console.log('result->> ',JSON.stringify(result));
+            this.flightSchedule = result.flightPicklist;
             
         })
         .catch((error) => {
@@ -305,23 +307,6 @@ handleTabChange(event) {
        if(this.isTabOne){
             this.loadFlightData(this.arrivalDate, this.departureAirport, this.arrivingAirport);
         }
-          /*getFlightInfo({arrivalDate:event.target.value})
-          .then(result => {
-              console.log('result------------>',result)
-                this.flightNumbers = result.map(each => ({
-                label: each.Flight_Number__c,
-                value: each.Flight_Number__c
-            }));
-            result.map(each => 
-            this.myMap.set(each.Flight_Number__c,each)    
-            )
-            })
-            .catch(error => {
-                console.error('Error fetching accounts:', error);
-                
-            });
-          console.log(' this.myMap -------->', this.myMap );
-      */
     }
     handleDepartureDateChange(event){
         this.departureDate = event.target.value;
@@ -340,29 +325,20 @@ handleTabChange(event) {
             this.setStdTime();
             this.opportunityFieldValues['Departure_Flight_Schedule__c']=this.getFlightId(this.flightNumber);
         }
-
-        
-        /*if( this.myMap.has(event.target.value)){
-              
-            
-           const sta =  this.myMap.get(event.target.value);
-           console.log('----------sta-----',sta);
-            
-           this.staTime =  this.formatTime(sta.STA__c);;
-        }
-        console.log('------------',this.flightNumber);*/
     }
 
     // Method to retrieve flight ID based on flight number
     getFlightId(flightNumber) {
         // Iterate through the flightPicklist
         let flightScheduleId = null;
+        console.log('flightSchedule->> ',JSON.stringify(this.flightSchedule));
         this.flightSchedule.forEach(item => {
         if (item.value == flightNumber) {
                 // Extract the record ID associated with "flight number"
                 flightScheduleId= item[flightNumber];
             }
         });
+        console.log('flightScheduleId->> ',flightScheduleId);
         return flightScheduleId;
     }
 
@@ -470,11 +446,13 @@ handleTabChange(event) {
         this.flightNumberArrival = event.target.value; 
         this.setStaTime();
         this.opportunityFieldValues['Arriving_Flight_Schedule__c'] = this.getFlightId(this.flightNumberArrival);
+        console.log('opportunityFieldValues-->> ',JSON.stringify(this.opportunityFieldValues));
     }
     handleFlightNumberChangeDeparture(event) {
         this.flightNumberDeparture = event.target.value;
         this.setStdTime();
         this.opportunityFieldValues['Departure_Flight_Schedule__c'] = this.getFlightId(this.flightNumberDeparture);
+        console.log('this->opportunityFieldValues-->> ',JSON.stringify(this.opportunityFieldValues));
     }
 
 

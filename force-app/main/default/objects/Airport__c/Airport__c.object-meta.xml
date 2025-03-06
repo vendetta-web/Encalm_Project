@@ -155,10 +155,9 @@
     <externalSharingModel>ReadWrite</externalSharingModel>
     <label>Airport</label>
     <nameField>
-        <displayFormat>{000000}</displayFormat>
         <label>Airport Name</label>
         <trackHistory>false</trackHistory>
-        <type>AutoNumber</type>
+        <type>Text</type>
     </nameField>
     <pluralLabel>Airports</pluralLabel>
     <searchLayouts></searchLayouts>

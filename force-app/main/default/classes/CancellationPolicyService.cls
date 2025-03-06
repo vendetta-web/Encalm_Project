@@ -1,4 +1,5 @@
 public class CancellationPolicyService {
+    public static Set<String> checkUniqueRefundPolicy = new Set<String>();    
     public static String refundPolicy='';
     public static String addAnd =' & ';
 
@@ -16,20 +17,32 @@ public class CancellationPolicyService {
             generalMetadataRecord.Less_Than__c && 
             hoursDifference < Long.valueOf(generalMetadataRecord.Time_Frame__c)) {
                 if (generalMetadataRecord.Charges_in_Percentage__c) {
-                    refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                    if (!checkUniqueRefundPolicy.contains(generalMetadataRecord.Refund_Policy__c)) {
+                        checkUniqueRefundPolicy.add(generalMetadataRecord.Refund_Policy__c);
+                        refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                    }
                     return bookingAmount = bookingAmount - (bookingAmount * (generalMetadataRecord.Charges__c / 100));
                 } else {
-                    refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                    if (!checkUniqueRefundPolicy.contains(generalMetadataRecord.Refund_Policy__c)) {
+                        checkUniqueRefundPolicy.add(generalMetadataRecord.Refund_Policy__c);
+                        refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                    }
                     return bookingAmount = bookingAmount - generalMetadataRecord.Charges__c;
                 } 
         } else if (generalMetadataRecord != null &&
             generalMetadataRecord.Greater_Than__c && 
             Long.valueOf(generalMetadataRecord.Time_Frame__c) < hoursDifference) {
             if (generalMetadataRecord.Charges_in_Percentage__c) {
-                refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                if (!checkUniqueRefundPolicy.contains(generalMetadataRecord.Refund_Policy__c)) {
+                    checkUniqueRefundPolicy.add(generalMetadataRecord.Refund_Policy__c);
+                    refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                }
                 return bookingAmount = bookingAmount - (bookingAmount * (generalMetadataRecord.Charges__c / 100));
             } else {
-                refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                if (!checkUniqueRefundPolicy.contains(generalMetadataRecord.Refund_Policy__c)) {
+                    checkUniqueRefundPolicy.add(generalMetadataRecord.Refund_Policy__c);
+                    refundPolicy = refundPolicy + addAnd + generalMetadataRecord.Refund_Policy__c;
+                }
                 return bookingAmount = bookingAmount - generalMetadataRecord.Charges__c;
             } 
         }
@@ -41,6 +54,12 @@ public class CancellationPolicyService {
         Long hoursDifference = serviceDateTime.getTime() - cancellationDateTime.getTime();
         hoursDifference = hoursDifference / (1000 * 60 * 60);  // Convert milliseconds to hours
         system.debug('hoursDifference ->> '+hoursDifference);
+        system.debug('packageName ->> '+packageName);
+        if (refundPolicy != '') {
+            addAnd = ' & ';
+        } else {
+            addAnd = '';
+        }
         // Query the cancellation policies
         List<Cancellation_And_Refund__mdt> policies = [SELECT MasterLabel, Time_Frame__c,
                                                    Charges_in_Percentage__c, Charges__c,
@@ -52,25 +71,38 @@ public class CancellationPolicyService {
 
         // Iterate through policies to find the applicable one
         for (Cancellation_And_Refund__mdt policy : policies) {
+            system.debug('policy list-->> '+policy);
                 if (policy.Less_Than__c &&  hoursDifference < Long.valueOf(policy.Time_Frame__c)) {
                     if (policy.Charges_in_Percentage__c) {
                         system.debug('policy ->> '+policy.Refund_Policy__c);
-                        refundPolicy = policy.Refund_Policy__c;
+                        if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                            checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                            refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                        }
                         return bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                     } else {
                         system.debug('policy ->> '+policy.Refund_Policy__c);
-                        refundPolicy = policy.Refund_Policy__c;
+                        if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                            checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                            refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                        }
                         return bookingAmount - policy.Charges__c;
                     } 
                 } 
                 else if (policy.Greater_Than__c && Long.valueOf(policy.Time_Frame__c) < hoursDifference) {
                     if (policy.Charges_in_Percentage__c) {
                         system.debug('policy ->> '+policy.Refund_Policy__c);
-                        refundPolicy = policy.Refund_Policy__c;
+                        if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                            checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                            refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                        }
                         return bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                     } else {
                         system.debug('policy ->> '+policy.Refund_Policy__c);
-                        refundPolicy = policy.Refund_Policy__c;
+                        if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                            checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                            refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                        }
                         return bookingAmount - policy.Charges__c;
                     } 
                 }
@@ -84,11 +116,17 @@ public class CancellationPolicyService {
                     if (hoursDifference > lowerValue && hoursDifference < upperValue) {
                         if (policy.Charges_in_Percentage__c) {
                             system.debug('policy ->> '+policy.Refund_Policy__c);
-                            refundPolicy = policy.Refund_Policy__c;
+                            if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                                checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                                refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                            }
                             return bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                         } else {
                             system.debug('policy ->> '+policy.Refund_Policy__c);
-                            refundPolicy = policy.Refund_Policy__c;
+                            if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                                checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                                refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                            }
                             return bookingAmount - policy.Charges__c;
                         } 
                     }
@@ -96,11 +134,17 @@ public class CancellationPolicyService {
                 else if (policy.Time_Frame__c == 'Unlimited') {
                     if (policy.Charges_in_Percentage__c) {
                         system.debug('policy ->> '+policy.Refund_Policy__c);
-                        refundPolicy = policy.Refund_Policy__c;
+                        if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                            checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                            refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                        }
                         bookingAmount = bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                     } else {
                         system.debug('policy ->> '+policy.Refund_Policy__c);
-                        refundPolicy = policy.Refund_Policy__c;
+                        if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
+                            checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
+                            refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
+                        }
                         bookingAmount = bookingAmount - policy.Charges__c;
                     } 
                 }
@@ -146,22 +190,29 @@ public class CancellationPolicyService {
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
         } else if (opp.STD_Time__c != null) {
             dateText=opp.Date_of_Departure__c;
-            timeText=opp.STD_Time__c;
+            timeText=opp.STD_Time__c;// Ensure timeText includes seconds
+            if (timeText.length() == 5) {  // "HH:mm" format
+                timeText += ':00';  // Append ":00" for seconds
+            }
             combinedDateTimeStr=dateText + ' ' + timeText;
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
         }
+
+        //both scenarios of preview of cancellation and creating cancellation records for full cancellation
         if (cancelType =='fullCancel') {    
-            Cancellation_And_Refund__mdt metadataRecord = [SELECT Package__c FROM Cancellation_And_Refund__mdt LIMIT 1];           
             numberOfPax = opp.opportunitylineitems.size();    
-            bookingAmount = 0;     
+            bookingAmount = 0;  
+            Decimal refundAmount = 0;   
             for (opportunitylineitem oli: opp.opportunitylineitems) {
-                packageName = metadataRecord.Package__c.contains(oli.Product2.Family) ? oli.Product2.Family: '';
-                bookingAmount += oli.UnitPrice;   
+                packageName = oli.Product2.Family;
+                bookingAmount += oli.UnitPrice; 
+                decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), oli.UnitPrice, packageName); 
+                refundAmount += refundAmountPerOli;
+                // to create final cancellation records
                 if(submit) {
                     oli.Status__c = 'Fully Cancelled';
                     oliList.add(oli);
                 OpportunityLineItem oliNew = new OpportunityLineItem();
-                decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), oli.UnitPrice, packageName);
                 oliNew.Status__c = 'Cancellation';
                 oliNew.OpportunityId = opportunityId;
                 oliNew.UnitPrice = refundAmountPerOli;
@@ -173,20 +224,38 @@ public class CancellationPolicyService {
                 }          
             }
             update oliList;            
-            insert oliNewList;
+            insert oliNewList;    
+            
+            //to show preview of full cancellation
+            decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), refundAmount);
+            wrp.bookingAmount = bookingAmount;
+            wrp.refundAmount = afterGeneralCancellationRefund;
+            wrp.deductedAmount = bookingAmount - afterGeneralCancellationRefund;
+            wrp.refundMethod = 'Original Payment Mode';
+            wrp.numberOfPaxCancelled = numberOfPax;
+            wrp.refundPolicyApplicable = refundPolicy != '' ? refundPolicy : 'N/A';
         }
-        decimal afterCancellationRefundAmount = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), bookingAmount, packageName);
-        decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), afterCancellationRefundAmount);
-        wrp.bookingAmount = bookingAmount;
-        wrp.refundAmount = afterGeneralCancellationRefund;
-        wrp.deductedAmount = bookingAmount - afterGeneralCancellationRefund;
-        wrp.refundMethod = 'Original Payment Mode';
-        wrp.numberOfPaxCancelled = numberOfPax;
-        wrp.refundPolicyApplicable = refundPolicy;
 
-        
-        if (submit && cancelType !='fullCancel') {            
-            for (Map<String, Object> row : selectedOrders) {                
+        /*
+        //to show the preview for partial cancel
+        if (cancelType !='fullCancel') {
+            decimal afterCancellationRefundAmount = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), bookingAmount, packageName);
+            decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), afterCancellationRefundAmount);
+            wrp.bookingAmount = bookingAmount;
+            wrp.refundAmount = afterGeneralCancellationRefund;
+            wrp.deductedAmount = bookingAmount - afterGeneralCancellationRefund;
+            wrp.refundMethod = 'Original Payment Mode';
+            wrp.numberOfPaxCancelled = numberOfPax;
+            wrp.refundPolicyApplicable = refundPolicy;
+        }*/
+
+        //to create final cancellation record for partial cancel
+        if (cancelType !='fullCancel') {      
+            Decimal refundAmountWithoutGeneralCharges = 0;  
+            Decimal generalDeduction = 0;
+            Integer count = 0;    
+            for (Map<String, Object> row : selectedOrders) {    
+                system.debug('size->> '+selectedOrders.size());    
                 String pckName = (String) row.get('packageName');
                 Decimal perUnitPrice = (Decimal) row.get('unitPrice');
                 if((Id) row.get('oliId') !=null) {
@@ -197,17 +266,37 @@ public class CancellationPolicyService {
                 }                
                 OpportunityLineItem oliNew = new OpportunityLineItem();
                 decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), perUnitPrice, pckName);
+                refundAmountWithoutGeneralCharges += refundAmountPerOli;
+                generalDeduction = refundAmountWithoutGeneralCharges;
+                if (count == 0) {
+                    generalDeduction =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), refundAmountWithoutGeneralCharges);
+                }
+                
                 oliNew.Status__c = 'Cancellation';
                 oliNew.OpportunityId = opportunityId;
-                oliNew.UnitPrice = refundAmountPerOli;
+                oliNew.UnitPrice = perUnitPrice;
                 oliNew.Refund_Amount__c = refundAmountPerOli;
                 oliNew.Quantity = 1;
                 oliNew.Amount_Deducted__c= perUnitPrice -  refundAmountPerOli;
                 oliNew.PricebookEntryId=(Id) row.get('pbenteryId');
-                oliNewList.add(oliNew);                
+                oliNewList.add(oliNew);    
+                
+                //to show preview of full cancellation
+                wrp.bookingAmount = wrp.bookingAmount != null ? wrp.bookingAmount : 0;
+                wrp.refundAmount = wrp.refundAmount != null ? wrp.refundAmount : 0;
+                wrp.bookingAmount += perUnitPrice; 
+                wrp.refundAmount = generalDeduction;
+                wrp.deductedAmount = wrp.bookingAmount - wrp.refundAmount;
+                wrp.refundMethod = 'Original Payment Mode';
+                wrp.numberOfPaxCancelled = numberOfPax;
+                wrp.refundPolicyApplicable = refundPolicy != '' ? refundPolicy : 'N/A';
+
+                count++;
             }
-            update oliList;            
-            insert oliNewList;
+            if (submit) {
+                update oliList;            
+                insert oliNewList;
+            }
         }
         if(numberOfPax == 0) {
             return null;
@@ -230,8 +319,34 @@ public class CancellationPolicyService {
 
         // Populate wrapper class list
         for (Passenger_Details__c pd : passengerList) {
-            if(pd.Individual_Booking_Details__r.Status__c == 'Active'){                
-                pdList.add(new passengerDetailsWrapper(pd));
+            if(pd.Individual_Booking_Details__r.Status__c == 'Active'){  
+                passengerDetailsWrapper passenger = new passengerDetailsWrapper();
+                passenger.id = pd.Id;
+                passenger.oliId = pd.Individual_Booking_Details__c;
+                passenger.name = pd.Name;
+                passenger.packageName = pd.Individual_Booking_Details__r.Product2.Family;
+                passenger.unitPrice = pd.Individual_Booking_Details__r.UnitPrice;
+                passenger.quantity = 1;
+                passenger.type = pd.Passenger_Type__c;
+                passenger.pbenteryId =pd.Individual_Booking_Details__r.PricebookEntryId;                              
+                pdList.add(passenger);
+            }
+        }
+
+        List<OpportunityLineItem> oliAddOnList = [SELECT Id,Product2.Family,PricebookEntryId,Status__c,Product2.Name,UnitPrice,Quantity
+                                            FROM OpportunityLineItem
+                                            WHERE Status__c = 'Active' AND Product2.Family='Add Ons' AND OpportunityId=:opportunityId];
+        if (oliAddOnList != null) {
+            for (OpportunityLineItem oli: oliAddOnList) {
+                passengerDetailsWrapper wrap = new passengerDetailsWrapper();
+                wrap.oliId = oli.Id;
+                wrap.name = oli.Product2.Name;
+                wrap.packageName = oli.Product2.Family;
+                wrap.unitPrice = oli.UnitPrice;
+                wrap.quantity = Integer.valueOf(oli.Quantity);
+                wrap.type = oli.Product2.Family;
+                wrap.pbenteryId = oli.PricebookEntryId;
+                pdList.add(wrap);
             }
         }
         return pdList;
@@ -247,18 +362,6 @@ public class CancellationPolicyService {
         @AuraEnabled public Integer quantity { get; set; }
         @AuraEnabled public String type { get; set; }
         @AuraEnabled public String pbenteryId { get; set; }
-
-        public passengerDetailsWrapper(Passenger_Details__c pd) {
-            this.id = pd.Id;
-            this.oliId = pd.Individual_Booking_Details__c;
-            this.name = pd.Name;
-            this.packageName = pd.Individual_Booking_Details__r.Product2.Family;
-            this.unitPrice = pd.Individual_Booking_Details__r.UnitPrice;
-            this.quantity = 1;
-            this.type = pd.Passenger_Type__c;
-            this.pbenteryId =pd.Individual_Booking_Details__r.PricebookEntryId;
-
-        }
     }
 
     public class cancellationDetailsWrapper {

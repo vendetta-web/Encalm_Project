@@ -1,47 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <name>Copy_2_of_Status_Changed</name>
-        <label>Copy 2 of Status Changed</label>
-        <locationX>578</locationX>
-        <locationY>1271</locationY>
-        <actionName>emailSimple</actionName>
-        <actionType>emailSimple</actionType>
-        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
-        <inputParameters>
-            <name>emailAddresses</name>
-            <value>
-                <elementReference>$Record.Email</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailSubject</name>
-            <value>
-                <stringValue>Status Changed</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>emailBody</name>
-            <value>
-                <stringValue>Your Status is Changed</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>recipientId</name>
-            <value>
-                <elementReference>$Record.Id</elementReference>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>logEmailOnSend</name>
-            <value>
-                <booleanValue>true</booleanValue>
-            </value>
-        </inputParameters>
-        <nameSegment>emailSimple</nameSegment>
-        <offset>0</offset>
-    </actionCalls>
-    <actionCalls>
         <name>Send_Email_to_Supervisor</name>
         <label>Send Email to Supervisor</label>
         <locationX>1106</locationX>
@@ -208,29 +167,7 @@
             <label>Not Existing Account</label>
         </rules>
     </decisions>
-    <decisions>
-        <name>Escalated_Status</name>
-        <label>Escalated Status</label>
-        <locationX>710</locationX>
-        <locationY>1163</locationY>
-        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
-        <rules>
-            <name>checkEscalated</name>
-            <conditionLogic>and</conditionLogic>
-            <conditions>
-                <leftValueReference>$Record.Status</leftValueReference>
-                <operator>EqualTo</operator>
-                <rightValue>
-                    <stringValue>Follow up required</stringValue>
-                </rightValue>
-            </conditions>
-            <connector>
-                <targetReference>Copy_2_of_Status_Changed</targetReference>
-            </connector>
-            <label>checkEscalated</label>
-        </rules>
-    </decisions>
-    <description>Saurabh 26 feb</description>
+    <description>Update by Saurabh 27 feb - Remove followup stage</description>
     <environments>Default</environments>
     <formulas>
         <name>IS_NEW</name>
@@ -509,9 +446,6 @@
         <label>Change stage to Follow up required</label>
         <locationX>710</locationX>
         <locationY>1055</locationY>
-        <connector>
-            <targetReference>Escalated_Status</targetReference>
-        </connector>
         <inputAssignments>
             <field>Trigger_Time_15__c</field>
             <value>

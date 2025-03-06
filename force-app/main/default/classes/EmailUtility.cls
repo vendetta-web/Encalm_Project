@@ -24,13 +24,14 @@ public without sharing class EmailUtility {
 
         // Extract the first input from the list
         FlowInputs input = request[0];
+            String orgWideEmail = System.Label.OrgWideEmailAddress;
         System.debug('36 '+bodyUpdated);
         // Prepare recipient email addresses
         List<String> toAddress = input.toAddresses?.split(',');
         if (toAddress == null) {
             toAddress = new List<String>();
         }
-        toAddress.add('supriya.bassi@maxify.digital'); // Ensure a default address is always added
+        toAddress.add(System.Label.DefaultToAddress); // Ensure a default address is always added
         
         // Retrieve the email template
         EmailTemplate emailTemp;
@@ -51,9 +52,12 @@ public without sharing class EmailUtility {
         // Render email using the template
         Messaging.SingleEmailMessage mail = Messaging.renderStoredEmailTemplate(emailTemp.Id, null, input.recordId);
             
-            OrgWideEmailAddress[] owea = [select Id from OrgWideEmailAddress where Address = 'supriya.bassi@maxify.digital'];
-            if ( owea.size() > 0 ) {
-                mail.setOrgWideEmailAddressId(owea.get(0).Id);
+            Map<String, OrgWideEmailAddress> oweaMap = new Map<String, OrgWideEmailAddress>();
+
+            for (OrgWideEmailAddress owea : [SELECT Id, Address FROM OrgWideEmailAddress WHERE Address = :orgWideEmail]) {
+
+                oweaMap.put(owea.Address, owea);
+
             }
 
         // Set recipient addresses
@@ -75,7 +79,7 @@ public without sharing class EmailUtility {
         if (String.isNotBlank(input.fromAddress)) {
             mail.setReplyTo(input.fromAddress);
         } else {
-            mail.setReplyTo('encalmreservation@gmail.com'); // Default Reply-To address
+            mail.setReplyTo(String.isNotBlank(input.fromAddress) ? input.fromAddress : System.Label.DefaultReplyToAddress);
         }
 		
         
@@ -108,7 +112,6 @@ public without sharing class EmailUtility {
             } 
         catch (Exception e) {
             System.debug('Error occurred in sendEmail method: ' + e.getMessage());
-            LogErrorUtil.logError(e, 'EmailUtility', 'sendEmail');            
         }        
     }
     // Custom Exception for better error handling

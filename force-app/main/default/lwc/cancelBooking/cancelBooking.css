@@ -58,3 +58,9 @@
     margin-top: 0;
     margin-bottom: 0;
 }
+
+.center-card .slds-card__header {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}

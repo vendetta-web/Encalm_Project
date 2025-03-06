@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>63.0</apiVersion>
+    <description>This flow will run before insert and before update to set the opportunity name as Booking Id</description>
+    <environments>Default</environments>
+    <formulas>
+        <name>FormatOpportunityName</name>
+        <dataType>String</dataType>
+        <expression>&quot;EN&quot; &amp; {!$Record.Service_Airport__c} &amp; {!getArrivalDepartureCode} &amp; LPAD(TEXT({!GenerateNextNumber}), 3, &quot;0&quot;)</expression>
+    </formulas>
+    <formulas>
+        <name>GenerateNextNumber</name>
+        <dataType>Number</dataType>
+        <expression>{!Get_Opportunity_Booking_Counter.Last_Used_Number__c} + 1</expression>
+        <scale>0</scale>
+    </formulas>
+    <formulas>
+        <name>getArrivalDepartureCode</name>
+        <dataType>String</dataType>
+        <expression>CASE({!$Record.Service_Type__c}, &quot;Arrival&quot;, &quot;AR&quot;, &quot;Departure&quot;, &quot;DE&quot;,&quot;TR&quot;)</expression>
+    </formulas>
+    <interviewLabel>Opportunity Before Insert Before Update Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Opportunity Before Insert Before Update Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordLookups>
+        <name>Get_Opportunity_Booking_Counter</name>
+        <label>Get Opportunity Booking Counter</label>
+        <locationX>176</locationX>
+        <locationY>287</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Update_Opportunity_Name</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Default_Counter</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Opportunity_Booking_Counter__mdt</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Update_Opportunity_Name</name>
+        <label>Update Opportunity Name</label>
+        <locationX>176</locationX>
+        <locationY>395</locationY>
+        <inputAssignments>
+            <field>Name</field>
+            <value>
+                <elementReference>FormatOpportunityName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Opportunity_Booking_Counter</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue></stringValue>
+            </value>
+        </filters>
+        <object>Opportunity</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Draft</status>
+</Flow>

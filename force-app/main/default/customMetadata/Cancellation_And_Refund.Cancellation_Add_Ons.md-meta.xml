@@ -28,7 +28,7 @@
     </values>
     <values>
         <field>Refund_Policy__c</field>
-        <value xsi:type="xsd:string">100% of the Booking Amount applicable</value>
+        <value xsi:type="xsd:string">100% of the Booking Amount applicable for Add on cancellation</value>
     </values>
     <values>
         <field>Sort_Order__c</field>

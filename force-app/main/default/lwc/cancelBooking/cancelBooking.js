@@ -3,6 +3,7 @@ import { CloseActionScreenEvent } from 'lightning/actions';
 import getpassengerDetails from '@salesforce/apex/CancellationPolicyService.getBookingToCancel';
 import cancelledSummaryPreview from '@salesforce/apex/CancellationPolicyService.showCancellationCharges';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { NavigationMixin } from 'lightning/navigation';
 
 const COLUMNS = [
     {
@@ -41,7 +42,7 @@ const COLUMNS = [
 
 ];
 
-export default class CancelBooking extends LightningElement {
+export default class CancelBooking extends NavigationMixin(LightningElement) {
     @api recordId; // Record ID for the Opportunity page
     isLoading = false;
     isModalOpen = true;
@@ -58,6 +59,7 @@ export default class CancelBooking extends LightningElement {
     selectedPassengers = 0;
     selectedPackage;
     cancellationOrder;
+    noBookingFound='';
     cancelOptions = [
         { label: 'Full Cancel', value: 'fullCancel' },
         { label: 'Partial Cancel', value: 'partialCancel' }
@@ -93,7 +95,8 @@ export default class CancelBooking extends LightningElement {
         } else {
             if (this.selectedCancelOption == 'partialCancel') {
                 this.isModalOpen = false;
-                this.showMultipleCancelScreen = true;    
+                this.showMultipleCancelScreen = true;
+                this.selectedPassengers = 0;    
             } else {
                 this.isLoading = true;
                 this.isModalOpen = false;
@@ -163,10 +166,21 @@ export default class CancelBooking extends LightningElement {
             submit: true})
             .then(result => {
                 this.cancellationOrder = result;
-                this.showToast('Success', 'Booking cancelled successfully!', 'success');
+                
             })
             .catch(error => {
                 console.error('Apex Error:', error);
+        });
+        
+        this.showToast('Success', 'Booking cancelled successfully!', 'success');
+        // Redirect to Opportunity record
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: this.recordId,
+                objectApiName: 'Opportunity',
+                actionName: 'view',
+            },
         });
     }
 
@@ -185,6 +199,11 @@ export default class CancelBooking extends LightningElement {
                 submit: false })
                 .then(result => {
                     this.cancellationOrder = result;
+                    if (this.cancellationOrder == null) {
+                        this.noBookingFound = 'No booking available for cancellation';
+                    } else {
+                        this.noBookingFound = '';
+                    }
                     this.showMultipleCancelScreen = false;
                     this.showSummary = true;
                     this.isLoading = false;

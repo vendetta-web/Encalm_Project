@@ -16,15 +16,6 @@ return  airPortList;
 
 @AuraEnabled
         public static Boolean createOpportunity(String arrivingAirport, String departureAirport, Date dateOfArrival, String sector, String flightNumber ,String infantCount, String childCount, String adultCount){
-      System.debug('---------------arrivingAirport---'+arrivingAirport);
-            system.debug('----------departureAirport-------------'+departureAirport);
-
-            system.debug('-------------------dateOfArrival----'+dateOfArrival);
-            system.debug('----------sector-------------'+sector);
-            system.debug('-----------------flightNumber------'+flightNumber);
-            system.debug('---------------adultCount--------'+adultCount);
-            system.debug('------------childCount-----------'+childCount);
-            system.debug('----------------adultCount-------'+adultCount);
           return true;
         }
 }
