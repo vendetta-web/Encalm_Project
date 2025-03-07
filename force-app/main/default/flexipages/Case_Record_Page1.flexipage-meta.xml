@@ -58,6 +58,12 @@
         </itemInstances>
         <itemInstances>
             <componentInstance>
+                <componentName>caseClosedOnInquryLWC</componentName>
+                <identifier>c_caseClosedOnInquryLWC2</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
                 <componentInstanceProperties>
                     <name>hideUpdateButton</name>
                     <value>true</value>

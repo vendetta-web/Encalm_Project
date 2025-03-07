@@ -36,11 +36,13 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
  departureFlightId;
  @track opportunityFieldValues = {};
  myMap = new Map();
-  @track adultCount = 1;
-    @track childCount = 0;
-    @track infantCount = 0;
-    transitVia;
-    arrivingFrom;
+@track adultCount = 1;
+@track childCount = 0;
+@track infantCount = 0;
+transitVia;
+arrivingFrom;
+showDropdown = false;
+@track filteredOptions = [];
 sectorOption = [
     {label : 'Domestic', value : 'Domestic'},
     {label: 'International', value : 'International'},
@@ -331,14 +333,12 @@ handleTabChange(event) {
     getFlightId(flightNumber) {
         // Iterate through the flightPicklist
         let flightScheduleId = null;
-        console.log('flightSchedule->> ',JSON.stringify(this.flightSchedule));
         this.flightSchedule.forEach(item => {
         if (item.value == flightNumber) {
                 // Extract the record ID associated with "flight number"
                 flightScheduleId= item[flightNumber];
             }
         });
-        console.log('flightScheduleId->> ',flightScheduleId);
         return flightScheduleId;
     }
 
@@ -384,6 +384,14 @@ handleTabChange(event) {
         }
     }
 
+    // Handle selection of an option
+    handleOptionSelect(event) {
+        const selectedValue = event.currentTarget.getAttribute('data-value');
+        const selectedLabel = event.currentTarget.getAttribute('data-label');
+        this.showDropdown = false;
+        this.departureAirport = selectedValue;
+    }
+
     handleArrivingAirportChange(event) {
         this.arrivingAirport = event.target.value;
         if(this.isTabThree){
@@ -410,6 +418,13 @@ handleTabChange(event) {
             this.setSector();
             this.resetflightNumber();
             if (this.isTabOne){
+                
+                const searchKey = event.target.value.toLowerCase();
+                this.filteredOptions = this.allAirportOptions.filter(option =>
+                    option.label.toLowerCase().includes(searchKey)
+                );
+                this.showDropdown = this.allAirportOptions.length > 0;
+
                 this.opportunityFieldValues['Departure_Airport_Id__c'] = this.getAirportId(this.departureAirport);
                 this.loadFlightData(this.arrivalDate, this.departureAirport, this.arrivingAirport);
             } else {
@@ -417,6 +432,11 @@ handleTabChange(event) {
                 this.loadFlightData(this.departureDate, this.arrivingAirport, this.departureAirport);
             }
         }
+    }
+
+    handledropdownOpen() {
+        this.showDropdown = true;
+        this.filteredOptions = this.allAirportOptions;
     }
 
     resetflightNumber(){
@@ -603,6 +623,10 @@ showToast(title, message, variant) {
 
 //to get field values to save in opp record
 handleFieldChange(event) {
+    // Delay the blur event to ensure option selection works
+    setTimeout(() => {
+        this.showDropdown = false;
+    }, 200);
     const fieldName = event.target.name;
     const fieldValue = event.target.value;
 

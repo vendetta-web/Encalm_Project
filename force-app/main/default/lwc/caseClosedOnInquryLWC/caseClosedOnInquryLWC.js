@@ -1,9 +1,10 @@
 import { LightningElement, api, wire, track } from 'lwc';
 import { subscribe, unsubscribe } from 'lightning/empApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { getRecord } from 'lightning/uiRecordApi';
+import { getRecord, updateRecord } from 'lightning/uiRecordApi';
 import INQUIRY_TYPE_FIELD from '@salesforce/schema/Case.Inquiry_Type__c';
 import STATUS_FIELD from '@salesforce/schema/Case.Status';
+import ID_FIELD from '@salesforce/schema/Case.Id';
 
 export default class CaseClosedOnInquiryLWC extends LightningElement {
     channelName = '/data/CaseChangeEvent';
@@ -26,11 +27,15 @@ export default class CaseClosedOnInquiryLWC extends LightningElement {
 
     handleSubscribe() {
         const messageCallback = (response) => {
-            console.log('New message received: ', JSON.stringify(response));
+            console.log('New message received:', JSON.stringify(response));
+            if( JSON.stringify(response)){
+             this.openPopup = false;
+            }
             this.handleMessage(response);
         };
+
         subscribe(this.channelName, -1, messageCallback).then(response => {
-            console.log('Subscribed to: ', JSON.stringify(response.channel));
+            console.log('Subscribed to:', response.channel);
             this.subscription = response;
         });
     }
@@ -38,7 +43,7 @@ export default class CaseClosedOnInquiryLWC extends LightningElement {
     handleUnsubscribe() {
         if (this.subscription) {
             unsubscribe(this.subscription, (response) => {
-                console.log('Unsubscribed: ', JSON.stringify(response));
+                console.log('Unsubscribed:', response);
                 this.subscription = null;
             });
         }
@@ -61,25 +66,34 @@ export default class CaseClosedOnInquiryLWC extends LightningElement {
         this.openPopup = false;
     }
 
-    handleSubmit(event) {
-    event.preventDefault();
-    const fields = event.detail.fields;
-    fields.Id = this.recordId;
-    fields[STATUS_FIELD.fieldApiName] = 'Closed';
+    async handleSubmit(event) {
+        event.preventDefault();
+        this.openPopup = false; // **Ensure modal closes immediately**
 
-    // Submit form (this already updates the record)
-    this.template.querySelector('lightning-record-edit-form').submit(fields);
+        const fields = {};
+        fields[ID_FIELD.fieldApiName] = this.recordId;
+        fields[STATUS_FIELD.fieldApiName] = 'Closed';
 
-    // Show success message only after submission
-    this.dispatchEvent(
-        new ShowToastEvent({
-            title: 'Success',
-            message: 'Case updated successfully.',
-            variant: 'success',
-        })
-    );
+        const recordInput = { fields };
 
-    this.openPopup = false;
-}
-
+        try {
+            await updateRecord(recordInput);
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Success',
+                    message: 'Case updated successfully.',
+                    variant: 'success',
+                })
+            );
+        } catch (error) {
+            console.error('Error updating case:', error);
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Error',
+                    message: error?.body?.message || 'Unknown error occurred.',
+                    variant: 'error',
+                })
+            );
+        }
+    }
 }

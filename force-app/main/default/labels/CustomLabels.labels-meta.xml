@@ -22,6 +22,13 @@
         <value>supriya.bassi@maxify.digital</value>
     </labels>
     <labels>
+        <fullName>Encalm_Logo</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Encalm Logo</shortDescription>
+        <value>https://encalm--encalmdev.sandbox.my.salesforce-sites.com/resource/Encalm_Logo?</value>
+    </labels>
+    <labels>
         <fullName>EntitlementId</fullName>
         <language>en_US</language>
         <protected>false</protected>

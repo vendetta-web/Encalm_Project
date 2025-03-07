@@ -51,9 +51,27 @@
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Departure Airport</label>
-                            <lightning-combobox required name="Departure_Airport__c" data-id="departureAirport" variant="label-hidden" onblur={handleFieldChange}
-                                options={allAirportOptions} value={departureAirport}
-                                onchange={handleDepartureAirportChange}></lightning-combobox>
+                                <lightning-input 
+                                    data-id="departureAirport"
+                                    name="Departure_Airport__c"
+                                    onblur={handleFieldChange}
+                                    variant="label-hidden"
+                                    label="Departure Airport" 
+                                    value={departureAirport} 
+                                    onchange={handleDepartureAirportChange} 
+                                    onfocus={handledropdownOpen} 
+                                    required>
+                                </lightning-input>
+                                <!-- Display filtered options in a dropdown-style list -->
+                                <template if:true={showDropdown}>
+                                    <div class="dropdown">
+                                        <template for:each={filteredOptions} for:item="option">
+                                            <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleOptionSelect}>
+                                                {option.label}
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Select Sector</label>

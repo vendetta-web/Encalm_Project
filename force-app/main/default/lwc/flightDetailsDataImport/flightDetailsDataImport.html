@@ -2,7 +2,7 @@
     <lightning-card title="Import Flight Data" icon-name="custom:custom14">
         <div class="slds-p-around_medium">
             <lightning-input type="file" label="Upload CSV File" accept=".csv" onchange={handleFileChange}></lightning-input> </br>
-            <lightning-button label="Import" variant="brand" onclick={handleUpload} class="slds-m-top_medium" disabled={disableButton}></lightning-button>
+            <lightning-button label="Import" variant="brand" onclick={handleImport} class="slds-m-top_medium" disabled={disableButton}></lightning-button>
         </div>
     </lightning-card>
 </template>

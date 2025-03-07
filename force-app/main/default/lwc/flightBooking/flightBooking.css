@@ -15,6 +15,25 @@
     margin: 0 10px;
 }
 
+.dropdown {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute;
+    width: 100%;
+    z-index: 10; /* Bring the dropdown above other elements */
+    max-height: 200px; /* Set the maximum height */
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
 
 
 

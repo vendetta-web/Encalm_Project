@@ -2,26 +2,33 @@ import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import importCSVFile from '@salesforce/apex/FlightDetailsDataImportController.importCSVFile';
 
-export default class CsvUploader extends LightningElement {
+export default class FlightDetailsDataImport extends LightningElement {
     @track fileData;
+    @track fileName;
     @track disableButton = true;
     
     handleFileChange(event) {
         const file = event.target.files[0];
+        this.fileName = file.name;
+        console.log('file.name-->'+file.name);
         if (file) {
             let reader = new FileReader();
             reader.onload = () => {
                 let csv = reader.result;
                 this.fileData = csv;
+                this.showToast('Success', this.fileName + ' uploaded successfully! Please click on import button.', 'success');
             };
             reader.readAsText(file);
             this.disableButton = false;
         }
     }
 
-    handleUpload() {
+    handleImport() {
         if (this.fileData) {
-            importCSVFile({ csvString: this.fileData })
+            let fileNameWithoutExtension = this.fileName.split('.')[0];  // Remove the file extension (.csv)
+            let airportCode = fileNameWithoutExtension.slice(-3);  // Extract last 3 characters (assuming it's always 3 letters)
+
+            importCSVFile({ csvString: this.fileData, airportCodeFromFileName:  airportCode})
                 .then(result => {
                     this.showToast('Success', 'File processed successfully', 'success');
                 })

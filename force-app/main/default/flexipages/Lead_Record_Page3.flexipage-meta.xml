@@ -265,10 +265,10 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>readonly</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Case_Number__c</fieldItem>
-                <identifier>RecordCase_Number_cField</identifier>
+                <fieldItem>Record.Case__c</fieldItem>
+                <identifier>RecordCase_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
