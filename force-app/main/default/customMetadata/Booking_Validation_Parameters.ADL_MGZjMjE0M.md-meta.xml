@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>ADL-MGZjMjE0M</label>
+    <protected>false</protected>
+    <values>
+        <field>Booking_Threshold_Hr__c</field>
+        <value xsi:type="xsd:string">12</value>
+    </values>
+    <values>
+        <field>Dep_Dom_Service_Time__c</field>
+        <value xsi:type="xsd:string">90</value>
+    </values>
+    <values>
+        <field>Dep_Int_Service_Time__c</field>
+        <value xsi:type="xsd:string">180</value>
+    </values>
+    <values>
+        <field>Key__c</field>
+        <value xsi:type="xsd:string">ADL-MGZjMjE0M</value>
+    </values>
+    <values>
+        <field>Transit_Max_Flight_Gap_Hr__c</field>
+        <value xsi:type="xsd:string">8</value>
+    </values>
+    <values>
+        <field>Transit_Min_Flight_Gap_Hr__c</field>
+        <value xsi:type="xsd:string">2</value>
+    </values>
+</CustomMetadata>

@@ -14,23 +14,6 @@ global class MDEN_GetProductMaster {
             //Uncomment below to call via Postman
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestbody.toString(), MDEN_GetRequestWrapper.class);
-           
-            
-            //Uncomment below to call via Developer console using : MDEN_GetProductMaster.getProductWithAvailablity();
-            /*String reqBody =' { ' +
-                            ' "category" : "Arrival", ' +
-                            ' "sector" : "Domestic", ' +
-                            ' "airport_code" : "8008", ' +
-                            ' "travel_date" : "2022-07-06", ' +
-                            ' "service_time" : "12:15", ' +
-                            ' "basetype" : "Primary", ' +
-                            ' "product_id" : "0", ' +
-                            ' "no_of_adult" : "2", ' +
-                            ' "no_of_children" : "1", ' +
-                            ' "no_of_infants" : "0"' +
-            ' } ';
-            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);*/	
-			
             system.debug('requestMap==>'+requestMap);
             //Parsing data from requestMap
             String category = (String)requestMap.category; 
@@ -86,11 +69,11 @@ global class MDEN_GetProductMaster {
                     paw.tax_price = pbe.Tax_Price__c;
                     paw.categ_id = new List<String>{pbe.product2.ProductCode, 'Welcome and Assist / '+ pbe.product2.Service_Type__c + ' / ' + pbe.product2.Sector__c};
                     paw.description = pbe.product2.Description;
-                    //paw.surcharge_applicable_hours = Integer.valueOf(surcharge_applicable_hours);
+                   // paw.surcharge_applicable_hours = Integer.valueOf(surcharge_applicable_hours); need confirmation 
                     paw.surcharge_amount = pbe.Surcharge_Amount__c;
-                    //paw.min_lead_time_booking_hrs = productPrice.Arrival_Terminal__r.Name;
-                    //paw.available = pbe.product2.Is_Available__c;
-                    paw.available = pbe.product2.isActive;
+                   // paw.min_lead_time_booking_hrs = pbe.Arrival_Terminal__r.Name;
+                    paw.available = pbe.product2.Is_Available__c;
+                   // paw.available = pbe.product2.isActive;
                     
                     datalist.add(paw);
                 }
@@ -150,7 +133,7 @@ global class MDEN_GetProductMaster {
         //global BLOB image_1920;
         global Decimal tax_price;
         global Boolean available;
-        global Boolean surcharge;
+        //global Boolean surcharge;
                 
         global productAvailabilityWrapper(){
             

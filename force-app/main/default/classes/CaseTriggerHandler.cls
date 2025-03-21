@@ -17,14 +17,17 @@ public class CaseTriggerHandler {
     public static void beforeUpdateAddEntitlementOnCase(List<Case> newCases, Map<Id, Case> oldCasesMap) { // Added by Sidhant
         Set<Id> ownerIds = new Set<Id>();
         for (Case c : newCases) {
+            system.debug('Testtttt');
         if (oldCasesMap != null && oldCasesMap.containsKey(c.Id)) {
             Case oldCase = oldCasesMap.get(c.Id); 
             if (c.OwnerId != oldCase.OwnerId && c.Status == 'New') {
+                system.debug('Testtttt');
                 ownerIds.add(c.OwnerId);
             }
         }
         else if (c.Status == 'New') {
             ownerIds.add(c.OwnerId);
+             system.debug('Testtttt elseee');
         }
     }
 

@@ -237,12 +237,21 @@ public with sharing class PackageSelectionController {
         List<Passenger_Details__c> passengerDetailsList = new List<Passenger_Details__c>();
         // Create a Map directly from the query result
         Map<Id, String> opportunityMap = new Map<Id, String>();// Initialize a Map to store Record_Id__c as key and Description__c as value
-        List<OpportunityLineItem> oliList = [SELECT Id,Product2.Package_Is_For__c FROM OpportunityLineItem WHERE OpportunityId =:opportunityId];
+        List<OpportunityLineItem> oliList = [SELECT Id,Product2.Package_Is_For__c 
+            FROM OpportunityLineItem
+            WHERE OpportunityId =:opportunityId
+            AND Status__c = 'Active'
+            AND Id NOT IN (
+                SELECT Individual_Booking_Details__c
+                FROM Passenger_Details__c
+            )
+            ORDER BY CreatedDate DESC];
         //Delete existing passengers and create new list if updates are made
         List<Passenger_Details__c> passengersToDelete = [SELECT Id FROM Passenger_Details__c WHERE Opportunity_ID__c=:opportunityId];
+        /*
         if (passengersToDelete!=null && passengersToDelete.size()>0) {
             Delete passengersToDelete;
-        }
+        } */
         Map<String, String> typeToOliIdMap = new Map<String, String>();
         // Create a map to store lists of passengers by their 'Valid_For' field value
         Map<String, List<Id>> oliMap = new Map<String, List<Id>>();
@@ -331,12 +340,23 @@ public with sharing class PackageSelectionController {
     public static void createOpportunityLineItems(Id opportunityId, List<Map<String, Object>> productDetails, Decimal amount) {
         // Create a list to store OpportunityLineItems
         List<OpportunityLineItem> opportunityLineItemsToInsert = new List<OpportunityLineItem>();
+        List<Transaction_History__c> transactionList= new List<Transaction_History__c>();
+        Decimal totalListPrice=0;
+
+        // Query Opportunity based on OpportunityId
+        Opportunity opp = [
+            SELECT Name
+            FROM Opportunity
+            WHERE Id=:opportunityId
+            LIMIT 1
+        ];
+
         //update opportunity
+        /*
         List<OpportunityLineItem> loiToDelete = [SELECT Id,Product2Id FROM OpportunityLineItem WHERE OpportunityId =:opportunityId];
         Delete loiToDelete;
-        system.debug('product-->>>> '+productDetails);
+        */
         for (Map<String, Object> productDetail : productDetails) {
-            system.debug('product-->>>> '+productDetail);
             // Extract the values from the map
             Id productId = (Id) productDetail.get('productId');
             Id pricebookEntry = (Id) productDetail.get('pricebookEntryId');
@@ -356,14 +376,26 @@ public with sharing class PackageSelectionController {
                 oli.Pickup_Terminal__c = pickupTerminal;
                 oli.Drop_Terminal__c = dropTerminal;
                 oli.Status__c = 'Active';
+                totalListPrice += unitPrice;
                 // Add the OLI to the list
                 opportunityLineItemsToInsert.add(oli);
             }
         }
+            //creation of transaction record for booking
+            if(totalListPrice !=0) {
+                Transaction_History__c transactionRec= new Transaction_History__c();
+                transactionRec.Booking_Id__c = opportunityId;
+                transactionRec.List_Price__c = totalListPrice;
+                transactionRec.Name = opp.Name;
+                transactionRec.Transaction_Type__c = 'Debit';
+                
+                transactionList.add(transactionRec);
+            } 
 
         // Insert the Opportunity Line Items
         try {
-            insert opportunityLineItemsToInsert;
+            insert opportunityLineItemsToInsert;                
+            insert transactionList;
         } catch (Exception e) {
             System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
             throw new AuraHandledException('Error in creating order summary, please show this message to admin');

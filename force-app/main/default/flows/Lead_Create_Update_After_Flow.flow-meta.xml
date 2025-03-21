@@ -146,7 +146,7 @@
         <name>Decision_Account_Check</name>
         <label>Decision Account Check</label>
         <locationX>182</locationX>
-        <locationY>647</locationY>
+        <locationY>755</locationY>
         <defaultConnector>
             <targetReference>Create_Person_Account</targetReference>
         </defaultConnector>
@@ -167,7 +167,7 @@
             <label>Not Existing Account</label>
         </rules>
     </decisions>
-    <description>Update by Saurabh 27 feb - Remove followup stage</description>
+    <description>Update by Saurabh _21 MArch</description>
     <environments>Default</environments>
     <formulas>
         <name>IS_NEW</name>
@@ -204,7 +204,7 @@
         <name>Create_Person_Account</name>
         <label>Create Person Account</label>
         <locationX>314</locationX>
-        <locationY>755</locationY>
+        <locationY>863</locationY>
         <connector>
             <targetReference>Update_Lead</targetReference>
         </connector>
@@ -286,7 +286,7 @@
         <name>Existing_Account_Email</name>
         <label>Existing Account Email</label>
         <locationX>182</locationX>
-        <locationY>539</locationY>
+        <locationY>647</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Decision_Account_Check</targetReference>
@@ -310,7 +310,7 @@
         <locationY>431</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Existing_Account_Email</targetReference>
+            <targetReference>Update_related_case</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
@@ -354,7 +354,7 @@
         <connector>
             <targetReference>Check_followUp</targetReference>
         </connector>
-        <filterLogic>and</filterLogic>
+        <filterLogic>or</filterLogic>
         <filters>
             <field>WhoId</field>
             <operator>EqualTo</operator>
@@ -419,7 +419,7 @@
         <name>Associate_lead</name>
         <label>Associate lead</label>
         <locationX>50</locationX>
-        <locationY>755</locationY>
+        <locationY>863</locationY>
         <inputAssignments>
             <field>Account__c</field>
             <value>
@@ -477,7 +477,7 @@
         <name>Update_Case</name>
         <label>Update Case</label>
         <locationX>314</locationX>
-        <locationY>971</locationY>
+        <locationY>1079</locationY>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Id</field>
@@ -498,7 +498,7 @@
         <name>Update_Lead</name>
         <label>Update Lead</label>
         <locationX>314</locationX>
-        <locationY>863</locationY>
+        <locationY>971</locationY>
         <connector>
             <targetReference>Update_Case</targetReference>
         </connector>
@@ -509,6 +509,22 @@
             </value>
         </inputAssignments>
         <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_related_case</name>
+        <label>Update related case</label>
+        <locationX>182</locationX>
+        <locationY>539</locationY>
+        <connector>
+            <targetReference>Existing_Account_Email</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Closed</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record.Case__r</inputReference>
     </recordUpdates>
     <recordUpdates>
         <name>Update_Task</name>

@@ -11,7 +11,7 @@ import { NavigationMixin } from 'lightning/navigation';
 const fields = [STAGE_NAME, RECORD_TYPE_ID, FOLLOWUP_FIELD, LEAD_OWNER, REASON_FOR_CLOSE]; 
 
 export default class EncalmLeadProcess extends NavigationMixin(LightningElement) {
-    @track reservationStages = ['Open', 'Awaiting Customer response', 'Closed/Converted'];
+    @track reservationStages = ['Open', 'Awaiting Customer response','Customer Responded','Escalated', 'Closed/Converted'];
     //@track salesStages = ['Open', 'Awaiting Customer response','Closed/Converted'];
     pathType = 'path';
     @api recordId;

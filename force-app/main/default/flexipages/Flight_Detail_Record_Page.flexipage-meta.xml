@@ -50,12 +50,6 @@
                 <identifier>force_relatedListContainer</identifier>
             </componentInstance>
         </itemInstances>
-        <itemInstances>
-            <componentInstance>
-                <componentName>flightDetailsDataImport</componentName>
-                <identifier>c_flightDetailsDataImport</identifier>
-            </componentInstance>
-        </itemInstances>
         <mode>Replace</mode>
         <name>relatedTabContent</name>
         <type>Facet</type>

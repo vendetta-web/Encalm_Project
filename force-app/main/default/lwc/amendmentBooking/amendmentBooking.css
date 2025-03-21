@@ -1,0 +1,501 @@
+/* Style for the lightning layout items */
+.lightning-layout-item {
+    border: 1px solid #e0e0e0; /* Light border between items */
+    background-color: #fefefe; /* White background for layout items */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 0.3rem;
+    padding: 1rem;
+    text-align: center;
+    overflow: hidden; /* Prevent content from overflowing */
+    word-wrap: break-word;
+}
+
+/* Styling the package section */
+.package {
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 0.5rem;
+    background-color: #f9f9f9;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling the package name */
+.package-name {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.package-name .left-value,
+.package-name .right-value {
+    display: inline-block;
+}
+
+/* Add-ons section adjustments */
+.left-value-addon {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #444;
+}
+
+.right-value-addon {
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: right;
+}
+
+/* Grid structure improvements for responsiveness */
+.slds-grid {
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.slds-col {
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+/* Combobox alignment */
+lightning-combobox {
+    margin: 0.5rem 0;
+    width: 100%; /* Ensure comboboxes take full width */
+}
+
+/* Add a max-width to the card to prevent content overflow */
+.slds-card {
+    max-width: 1000px; /* Adjust based on your layout */
+    margin: auto; /* Center the card */
+}
+
+/* Ensure responsiveness for smaller screens */
+@media screen and (max-width: 768px) {
+    .slds-col {
+        flex: 0 0 100%;
+    }
+
+    .package {
+        text-align: center;
+    }
+}
+
+.lightning-card {
+    margin-bottom: 1rem;
+}
+
+
+
+.slds-box.booking-form {
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+}
+
+.payment-logo {
+    width: 50px;
+    margin: 0 10px;
+}
+
+.dropdown {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute;
+    width: 45%;
+    z-index: 10; /* Bring the dropdown above other elements */
+    max-height: 200px; /* Set the maximum height */
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdownFlight {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute;
+    width: 29%;
+    z-index: 10; /* Bring the dropdown above other elements */
+    max-height: 200px; /* Set the maximum height */
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-width: 300px;
+}
+
+span {
+    font-size: 16px;
+}
+
+.count {
+    padding: 5px 10px;
+    font-weight: bold;
+}
+
+.btn {
+    padding: 5px 10px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    background-color: #eee;
+    border-radius: 3px;
+}
+
+.plus {
+    color: #28a745; /* Green color for + icon */
+    font-weight: bold;
+}
+
+.minus {
+    color: #dc3545; /* Red color for - icon */
+    font-weight: bold;
+}
+
+.age-range {
+    font-size: 12px;
+    color: #777;
+}
+
+.encalmbg {
+    --sds-c-button-brand-color-background: #cda45e;
+    --sds-c-button-brand-color-border: #cda45e;
+    --sds-c-button-brand-color-background-hover: #cda45e;
+    --sds-c-button-brand-color-border-hover: #cda45e;
+}
+
+.custom-label {
+    color: #444;
+    font-size: 14px;
+  }
+
+  .encalmbg {
+    --sds-c-button-brand-color-background: #cda45e;
+    --sds-c-button-brand-color-border: #cda45e;
+    --sds-c-button-brand-color-background-hover: #cda45e;
+    --sds-c-button-brand-color-border-hover: #cda45e;
+}
+
+.custom-label {
+    color: #444;
+    font-size: 14px;
+}
+/* Container for the box */
+.param2-container {
+    display: flex;
+    justify-content: left;  /* left align box */
+    align-items: center;  /* Center vertically */
+    margin-top: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* Style for the box that shows the selected param2 */
+.param2-box {
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    width: 100%;  /* Allow box to be responsive */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);  /* Add a slight shadow for better visual effect */
+    text-align: center;  /* Center the text inside the box */
+}
+
+/* Header style inside the box */
+.param2-box strong {
+    font-weight: bold;
+    color: #0070d2; /* Salesforce blue */
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Paragraph style for the param2 content */
+.param2-box p {
+    font-size: 16px;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Ensuring that grid items fit properly */
+.slds-grid {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping when necessary */
+}
+
+/* Style for individual columns */
+.column {
+    width: 32%; /* Roughly 1/3 of the container width */
+    margin: 10px 0; /* Vertical margin for spacing */
+    padding: 0.5rem;
+    border: 1px solid #cda45e; /* Border around each column */
+    box-sizing: border-box; /* Ensure padding is included in the width */
+}
+
+/* Add a border under the package name */
+.package-name {
+    border-bottom: 2px solid #cda45e; /* Line under package name */
+    padding-bottom: 10px; /* Add some space between the package name and the next element */
+}
+
+/* Add a border under the price tag */
+.price-tag {
+    border-bottom: 2px solid #cda45e; /* Line under price tag */
+    padding-bottom: 10px; /* Add space between price tag and services list */
+}
+
+/* Style for the individual items in the list */
+.slds-item {
+    border-bottom: 1px solid #cda45e; /* Border between service items */
+    padding: 5px 0;
+}
+
+/* Remove border for the last service item */
+.slds-item:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Layout: Adjust the number of columns on smaller screens */
+@media (max-width: 768px) {
+    .column {
+        width: 48%; /* 2 columns on medium screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .column {
+        width: 100%; /* 1 column on small screens */
+    }
+}
+
+/* Consistent spacing around the button */
+lightning-button {
+    margin-top: 10px;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-width: 300px;
+}
+
+span {
+    font-size: 16px;
+}
+
+.count {
+    padding: 5px 10px;
+    font-weight: bold;
+}
+
+.btn {
+    padding: 5px 10px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    background-color: #eee;
+    border-radius: 3px;
+}
+
+.plus {
+    color: #28a745; /* Green color for + icon */
+    font-weight: bold;
+}
+
+.minus {
+    color: #dc3545; /* Red color for - icon */
+    font-weight: bold;
+}
+
+.age-range {
+    font-size: 12px;
+    color: #777;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between; /* This pushes the items to opposite sides */
+    padding: 10px;
+}
+
+.left-value {
+    font-size: x-large; /* You can change this as needed */
+    text-align: left;
+    align-content: end;
+
+}
+
+.right-value {
+    font-size: 15px; /* You can change this as needed */
+    text-align: right;
+    align-content: end;
+}
+
+.left-value-addon {
+    font-size: large; /* You can change this as needed */
+    text-align: left;
+    align-content: end;
+
+}
+
+.right-value-addon {
+    font-size: 15px; /* You can change this as needed */
+    text-align: right;
+    align-content: end;
+}
+.box {
+    width: 200px;
+    height: 200px;
+    background-color: lightgrey;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.btns {
+    padding: 5px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    border: black;
+    background-color: #FFFFFF;
+    border-radius: 3px;
+    color: #0176D3;
+    border: 0.5px solid #000000a1;
+}
+
+.remove {
+    color: black; /* red color for remove */
+    /*background-color: red;*/
+}
+
+.select {
+    color: #2857a7; /* blue color for select */
+}
+
+.guest-row {
+    display: flex;
+    flex-wrap: wrap;  /* Allow fields to wrap if they overflow */
+    gap: 15px;  /* Adds space between the fields */
+    margin-bottom: 15px; /* Adds     space between rows */
+    margin-left: 10px; /* Adds space from first rows */
+    margin-right: 10px; /* Adds space from   last rows */
+}
+
+.guest-rows {
+    display: flex;
+    flex-wrap: wrap;  /* Allow fields to wrap if they overflow */
+    gap: 15px;  /* Adds space between the fields */
+    margin-bottom: 15px; /* Adds     space between rows */
+    margin-left: 10px; /* Adds space from first rows */
+    margin-right: 10px; /* Adds space from   last rows */
+}
+
+.input-field {
+    flex: 1 1 180px;  /* Ensures each field is flexible and has a minimum width */
+}
+
+.field-container {
+    display: flex;
+    justify-content: space-between; /* Distribute the fields evenly */
+    gap: 10px; /* Space between fields */
+}
+
+.field {
+    flex: 1;
+    max-width: 150px; /* Limit width of each field */
+    word-wrap: break-word; /* Ensure text wraps within the container */
+    margin-left: 10px; /* Adds space from first rows */
+}
+
+@media screen and (max-width: 600px) {
+    lightning-layout-item {
+        flex: 1 1 100%; /* On small screens, items can stack */
+    }
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute;
+    width: 180px;
+    z-index: 10; /* Bring the dropdown above other elements */
+    max-height: 200px; /* Set the maximum height */
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+.fixed-width {
+    width: 200px; /* Set a fixed width for the input and combobox fields */
+}
+
+.input-field {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.slds-modal__container {
+    max-width: 80%; /* Increase width of the modal */
+    width: 80%; /* Add a custom width */
+}
+
+.demo-only .slds-card {
+    margin: 1rem; /* Add spacing around cards */
+}

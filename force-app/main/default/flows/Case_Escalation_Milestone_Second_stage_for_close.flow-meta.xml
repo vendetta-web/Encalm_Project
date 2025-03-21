@@ -10,12 +10,19 @@
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>Complete_CaseMilestone</name>
-            <conditionLogic>and</conditionLogic>
+            <conditionLogic>or</conditionLogic>
             <conditions>
                 <leftValueReference>Case.Status</leftValueReference>
                 <operator>NotEqualTo</operator>
                 <rightValue>
                     <stringValue>Escalated</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Case.Inquiry_Type__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
                 </rightValue>
             </conditions>
             <connector>
@@ -24,6 +31,7 @@
             <label>Complete CaseMilestone</label>
         </rules>
     </decisions>
+    <description>Update by saurabh</description>
     <environments>Default</environments>
     <formulas>
         <description>CaseMilestone completion date.</description>

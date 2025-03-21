@@ -164,15 +164,15 @@ public class CancellationPolicyService {
         Integer numberOfPax,
         Boolean submit) {
         List<OpportunityLineItem> oliList = new List<OpportunityLineItem>();
-        List<OpportunityLineItem> oliNewList = new List<OpportunityLineItem>();
         cancellationDetailsWrapper wrp = new cancellationDetailsWrapper();
+        List<Transaction_History__c> transactionList= new List<Transaction_History__c>();
         DateTime serviceDateTime;
         String dateText;
         String timeText;
         String combinedDateTimeStr;
         // Query OpportunityLineItems based on OpportunityId
         Opportunity opp = [
-            SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,
+            SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,Name,
             (SELECT Id,Product2.Family,UnitPrice,PricebookEntryId FROM opportunitylineitems WHERE Status__c = 'Active') 
             FROM Opportunity
             WHERE Id=:opportunityId
@@ -211,20 +211,12 @@ public class CancellationPolicyService {
                 // to create final cancellation records
                 if(submit) {
                     oli.Status__c = 'Fully Cancelled';
+                    oli.Refund_Amount__c = refundAmountPerOli;
+                    oli.Amount_Deducted__c= oli.UnitPrice-refundAmountPerOli;
                     oliList.add(oli);
-                OpportunityLineItem oliNew = new OpportunityLineItem();
-                oliNew.Status__c = 'Cancellation';
-                oliNew.OpportunityId = opportunityId;
-                oliNew.UnitPrice = refundAmountPerOli;
-                oliNew.Refund_Amount__c = refundAmountPerOli;
-                oliNew.Quantity = 1;
-                oliNew.Amount_Deducted__c= oli.UnitPrice-refundAmountPerOli;
-                oliNew.PricebookEntryId=oli.PricebookEntryId;
-                oliNewList.add(oliNew); 
                 }          
             }
-            update oliList;            
-            insert oliNewList;    
+            update oliList;   
             
             //to show preview of full cancellation
             decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), refundAmount);
@@ -234,6 +226,20 @@ public class CancellationPolicyService {
             wrp.refundMethod = 'Original Payment Mode';
             wrp.numberOfPaxCancelled = numberOfPax;
             wrp.refundPolicyApplicable = refundPolicy != '' ? refundPolicy : 'N/A';
+
+            
+            //creation of transaction record if any refund is done for full cancellation
+            if(submit && afterGeneralCancellationRefund !=0) {
+                Transaction_History__c transactionRec= new Transaction_History__c();
+                transactionRec.Booking_Id__c = opportunityId;
+                transactionRec.Cancellation_Charges__c = bookingAmount - afterGeneralCancellationRefund;
+                transactionRec.Refund_Charges__c = afterGeneralCancellationRefund;
+                transactionRec.Name = opp.Name;
+                transactionRec.Transaction_Type__c = 'Credit';
+                
+                transactionList.add(transactionRec);
+            } 
+            insert transactionList;
         }
 
         /*
@@ -253,35 +259,30 @@ public class CancellationPolicyService {
         if (cancelType !='fullCancel') {      
             Decimal refundAmountWithoutGeneralCharges = 0;  
             Decimal generalDeduction = 0;
-            Integer count = 0;    
-            for (Map<String, Object> row : selectedOrders) {    
-                system.debug('size->> '+selectedOrders.size());    
+            Integer count = 0;  
+            String paxNames = '';  
+            for (Map<String, Object> row : selectedOrders) {      
                 String pckName = (String) row.get('packageName');
-                Decimal perUnitPrice = (Decimal) row.get('unitPrice');
-                if((Id) row.get('oliId') !=null) {
-                    OpportunityLineItem oli = new OpportunityLineItem(); 
-                    oli.Id = (Id) row.get('oliId');
-                    oli.Status__c = 'Partially Cancelled';
-                    oliList.add(oli);
-                }                
-                OpportunityLineItem oliNew = new OpportunityLineItem();
+                Decimal perUnitPrice = (Decimal) row.get('unitPrice');               
                 decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), perUnitPrice, pckName);
                 refundAmountWithoutGeneralCharges += refundAmountPerOli;
                 generalDeduction = refundAmountWithoutGeneralCharges;
                 if (count == 0) {
                     generalDeduction =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), refundAmountWithoutGeneralCharges);
-                }
+                    paxNames = (String) row.get('name') !=null ? (String) row.get('name') : '';
+                } else {
+                    paxNames = paxNames + ', ' + (String) row.get('name');
+                } 
+                if((Id) row.get('oliId') !=null) {
+                    OpportunityLineItem oli = new OpportunityLineItem(); 
+                    oli.Id = (Id) row.get('oliId');
+                    oli.Status__c = 'Partially Cancelled';
+                    oli.Refund_Amount__c = refundAmountPerOli;
+                    oli.Amount_Deducted__c= perUnitPrice -  refundAmountPerOli;
+                    oliList.add(oli);
+                }  
                 
-                oliNew.Status__c = 'Cancellation';
-                oliNew.OpportunityId = opportunityId;
-                oliNew.UnitPrice = perUnitPrice;
-                oliNew.Refund_Amount__c = refundAmountPerOli;
-                oliNew.Quantity = 1;
-                oliNew.Amount_Deducted__c= perUnitPrice -  refundAmountPerOli;
-                oliNew.PricebookEntryId=(Id) row.get('pbenteryId');
-                oliNewList.add(oliNew);    
-                
-                //to show preview of full cancellation
+                //to show preview of partial cancellation
                 wrp.bookingAmount = wrp.bookingAmount != null ? wrp.bookingAmount : 0;
                 wrp.refundAmount = wrp.refundAmount != null ? wrp.refundAmount : 0;
                 wrp.bookingAmount += perUnitPrice; 
@@ -290,12 +291,24 @@ public class CancellationPolicyService {
                 wrp.refundMethod = 'Original Payment Mode';
                 wrp.numberOfPaxCancelled = numberOfPax;
                 wrp.refundPolicyApplicable = refundPolicy != '' ? refundPolicy : 'N/A';
+                wrp.paxNames = paxNames != '' ? paxNames : null;
 
                 count++;
             }
             if (submit) {
-                update oliList;            
-                insert oliNewList;
+                update oliList;  
+                //creation of transaction record if any refund is done for partial cancellation
+                if(wrp.refundAmount !=0) {
+                    Transaction_History__c transactionRec= new Transaction_History__c();
+                    transactionRec.Booking_Id__c = opportunityId;
+                    transactionRec.Cancellation_Charges__c = wrp.deductedAmount;
+                    transactionRec.Refund_Charges__c = wrp.refundAmount;
+                    transactionRec.Name = opp.Name;
+                    transactionRec.Transaction_Type__c = 'Credit';
+                    
+                    transactionList.add(transactionRec);
+                } 
+                insert transactionList;
             }
         }
         if(numberOfPax == 0) {
@@ -314,12 +327,13 @@ public class CancellationPolicyService {
             Passenger_Type__c, Individual_Booking_Details__r.Product2.Family, Individual_Booking_Details__r.PricebookEntryId,
             Individual_Booking_Details__r.Status__c
             FROM Passenger_Details__c
-            WHERE Opportunity_ID__c=:opportunityId AND Individual_Booking_Details__r.Status__c = 'Active'
+            WHERE Opportunity_ID__c=:opportunityId AND (Individual_Booking_Details__r.Status__c = 'Active'
+            OR Individual_Booking_Details__r.Status__c = 'Rescheduled')
         ];
 
         // Populate wrapper class list
         for (Passenger_Details__c pd : passengerList) {
-            if(pd.Individual_Booking_Details__r.Status__c == 'Active'){  
+            if(pd.Individual_Booking_Details__r.Status__c == 'Active'|| pd.Individual_Booking_Details__r.Status__c == 'Rescheduled'){  
                 passengerDetailsWrapper passenger = new passengerDetailsWrapper();
                 passenger.id = pd.Id;
                 passenger.oliId = pd.Individual_Booking_Details__c;
@@ -371,5 +385,6 @@ public class CancellationPolicyService {
         @AuraEnabled public String refundMethod;
         @AuraEnabled public Integer numberOfPaxCancelled;
         @AuraEnabled public String refundPolicyApplicable;
+        @AuraEnabled public String paxNames;
     }
 }

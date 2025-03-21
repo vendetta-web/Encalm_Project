@@ -3,10 +3,10 @@ trigger CaseTrigger on Case (before insert, before update, after insert, after u
         if (Trigger.isBefore) {
             if(Trigger.isInsert){
                 CaseTriggerHandler.handleBeforeInsert(trigger.new);
-                CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
+                //CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
             }
              if(trigger.isUpdate){
-                CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
+                //CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
             } 
         }
         

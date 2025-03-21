@@ -8,5 +8,6 @@
 		<target>lightning__RecordPage</target>
 		<target>lightning__RecordAction</target>
 		<target>lightning__UrlAddressable</target>
+		<target>lightning__Tab</target>
 	</targets>
 </LightningComponentBundle>

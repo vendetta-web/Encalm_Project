@@ -5,7 +5,7 @@
  */
 @RestResource(urlMapping='/get_sale_order_details_by_gso/*')	
 global class MDEN_GetServiceOrderCompleteDetails {
-    @HttpGet
+    @HttpPost
     global static MDEN_GetResponseWrapper saveSaleOrderParent(){
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper();
         mainData mainDataDetails = new mainData('', '');

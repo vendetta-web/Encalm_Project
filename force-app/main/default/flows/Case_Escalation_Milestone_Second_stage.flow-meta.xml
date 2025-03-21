@@ -11,7 +11,7 @@
         <inputParameters>
             <name>emailAddresses</name>
             <value>
-                <elementReference>Get_Case.Owner:User.Manager.ManagerId</elementReference>
+                <elementReference>Get_Case.Owner:User.Manager.Manager.Email</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -23,13 +23,13 @@
         <inputParameters>
             <name>emailSubject</name>
             <value>
-                <stringValue>Case Escalation 2</stringValue>
+                <stringValue>&quot;Urgent: Case Escalated to Supervisor – Immediate Attention Required&quot;</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
             <name>emailBody</name>
             <value>
-                <stringValue>Case Escalated 2</stringValue>
+                <elementReference>bodyContent</elementReference>
             </value>
         </inputParameters>
         <nameSegment>emailSimple</nameSegment>
@@ -58,6 +58,7 @@
             <label>Status still escalated</label>
         </rules>
     </decisions>
+    <description>Updated by Saurabh - 19 March</description>
     <environments>Default</environments>
     <interviewLabel>Case_Escalation_Milestone_Second_stage {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Case Escalation Milestone Second stage</label>
@@ -133,6 +134,14 @@
         </connector>
     </start>
     <status>Active</status>
+    <textTemplates>
+        <name>bodyContent</name>
+        <isViewedAsPlainText>false</isViewedAsPlainText>
+        <text>Dear {!Get_Case.Owner:User.Manager.FirstName} {!Get_Case.Owner:User.Manager.LastName},
+This is to inform you that Case #{!Get_Case.CaseNumber} has been escalated due to no action taken by the assigned service agent within the required timeframe. Please review and take the necessary action as soon as possible.
+
+https://encalm--encalmdev.sandbox.lightning.force.com/{!Get_Case.Id}</text>
+    </textTemplates>
     <variables>
         <description>Case Id</description>
         <name>case_id</name>

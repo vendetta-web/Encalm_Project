@@ -14,7 +14,7 @@ global class EmailToLeadReply implements Messaging.InboundEmailHandler {
                 System.debug('Lead Name: ' + leadName);
 
                 // Query the most recently modified lead with the extracted name
-                List<Lead> leads = [SELECT Id FROM Lead WHERE Name = :leadName ORDER BY LastModifiedDate DESC LIMIT 1];
+                List<Lead> leads = [SELECT Id,Status,OwnerId,CreatedById FROM Lead WHERE Name = :leadName ORDER BY LastModifiedDate DESC LIMIT 1];
 
                 if (!leads.isEmpty()) {
                     // Create a new task associated with the lead
@@ -27,6 +27,9 @@ global class EmailToLeadReply implements Messaging.InboundEmailHandler {
 
                     // Insert the new task
                     insert newTask;
+                    leads[0].Status='Customer Responded';
+                    leads[0].OwnerId=leads[0].CreatedById;
+                    update leads;
                     System.debug('Task created successfully: ' + newTask.Id);
                 } else {
                     System.debug('No lead found with the name: ' + leadName);

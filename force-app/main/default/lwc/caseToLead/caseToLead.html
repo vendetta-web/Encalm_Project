@@ -1,5 +1,8 @@
 <template>
-    <template if:true={openCaseClosedScreen}>
+
+    <lightning-spinner if:true={isNavigatingToLead} alternative-text="Processing..."></lightning-spinner>
+
+    <!-- <template if:true={openCaseClosedScreen}>
 
         <lightning-record-edit-form onerror={handleError} record-id={recordId} object-api-name="Case"
             onsubmit={handleSubmit}>
@@ -10,19 +13,19 @@
                     </lightning-output-field>
                 </div>
                 <div class="slds-col slds-size_1-of-1">
-                    <lightning-input-field field-name="Resolution_Notes__c" required="true" variant="label-stacked">
+                    <lightning-input-field field-name="Resolution_Notes__c" value={resolutionNotes} variant="label-stacked">
                     </lightning-input-field>
                 </div>
             </div>
 
             <footer class="slds-text-align_right" style="margin-top: 1rem; padding: 0.5rem 1rem;">
-                <!-- <button class="slds-button slds-button_neutral" onclick={hideModalBox}>Close</button> -->
                 <lightning-button class="slds-m-left_small" variant="brand" type="submit" name="update" label="Save">
                 </lightning-button>
             </footer>
         </lightning-record-edit-form>
 
-    </template>
+    </template> -->
+
     <!-- <template if:true={isShowAction}>
         <lightning-card>
             <div class="slds-p-around_medium">

@@ -97,6 +97,82 @@
                 <identifier>RecordReason_for_Closure_ReadOnly_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Rating__c</fieldItem>
+                <identifier>RecordRating__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Feedback__c</fieldItem>
+                <identifier>RecordFeedback__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Issue__c</fieldItem>
+                <identifier>RecordIssue__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Category__c</fieldItem>
+                <identifier>RecordCategory__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Resolution_Date__c</fieldItem>
+                <identifier>RecordResolution_Date__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Resolution_Time__c</fieldItem>
+                <identifier>RecordResolution_Time__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Total_Resolution_Time__c</fieldItem>
+                <identifier>RecordTotal_Resolution_Time__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Guest_Satisfaction_Level__c</fieldItem>
+                <identifier>RecordGuest_Satisfaction_Level__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Resolution_Comments__c</fieldItem>
+                <identifier>RecordResolution_Comments__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Resolved_By__c</fieldItem>
+                <identifier>RecordResolved_By__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Issue_Date__c</fieldItem>
+                <identifier>RecordIssue_Date__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Issue_Time__c</fieldItem>
+                <identifier>RecordIssue_Time__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-0f45841b-c20e-4911-849d-cfe2ca41aeb1</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -354,6 +430,16 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.SuppliedCompany</fieldItem>
                 <identifier>RecordSuppliedCompanyField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Rating__c</fieldItem>
+                <identifier>RecordRating_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>

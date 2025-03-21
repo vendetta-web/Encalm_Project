@@ -130,6 +130,16 @@
                                             <p>{cancellationOrder.refundMethod}</p> <!-- Show the param2 of the selected row -->
                                         </lightning-layout-item>
                                     </lightning-layout>
+                                    <template if:true={cancellationOrder.paxNames}>
+                                        <lightning-layout multiple-rows="true">
+                                            <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
+                                                <b>Cancellation for :</b>
+                                            </lightning-layout-item>
+                                            <lightning-layout-item size="8" class="slds-p-around_small">
+                                                <p>{cancellationOrder.paxNames}</p> <!-- Show the param2 of the selected row -->
+                                            </lightning-layout-item>
+                                        </lightning-layout>
+                                    </template>
                                     <lightning-layout multiple-rows="true">
                                         <lightning-layout-item size="4" class="slds-p-around_small" style="text-align: left;">
                                             <b>Cancellation for Persons:</b>

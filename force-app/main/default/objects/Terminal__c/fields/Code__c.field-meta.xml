@@ -35,6 +35,26 @@
                 <default>false</default>
                 <label>Terminal 5</label>
             </value>
+            <value>
+                <fullName>Terminal 3I</fullName>
+                <default>false</default>
+                <label>Terminal 3I</label>
+            </value>
+            <value>
+                <fullName>Terminal 3D</fullName>
+                <default>false</default>
+                <label>Terminal 3D</label>
+            </value>
+            <value>
+                <fullName>Terminal 2D</fullName>
+                <default>false</default>
+                <label>Terminal 2D</label>
+            </value>
+            <value>
+                <fullName>Terminal 1D</fullName>
+                <default>false</default>
+                <label>Terminal 1D</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

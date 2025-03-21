@@ -23,13 +23,13 @@
         <inputParameters>
             <name>emailSubject</name>
             <value>
-                <stringValue>Case Escalation</stringValue>
+                <stringValue>&quot;Urgent: Case Escalated to Manager – Immediate Attention Required&quot;</stringValue>
             </value>
         </inputParameters>
         <inputParameters>
             <name>emailBody</name>
             <value>
-                <stringValue>Case Escalated now</stringValue>
+                <elementReference>bodyContent</elementReference>
             </value>
         </inputParameters>
         <nameSegment>emailSimple</nameSegment>
@@ -58,6 +58,7 @@
             <label>Case status still new</label>
         </rules>
     </decisions>
+    <description>Updated by Saurabh - 19march</description>
     <environments>Default</environments>
     <interviewLabel>Case_Escalation_Milestone_2 {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Case_Escalation_Milestone 2</label>
@@ -140,6 +141,14 @@
         </connector>
     </start>
     <status>Active</status>
+    <textTemplates>
+        <name>bodyContent</name>
+        <isViewedAsPlainText>true</isViewedAsPlainText>
+        <text>Dear {!GetCase.Owner:User.Manager.FirstName} {!GetCase.Owner:User.Manager.LastName},
+This is to inform you that Case # {!GetCase.CaseNumber} has been escalated due to no action taken by the assigned service agent within the required timeframe. Please review and take the necessary action at the earliest.
+
+https://encalm--encalmdev.sandbox.lightning.force.com/{!GetCase.Id}</text>
+    </textTemplates>
     <variables>
         <description>Case Id</description>
         <name>case_id</name>

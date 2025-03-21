@@ -13,26 +13,17 @@ global class MDEN_GetProductVariantDetail {
             //Uncomment below to call via Postman
             RestRequest request = RestContext.request;
             MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
-            
-            
-            //Uncomment below to call via Developer console using : MDEN_GetProductVariantDetail.getProductVariantDetails();
-          /*  String reqBody =' { ' +
-                            ' "id" : "0"' +
-            ' } ';	
-            
-            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(reqBody, MDEN_GetRequestWrapper.class);*/
-			         
-			system.debug('requestMap==>'+requestMap);
+            system.debug('requestMap==>'+requestMap);
             //Parsing data from requestMap
             String id = (String)requestMap.id; 
 			system.debug('requestMap.get==>'+requestMap.id);
-            
             //Fetch the product variants
             List<PricebookEntry> productFamily = [select id, product2.family
                                                     From PricebookEntry 
                                                     Where product2.ProductCode = :id limit 1];
             
              List<PricebookEntry> productPrice = [select id,
+                                                        Surcharge_Amount__c,
                                                         product2.name,
                                                         product2.id,
                                                         unitPrice,
@@ -66,7 +57,7 @@ global class MDEN_GetProductVariantDetail {
                     //pvd.surcharge_applicable_hours = Integer.valueOf(surcharge_applicable_hours);
                     //pvd.surcharge_amount = new List<String>{productPrice.Airline_Id__r.name, productPrice.Airline_Id__r.Airline_Name__c};
                     //pvd.min_lead_time_booking_hrs = productPrice.Arrival_Terminal__r.Name;
-                    
+                     pvd.surcharge_amount = pbe.Surcharge_Amount__c;
                     datalist.add(pvd);
                 }
             

@@ -255,3 +255,31 @@ span {
         flex: 1 1 100%; /* On small screens, items can stack */
     }
 }
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute;
+    width: 180px;
+    z-index: 10; /* Bring the dropdown above other elements */
+    max-height: 200px; /* Set the maximum height */
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+.fixed-width {
+    width: 200px; /* Set a fixed width for the input and combobox fields */
+}
+
+.input-field {
+    box-sizing: border-box;
+    width: 100%;
+}

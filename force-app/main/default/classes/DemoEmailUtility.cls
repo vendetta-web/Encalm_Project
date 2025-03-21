@@ -15,6 +15,8 @@ public class DemoEmailUtility {
         public String recordId;
         @InvocableVariable
         public String Body;
+        @InvocableVariable
+        public String Subject; 
     }
 
     @InvocableMethod(label='Invoke Email Utility' description='Send Bulk Emails')
@@ -38,7 +40,8 @@ public class DemoEmailUtility {
             if (String.isNotBlank(input.toAddresses)) {
                 toAddressList = input.toAddresses.split(',');
             }
-            toAddressList.add(System.Label.DefaultToAddress);
+            //commented by saurabh 18March
+            //toAddressList.add(System.Label.DefaultToAddress);
 
             Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
             mail.setToAddresses(Test.isRunningTest() ? new List<String>{'test123xyz@test.com'} : toAddressList);
@@ -54,7 +57,7 @@ public class DemoEmailUtility {
             if (oweaMap.containsKey(orgWideEmail)) {
                 mail.setOrgWideEmailAddressId(oweaMap.get(orgWideEmail).Id);
             }
-
+			mail.setSubject(input.Subject);
             mail.setHtmlBody(input.Body);
             mail.setReplyTo(String.isNotBlank(input.fromAddress) ? input.fromAddress : System.Label.DefaultLeadReplyToEmail);
 

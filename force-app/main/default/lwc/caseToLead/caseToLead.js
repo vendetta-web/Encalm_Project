@@ -30,25 +30,21 @@ const FIELDS = [
 
 export default class CaseToLead extends NavigationMixin(LightningElement) {
     @api recordId;
+     resolutionNotes = 'Converted to Lead';
     caseData;
     actionMessage = '';
     isSuccess = true;
     isNavigatingToLead = false;
     openCaseClosedScreen = false;
+
     @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
     wiredCase({ error, data }) {
         if (data) {
-            console.log('DataLine36 : ', JSON.stringify(data));
             this.caseData = data.fields;
-            //this.checkIfLeadExists(); 
-            console.log('42 ' + this.caseData?.CASE_INQUIRY_TYPE?.value);
             if (this.caseData?.CASE_INQUIRY_TYPE?.value !== 'Booking') {
 
-                console.log('45 ' + this.caseData?.CASE_INQUIRY_TYPE?.value);
-                this.openCaseClosedScreenStart();
+                this.updateCaseAndNavigate();
             } else {
-                console.log('49 ' + this.caseData?.CASE_INQUIRY_TYPE?.value);
-
                 this.navigateToLeadWithPrefill();
             }
             // // Directly navigate to lead creation
@@ -58,29 +54,19 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         }
     }
 
-    
-    openCaseClosedScreenStart() {
-        this.openCaseClosedScreen = true;
-    }
-    handleSubmit(event) {
-        event.preventDefault();
-        // Get data from submitted form
-        const fields = event.detail.fields;
-        fields.Status = 'Closed';
+    updateCaseAndNavigate() {
+        const fields = {};
+        fields.Id = this.recordId;
+        //fields.Status = 'Closed';
+        fields.Resolution_Notes__c = this.resolutionNotes;
 
-        // You need to submit the form after modifications
-        this.template
-            .querySelector('lightning-record-edit-form').submit(fields);
-        this.openCaseClosedScreen = false;
-        this.navigateToLeadWithPrefill();
-
-    }
-    hideModalBox(event) {
-        event.preventDefault();
-        //event.stopPropagation(); 
-        this.openCaseClosedScreen = false;
-        this.dispatchEvent(new CloseActionScreenEvent());
-
+        updateRecord({ fields })
+            .then(() => {
+                this.navigateToLeadWithPrefill();
+            })
+            .catch(error => {
+                console.error('Error updating case:', error);
+            });
     }
 
 
@@ -92,9 +78,6 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
         const phone = this.caseData?.SuppliedPhone?.value || '';
         const caseId = this.caseData?.Id?.value;
         const caseNumber = this.caseData?.CaseNumber?.value;
-
-        console.log('Navigating to Lead with Case ID:', caseId);
-        console.log('Case Number:', caseNumber);
 
         const [firstName, ...lastNameParts] = name.split(' ');
         const lastName = lastNameParts.join(' ') || 'Unknown';
@@ -117,7 +100,6 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
             LeadSource: this.caseData?.Origin?.value
         };
         this.isNavigatingToLead = true;
-        console.log('isNavigatingToLead : ', this.isNavigatingToLead);
         this[NavigationMixin.Navigate]({
             type: 'standard__objectPage',
             attributes: {

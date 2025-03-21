@@ -19,7 +19,7 @@
     border: 1px solid #ccc;
     background-color: #fff;
     position: absolute;
-    width: 100%;
+    width: 45%;
     z-index: 10; /* Bring the dropdown above other elements */
     max-height: 200px; /* Set the maximum height */
     overflow-y: auto; /* Add vertical scrolling */
@@ -34,6 +34,15 @@
     background-color: #f0f0f0;
 }
 
+.dropdownFlight {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute;
+    width: 29%;
+    z-index: 10; /* Bring the dropdown above other elements */
+    max-height: 200px; /* Set the maximum height */
+    overflow-y: auto; /* Add vertical scrolling */
+}
 
 
 

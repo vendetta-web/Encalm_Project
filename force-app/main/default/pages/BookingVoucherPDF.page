@@ -1,0 +1,107 @@
+<apex:page controller="MDEN_PdfAttachmentController" renderAs="pdf" applyBodyTag="false" showHeader="false">
+    <html>
+        <head>
+            <style>
+                body { font-family: Segoe UI, sans-serif; margin: 20px; }
+                h2, h3 { text-align: center; }
+                .header { text-align: center; }
+                .bold { font-weight: bold; }
+                .box { border: 1px solid #000; padding: 10px; margin-bottom: 15px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                th, td { border: 1px solid black; padding: 5px; text-align: left; }
+                th { background-color: #f2f2f2; text-align: center; }
+                .right { text-align: right; }
+                .center { text-align: center; }
+            </style>
+        </head>
+        <body>
+            <table width="100%">
+                <tr>
+                    <!-- Logo on the Left -->
+                    <td width="60%" style="text-align: center;">
+                        <apex:image url="{!$Resource.Encalm_Logo}" width="200" height="200"/>
+                    </td>
+                    <!-- Address on the Right -->
+                    <td width="40%">
+                        <h2>Proforma Invoice</h2>
+                        <p>ENCALM HOSPITALITY PRIVATE LIMITED</p>
+                        <p>B1/H3, MATHURA ROAD, MOHAN CO-OPERATIVE INDUSTRIAL AREA, NEW DELHI-110044, INDIA</p>
+                        <p>GST - 07AAGCE6783M1ZZ</p>
+                    </td>
+                </tr>
+            </table>
+            <hr style="border: 1px solid black; margin: 10px 0;"/>
+            <table width="100%">
+                <tr>
+                    <td width="70%" style="text-align: left;">
+                        <p><span class="bold">BILLED TO:</span> {!opp.Account.Name}</p>
+                        <p>{!opp.Account.BillingState} </p>
+                        <p>{!opp.Account.BillingCountry}</p>  
+                        <p><span class="bold">State Code:</span> need to be discussed</p>
+                		<p><span class="bold">Place Of Supply:</span> need to be discussed</p>
+                        <p><span class="bold">GSTIN:</span> {!opp.Account.GST__c}</p>
+                    </td>
+                    
+                    <td width="30%">
+                        <p><span class="bold">PI No:</span>{!opp.Name}</p>
+                		<p><span class="bold">PI Date:</span>{!opp.CreatedDate}></p>
+                        <p><span class="bold">Whether the tax is payable on Reverse Charge Basis ?:</span> NO</p>
+                    </td>
+                </tr>
+            </table>
+
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid black;">
+                <tr>
+                    <th class="center">Annexure 1: Service Details</th>
+                </tr>
+                <tr>
+                    <th>Sr.No</th><th>Description</th><th>HSN/HAC</th><th>Quantity</th><th>Unit Price</th><th>Taxes</th><th>Amount</th>
+                </tr>
+                <apex:repeat value="{!invoice.Items}" var="item">
+                    <tr>
+                        <td class="center">{!item.SrNo}</td>
+                        <td>{!item.Description}</td>
+                        <td class="center">{!item.HSN}</td>
+                        <td class="center">{!item.Quantity}</td>
+                        <td class="right">{!item.UnitPrice}</td>
+                        <td class="right">{!item.Taxes}</td>
+                        <td class="right">{!item.Amount}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+			
+            <table border="1px">
+                <tr>
+                    <th class="center">Annexure 2: Guest Details</th>
+                </tr>
+                <tr><th>Source</th><th>Sr. No</th><th>Guest Name</th><th>Travel Class</th><th>Age</th><th>PNR No.</th></tr>
+                <apex:repeat value="{!passengers}" var="passengerWrapper">
+                    <tr>
+                        <td>{!opp.Name}</td>
+                        <td class="center">{!passengerWrapper.SrNo}</td>
+                        <td>{!passengerWrapper.Passenger.Name}</td>
+                        <td>need to discuss</td>
+                        <td class="center">{!passengerWrapper.Passenger.Age__c}</td>
+                        <td class="center">{!passengerWrapper.Passenger.Airline_PNR__c}</td>
+                    </tr>
+                </apex:repeat>
+            </table>
+            
+            <table border="1px">
+                <tr>
+                    <th class="center">Annexure 3: Flight Details</th>
+                </tr>
+                <tr><th>Source</th><th>Flight Info</th><th>Airlines</th><th>Flight No</th><th>Flight Date and Time</th><th>Terminal</th><th>Payment Method</th><th>Payment Info</th></tr>
+                <tr>
+                    <td>{!invoice.FlightInfo}</td>
+                    <td>{!invoice.Airlines}</td>
+                    <td>{!invoice.FlightNo}</td>
+                    <td>{!invoice.FlightDateTime}</td>
+                    <td>{!invoice.Terminal}</td>
+                </tr>
+            </table>
+
+            
+        </body>
+    </html>
+</apex:page>

@@ -577,6 +577,66 @@
                 <identifier>RecordMilestone_Status__cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Rescheduling_Charges__c</fieldItem>
+                <identifier>RecordRescheduling_Charges__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Arrival_Service_Time__c</fieldItem>
+                <identifier>RecordArrival_Service_Time__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Departure_Service_Time__c</fieldItem>
+                <identifier>RecordDeparture_Service_Time__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Number_of_Rescheduling_Done__c</fieldItem>
+                <identifier>RecordNumber_of_Rescheduling_Done__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Commitment_Date__c</fieldItem>
+                <identifier>RecordCommitment_Date__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Departure_Airline__c</fieldItem>
+                <identifier>RecordDeparture_Airline__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Arrival_Airline__c</fieldItem>
+                <identifier>RecordArrival_Airline__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Departure_Terminal__c</fieldItem>
+                <identifier>RecordDeparture_Terminal__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Arrival_Terminal__c</fieldItem>
+                <identifier>RecordArrival_Terminal__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Payment_Ref_No__c</fieldItem>
+                <identifier>RecordPayment_Ref_No__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-bda0868e-f60d-43d1-bc15-da4b2cf8d682</name>
         <type>Facet</type>
     </flexiPageRegions>

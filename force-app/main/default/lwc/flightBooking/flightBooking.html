@@ -45,28 +45,42 @@
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Arriving Airport</label>
-                            <lightning-combobox required name="Service_Airport__c" data-id="arrivingAirportr" variant="label-hidden" onblur={handleFieldChange}
-                                options={baseAirportOptions} value={arrivingAirport} onchange={handleArrivingAirportChange}>
-                            </lightning-combobox>
+                                <lightning-input 
+                                    data-id="arrivingAirportr"
+                                    onblur={handleDropDownClose}
+                                    variant="label-hidden"
+                                    value={arrivingAirportLabel} 
+                                    onchange={handleArrivingAirportChange} 
+                                    onfocus={handleServicedropdownOpen} 
+                                    required>
+                                </lightning-input>
+                                <!-- Display filtered options in a dropdown-style list -->
+                                <template if:true={showServiceDropdown}>
+                                    <div class="dropdown">
+                                        <template for:each={filteredServiceOptions} for:item="option">
+                                            <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleServiceOptionSelect}>
+                                                {option.label}
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Departure Airport</label>
                                 <lightning-input 
                                     data-id="departureAirport"
-                                    name="Departure_Airport__c"
-                                    onblur={handleFieldChange}
+                                    onblur={handleDropDownClose}
                                     variant="label-hidden"
-                                    label="Departure Airport" 
-                                    value={departureAirport} 
-                                    onchange={handleDepartureAirportChange} 
-                                    onfocus={handledropdownOpen} 
+                                    value={departureAirportLabel} 
+                                    onchange={handleDepartureAirportChange}
+                                    onfocus={handleOtherdropdownOpen} 
                                     required>
                                 </lightning-input>
                                 <!-- Display filtered options in a dropdown-style list -->
-                                <template if:true={showDropdown}>
+                                <template if:true={showOtherDropdown}>
                                     <div class="dropdown">
-                                        <template for:each={filteredOptions} for:item="option">
-                                            <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleOptionSelect}>
+                                        <template for:each={filteredOtherOptions} for:item="option">
+                                            <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleOtherOptionSelect}>
                                                 {option.label}
                                             </div>
                                         </template>
@@ -87,8 +101,26 @@
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Flight Number</label>
-                            <lightning-combobox required style="font-size: 14px;" data-id="flightNumber" variant="label-hidden" options={flightNumberOptions}
-                            onblur={handleFieldChange} name="Flight_Number_Arrival__c" value={flightNumber} onchange={handleFlightNumberChange}></lightning-combobox>
+                            <lightning-input 
+                                data-id="flightNumber"
+                                name="Flight_Number_Arrival__c"
+                                onblur={handleFieldChange}
+                                variant="label-hidden"
+                                value={flightNumber} 
+                                onchange={handleFlightNumberChange} 
+                                onfocus={handleFlightDropdownOpen} 
+                                required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showFlightNumber}>
+                                <div class="dropdownFlight">
+                                    <template for:each={filteredFlightOptions} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleFlightOptionSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">STA Time</label>
@@ -142,13 +174,45 @@
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Departure Airport</label>
-                            <lightning-combobox  required name="Service_Airport__c" variant="label-hidden" options={baseAirportOptions}
-                            onblur={handleFieldChange} value={arrivingAirport} onchange={handleArrivingAirportChange}></lightning-combobox>
+                            <lightning-input 
+                                variant="label-hidden"
+                                onblur={handleDropDownClose}
+                                value={arrivingAirportLabel} 
+                                onchange={handleArrivingAirportChange} 
+                                onfocus={handleServicedropdownOpen} 
+                                required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showServiceDropdown}>
+                                <div class="dropdown">
+                                    <template for:each={filteredServiceOptions} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleServiceOptionSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Destination Airport</label>
-                            <lightning-combobox  required name="Arriving_Airport__c" variant="label-hidden" options={allAirportOptions}
-                            onblur={handleFieldChange} value={departureAirport} onchange={handleDepartureAirportChange}></lightning-combobox>
+                            <lightning-input 
+                                    variant="label-hidden"
+                                    onblur={handleDropDownClose}
+                                    value={departureAirportLabel} 
+                                    onchange={handleDepartureAirportChange}
+                                    onfocus={handleOtherdropdownOpen} 
+                                    required>
+                                </lightning-input>
+                                <!-- Display filtered options in a dropdown-style list -->
+                                <template if:true={showOtherDropdown}>
+                                    <div class="dropdown">
+                                        <template for:each={filteredOtherOptions} for:item="option">
+                                            <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleOtherOptionSelect}>
+                                                {option.label}
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout>
@@ -166,8 +230,26 @@
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Flight Number</label>
-                            <lightning-combobox  required name="Flight_Number_Departure__c" data-id="flightNumber" variant="label-hidden" options={flightNumberOptions}
-                                onblur={handleFieldChange} value={flightNumber} onchange={handleFlightNumberChange}></lightning-combobox>
+                            <lightning-input 
+                                data-id="flightNumber"
+                                name="Flight_Number_Departure__c"
+                                onblur={handleFieldChange}
+                                variant="label-hidden"
+                                value={flightNumber} 
+                                onchange={handleFlightNumberChange} 
+                                onfocus={handleFlightDropdownOpen} 
+                                required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showFlightNumber}>
+                                <div class="dropdownFlight">
+                                    <template for:each={filteredFlightOptions} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleFlightOptionSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">STD Time</label>
@@ -221,20 +303,68 @@
                     <lightning-layout multiple-rows="true">
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Select Transit Via</label>
-                            <lightning-combobox  required name="Service_Airport__c" variant="label-hidden" options={baseAirportOptions} value={transitAirport}
-                            onblur={handleFieldChange} onchange={handleTransitAirportChange}></lightning-combobox>
+                            <lightning-input 
+                                variant="label-hidden"
+                                onblur={handleDropDownClose}
+                                value={transitAirportLabel} 
+                                onchange={handleTransitAirportChange} 
+                                onfocus={handleServicedropdownOpen} 
+                                required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showServiceDropdown}>
+                                <div class="dropdown">
+                                    <template for:each={filteredServiceOptions} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleServiceOptionSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Arriving From</label>
-                            <lightning-combobox  required name="Departure_Airport__c" variant="label-hidden" options={allAirportOptionsArrFrom} value={departureAirport}
-                            onblur={handleFieldChange} onchange={handleDepartureAirportChange}></lightning-combobox>
+                            <lightning-input 
+                                    variant="label-hidden"
+                                    onblur={handleDropDownClose}
+                                    value={departureAirportLabel} 
+                                    onchange={handleDepartureAirportChange}
+                                    onfocus={handleArrFrmdropdownOpen} 
+                                    required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showTransitDepDropdown}>
+                                <div class="dropdown">
+                                    <template for:each={filteredAirportOptionsArrFrom} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleOtherOptionSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Departing To</label>
-                            <lightning-combobox  required name="Arriving_Airport__c" variant="label-hidden" options={allAirportOptionsDepTo} value={arrivingAirport}
-                            onblur={handleFieldChange} onchange={handleArrivingAirportChange}></lightning-combobox>
+                            <lightning-input 
+                                    variant="label-hidden"
+                                    onblur={handleDropDownClose}
+                                    value={arrivingAirportLabel} 
+                                    onchange={handleArrivingAirportChange}
+                                    onfocus={handleDepTodropdownOpen} 
+                                    required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showTransitArrDropdown}>
+                                <div class="dropdown">
+                                    <template for:each={filteredAirportOptionsDepTo} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleTransitDepToSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Select Sector</label>
@@ -250,8 +380,26 @@
                     </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Flight Number</label>
-                            <lightning-combobox  required name="Flight_Number_Arrival__c" data-id="flightNumber" variant="label-hidden" options={flightNumberOptionsArrival}
-                            onblur={handleFieldChange} value={flightNumberArrival} onchange={handleFlightNumberChangeArrival}></lightning-combobox>
+                            <lightning-input 
+                                data-id="flightNumber"
+                                name="Flight_Number_Arrival__c"
+                                onblur={handleFieldChange}
+                                variant="label-hidden"
+                                value={flightNumberArrival} 
+                                onchange={handleFlightNumberChangeArrival} 
+                                onfocus={handleArrivalFlightDropdownOpen} 
+                                required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showFlightNumberArrival}>
+                                <div class="dropdownFlight">
+                                    <template for:each={filteredFlightNumberOptionsArrival} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleArrivalFlightOptionSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">STA Time</label>
@@ -265,8 +413,26 @@
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Flight Number</label>
-                            <lightning-combobox  required name="Flight_Number_Departure__c" data-id="flightNumber" variant="label-hidden" options={flightNumberOptionsDeparture}
-                            onblur={handleFieldChange} value={flightNumberDeparture} onchange={handleFlightNumberChangeDeparture}></lightning-combobox>
+                            <lightning-input 
+                                data-id="flightNumber"
+                                name="Flight_Number_Departure__c"
+                                onblur={handleFieldChange}
+                                variant="label-hidden"
+                                value={flightNumberDeparture} 
+                                onchange={handleFlightNumberChangeDeparture} 
+                                onfocus={handleDepartureFlightDropdownOpen} 
+                                required>
+                            </lightning-input>
+                            <!-- Display filtered options in a dropdown-style list -->
+                            <template if:true={showFlightNumberDepart}>
+                                <div class="dropdownFlight">
+                                    <template for:each={filteredFlightNumberOptionsDeparture} for:item="option">
+                                        <div key={option.value} class="dropdown-item" data-value={option.value} data-label={option.label} onmousedown={handleDepartureFlightOptionSelect}>
+                                            {option.label}
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">STD Time</label>

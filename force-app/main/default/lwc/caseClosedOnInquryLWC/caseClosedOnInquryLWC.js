@@ -2,7 +2,7 @@ import { LightningElement, api, wire, track } from 'lwc';
 import { subscribe, unsubscribe } from 'lightning/empApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, updateRecord } from 'lightning/uiRecordApi';
-import INQUIRY_TYPE_FIELD from '@salesforce/schema/Case.Inquiry_Type__c';
+//import INQUIRY_TYPE_FIELD from '@salesforce/schema/Case.Inquiry_Type__c';
 import STATUS_FIELD from '@salesforce/schema/Case.Status';
 import ID_FIELD from '@salesforce/schema/Case.Id';
 
@@ -12,11 +12,11 @@ export default class CaseClosedOnInquiryLWC extends LightningElement {
     @api recordId;
     @track openPopup = false;
 
-    @wire(getRecord, { recordId: '$recordId', fields: [INQUIRY_TYPE_FIELD] })
+    //@wire(getRecord, { recordId: '$recordId', fields: [INQUIRY_TYPE_FIELD] })
     caseRecord;
 
     get inquiryType() {
-        return this.caseRecord?.data?.fields?.Inquiry_Type__c?.value || '';
+        //return this.caseRecord?.data?.fields?.Inquiry_Type__c?.value || '';
     }
 
     renderedCallback() {
@@ -31,7 +31,7 @@ export default class CaseClosedOnInquiryLWC extends LightningElement {
             if( JSON.stringify(response)){
              this.openPopup = false;
             }
-            this.handleMessage(response);
+            //this.handleMessage(response);
         };
 
         subscribe(this.channelName, -1, messageCallback).then(response => {
@@ -72,7 +72,7 @@ export default class CaseClosedOnInquiryLWC extends LightningElement {
 
         const fields = {};
         fields[ID_FIELD.fieldApiName] = this.recordId;
-        fields[STATUS_FIELD.fieldApiName] = 'Closed';
+        //fields[STATUS_FIELD.fieldApiName] = 'Closed';
 
         const recordInput = { fields };
 

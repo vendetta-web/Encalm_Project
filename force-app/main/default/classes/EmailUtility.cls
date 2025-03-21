@@ -31,7 +31,8 @@ public without sharing class EmailUtility {
         if (toAddress == null) {
             toAddress = new List<String>();
         }
-        toAddress.add(System.Label.DefaultToAddress); // Ensure a default address is always added
+         //commented by saurabh 18March
+            //toAddressList.add(System.Label.DefaultToAddress);
         
         // Retrieve the email template
         EmailTemplate emailTemp;

@@ -42,4 +42,11 @@
         <shortDescription>OrgWideEmailAddress</shortDescription>
         <value>supriya.bassi@maxify.digital</value>
     </labels>
+    <labels>
+        <fullName>Send_Shopping_Email_Subject</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Send Shopping Email Subject</shortDescription>
+        <value>Atithya Meet and Assist Services</value>
+    </labels>
 </CustomLabels>

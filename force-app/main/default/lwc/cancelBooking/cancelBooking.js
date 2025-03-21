@@ -112,7 +112,8 @@ export default class CancelBooking extends NavigationMixin(LightningElement) {
         if (data) {
             this.isLoading = false;  // Data fetched, stop loading
             if(data.length>0) {                
-                this.lineItems = data.map(pd => ({
+                this.lineItems = data
+                .map(pd => ({
                     id: pd.id,
                     oliId: pd.oliId,
                     name: pd.name,

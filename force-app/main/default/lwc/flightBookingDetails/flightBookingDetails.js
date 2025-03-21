@@ -8,13 +8,14 @@ import getOpportunityDetails from '@salesforce/apex/PackageSelectionController.g
 import createOpportunityLineItems from '@salesforce/apex/PackageSelectionController.createOpportunityLineItems';
 import savePassengerDetails from '@salesforce/apex/PackageSelectionController.savePassengerDetails';
 import savePlacardDetails from '@salesforce/apex/PackageSelectionController.savePlacardDetails';
-import createContentVersion from '@salesforce/apex/MDEN_PdfAttachmentController.createContentVersion';
+//import createContentVersion from '@salesforce/apex/MDEN_PdfAttachmentController.createContentVersion';
 import getTerminalInfo from '@salesforce/apex/PackageSelectionController.getTerminalInfo';
 import getFlightTerminalInfo from '@salesforce/apex/PackageSelectionController.getFlightTerminalInfo';
 import jsPDFLibrary from '@salesforce/resourceUrl/jsPDFLibrary';
 import { loadScript } from 'lightning/platformResourceLoader';
 import { RefreshEvent } from 'lightning/refresh';
 import getPicklistValues from '@salesforce/apex/CustomPicklistController.getNationalityPicklistValues';
+import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
 
 export default class FlightBookingDetails extends NavigationMixin(LightningElement) {
     @api recordId; // Opportunity record ID
@@ -27,7 +28,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     jsPDFInitialized = false;
     isLoading = false;
     getPackage;
-    getAddonDetail;
+    @track getAddonDetail;
     selectedRowIndex = -1;
     selectedAddonRowIndex = -1;
     selectedPackage = '';
@@ -39,7 +40,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     orderSummaryPackage=[];
     orderSummaryAddon=[];
     orderSummary=[];
-    terminalOptions = [];
+    pickupTerminalOptions = [];
+    dropTerminalOptions = [];
     totalAmount=0;
     @track oliFieldValues = {};
     serviceAirport;
@@ -47,6 +49,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     flightDate;
     selectedPassenger;
     nationalityOptions = [];
+    filteredNationalityOptions = [];
     selectedNationality;
 
 
@@ -136,11 +139,36 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
     getTerminals() {
         getTerminalInfo({oppId: this.recordId})
+        /*
           .then(result => {
                 this.terminalOptions = result.map(each => ({
                 label: each.Code__c,
                 value: each.Code__c
             }));
+            })*/
+            .then(result => {
+                // Create a list of all terminals as options
+                const allTerminals = result.map(each => ({
+                    label: each.Code__c,
+                    value: each.Code__c
+                }));
+        
+                // Initialize the options for pickup and drop terminals
+                this.pickupTerminalOptions = [...allTerminals];
+                this.dropTerminalOptions = [...allTerminals];
+        
+                // For each addon, remove the pickupTerminal from dropTerminalOptions and dropTerminal from pickupTerminalOptions
+                this.getAddonDetail.forEach(item => {
+                    if (item.pickupTerminal) {
+                        // Remove pickupTerminal value from dropTerminalOptions
+                        this.dropTerminalOptions = this.dropTerminalOptions.filter(option => option.value !== item.pickupTerminal);
+                    }
+                    if (item.dropTerminal) {
+                        // Remove dropTerminal value from pickupTerminalOptions
+                        this.pickupTerminalOptions = this.pickupTerminalOptions.filter(option => option.value !== item.dropTerminal);
+                    }
+                });
+        
             })
             .catch(error => {
                 console.error('Error fetching terminals:', error);
@@ -151,6 +179,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         getPackageDetails({oppId: this.recordId})
         .then((result) => {
             this.getPackage = result; 
+            console.log('packagelog->> ',JSON.stringify(this.getPackage));
             this.getPackage = result.map((item) => ({
                 ...item, // Spread the existing properties
                 buttonLabel: 'Select' // Add buttonLabel to each item
@@ -173,7 +202,6 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     loadAddonData() {
         getAddOnDetails({oppId: this.recordId})
         .then((result) => {
-            this.getTerminals();
             this.getAddonDetail = result; 
             this.getAddonDetail = result.map((item) => ({
                 ...item, // Spread the existing properties
@@ -183,6 +211,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 pickupDataId: `${item.addOnName}-pickup`,  // Unique data-id for pickup terminal,
                 dropDataId: `${item.addOnName}-drop`,  // Unique data-id for drop terminal
             }));
+            this.getTerminals();
         })
         .catch((error) => {
             console.error(error);
@@ -223,7 +252,6 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         .filter(wrapper => wrapper.buttonLabel === 'Selected') // Filter condition
         .map(wrapper => {
             const numberOfRecords = this.numberOfAdults > this.numberOfChildren ? this.numberOfAdults : this.numberOfChildren; // or any other condition to determine number of records
-            console.log('log->> ',wrapper.infantPackageWrapper);
             // Create an array of records based on the number of adults
             const records = [];
                 records.push({
@@ -430,6 +458,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 nationality: '',
                 passportnumber: '',
                 phone: '',
+                showDropdown: false,
                 isPlacard: i==0 && type == 'Adult' ? true : false
             });
         }
@@ -464,6 +493,73 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         
     }
 
+    handleNationalityChange(event) {
+        const index = event.target.dataset.index;    
+        // Logic for searching the key in the picklist for Nationality
+        const searchKey = event.target.value.toLowerCase();
+        // Filter nationality options based on the searchKey
+        this.filteredNationalityOptions = this.nationalityOptions.filter(option =>
+            option.label.toLowerCase().includes(searchKey)
+        );
+        // Create a shallow copy of the guests array
+        const updatedGuests = [...this.guestRows];
+        // Update the nationality for the specific guest in the copy
+        updatedGuests[index].nationality = event.target.value;
+        // Reassign the modified array to trigger reactivity in LWC
+        this.guestRows = updatedGuests;
+    }
+
+    handleNationalityDropdownOpen(event) {
+        const index = event.target.dataset.index;
+        // Create a shallow copy of the guestRows array
+        const updatedGuestRows = [...this.guestRows];
+
+        // Update showDropdown for the correct guest based on the index
+        updatedGuestRows.forEach((guest, i) => {
+            if (i === parseInt(index)) {
+                guest.nationality = '';
+                guest.showDropdown = true;  // Open the dropdown for this guest
+            } else {
+                guest.showDropdown = false;  // Close dropdowns for all other guests
+            }
+        });
+
+        // Reassign updatedGuestRows back to guestRows (this triggers reactivity)
+        this.guestRows = updatedGuestRows;
+        this.filteredNationalityOptions = this.nationalityOptions;
+    }
+
+    handleDropDownClose(event) {
+        const index = event.target.dataset.index;
+        // Create a shallow copy of the guestRows array
+        const updatedGuestRows = [...this.guestRows];
+        // Update showDropdown to false for the specific guest
+        updatedGuestRows.forEach((guest, i) => {
+            if (i === parseInt(index)) {
+                guest.showDropdown = false;  // Close the dropdown for this guest
+            }
+        });
+        // Reassign updatedGuestRows back to guestRows (this triggers reactivity)
+        this.guestRows = updatedGuestRows;
+    }
+
+    handleNationalityOptionSelect(event) {
+        const selectedValue = event.target.dataset.value;
+        const index = event.target.dataset.index;
+
+        // Create a shallow copy of the guestRows array
+        const updatedGuestRows = [...this.guestRows];
+
+        // Update the nationality for the selected guest
+        updatedGuestRows[index].nationality = selectedValue;
+
+        // Close the dropdown after selection
+        updatedGuestRows[index].showDropdown = false;
+
+        // Reassign updatedGuestRows back to guestRows (this triggers reactivity)
+        this.guestRows = updatedGuestRows;
+    }
+
     handlePlacardRadioButtonChange(event) {
         const selectedPassengerId = event.target.value;  
         // Update guestRows: set isPlacard to true for selected passenger, false for others
@@ -486,6 +582,12 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         if (item) {
             item[field] = value;
         }
+        // Update the value for pack.dropTerminal or pack.pickupTerminal
+        if (field === 'drop') {
+            item.dropTerminal = value; // Update the dropTerminal in the pack
+        } else if (field === 'pickup') {
+            item.pickupTerminal = value; // Update the pickupTerminal in the pack
+        }
     }
 
     //to get field values to save in opp record
@@ -505,7 +607,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.selectedPassenger.lastname = event.target.value;
     }
     handleMobChange(event) {
-        this.selectedPassenger.mobile = event.target.value;
+        this.selectedPassenger.phone = event.target.value;
     }
 
      // Handle the Save action
@@ -594,7 +696,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.showPreview = false;
     }
     //generate PDF file
-    generatePdf() {
+    /*generatePdf() {
         if (this.jsPDFInitialized) {
             this.isLoading = true;
             // Make sure to correctly reference the loaded jsPDF library.
@@ -687,6 +789,18 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             console.error('jsPDF library not initialised');
         }
         this.isLoading = false;
+    }*/
+
+    generatePdf(){
+         generateAndSavePDF({ recordId: this.recordId })
+            .then(fileId => {
+                this.showToast('Success', 'PDF generated and saved!', 'success');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.showToast('Error', 'Failed to generate PDF.', 'error');
+            });
+
     }
 
     // Helper function to convert ArrayBuffer to Base64

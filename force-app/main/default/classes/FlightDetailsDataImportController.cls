@@ -2,13 +2,17 @@ public class FlightDetailsDataImportController {
     @AuraEnabled
     public static void importCSVFile(String csvString, String airportCodeFromFileName) {
         List<String> rows = csvString.split('\\n');
-        Map<String, String> daysOfWeekMap = new Map<String, String>{'Sunday' => '1', 'Monday' => '2', 'Tuesday' => '3', 'Wednesday' => '4', 'Thursday' => '5', 'Friday' => '6', 'Saturday' => '7'};
-        Map<String, Map<String, Map<String, Flight_Detail__c>>> flightDetailsMap = new Map<String, Map<String, Map<String, Flight_Detail__c>>>();
+        Map<String, String> daysOfWeekMap = new Map<String, String>{'Monday' => '1', 'Tuesday' => '2', 'Wednesday' => '3', 'Thursday' => '4', 'Friday' => '5', 'Saturday' => '6', 'Sunday' => '7'};
+        
+        //Map<String, Map<String, Map<String, Flight_Detail__c>>> flightDetailsMap = new Map<String, Map<String, Map<String, Flight_Detail__c>>>();
+        Map<String, Flight_Detail__c> flightDetailsMap = new Map<String, Flight_Detail__c>();
+        Map<String, Flight_Schedule__c> flightScheduleMap = new Map<String, Flight_Schedule__c>();
+        Map<String, Transit_Flight_Detail__c> transitFlightDetailMap = new Map<String, Transit_Flight_Detail__c>();
 
         Map<String, Airline__c> airlineMap = new Map<String, Airline__c>();
         Map<String, Airport__c> airportMap = new Map<String, Airport__c>();
         Map<String, Map<String, Terminal__c>> terminalMap = new Map<String, Map<String, Terminal__c>>();
-        Map<Integer, List<Id>> rowVsDepartureArrivalFlightIds = new Map<Integer, List<Id>>();
+      //  Map<Integer, List<Id>> rowVsDepartureArrivalFlightIds = new Map<Integer, List<Id>>();
 
         List<Flight_Detail__c> flightDetailsToInsert = new List<Flight_Detail__c>();
         List<Flight_Schedule__c> flightSchedulesToInsert = new List<Flight_Schedule__c>();
@@ -28,10 +32,13 @@ public class FlightDetailsDataImportController {
         String frequency;
         Date fromDate;
         Date toDate;
+        Date today = Date.today();
 
-        try{
+        //try{
             for(Flight_Detail__c fdetail : [SELECT id, Flight_Number__c, Arrival_Airport__c, Departure_Airport__c FROM Flight_Detail__c LIMIT 49999]){
-            if (!flightDetailsMap.containsKey(fdetail.Flight_Number__c)) {
+                String fdetailKey = fdetail.Flight_Number__c +'_'+ fdetail.Arrival_Airport__c +'_'+ fdetail.Departure_Airport__c;
+                flightDetailsMap.put(fdetailKey, fdetail);
+            /*if (!flightDetailsMap.containsKey(fdetail.Flight_Number__c)) {
                     flightDetailsMap.put(fdetail.Flight_Number__c, new Map<String, Map<String, Flight_Detail__c>>());
                 }
                 if (!flightDetailsMap.get(fdetail.Flight_Number__c).containsKey(fdetail.Arrival_Airport__c)) {
@@ -39,7 +46,24 @@ public class FlightDetailsDataImportController {
                 }
                 if (!flightDetailsMap.get(fdetail.Flight_Number__c).get(fdetail.Arrival_Airport__c).containsKey(fdetail.Departure_Airport__c)) {
                     flightDetailsMap.get(fdetail.Flight_Number__c).get(fdetail.Arrival_Airport__c).put(fdetail.Departure_Airport__c, fdetail);
-                }
+                }*/
+            }
+
+            for(Flight_Schedule__c fsch : [SELECT id, Flight_Detail__c, Flight_Date__c, Departure_Terminal__c, Arrival_Terminal__c, STD__c, STA__c FROM Flight_Schedule__c where Flight_Date__c >= :today LIMIT 49999]){
+                String depTerminal = fsch.Departure_Terminal__c;
+                String arrTerminal = fsch.Arrival_Terminal__c;
+                String fschKey;
+                if(depTerminal != '')
+                    fschKey = fsch.Flight_Detail__c +'_'+ fsch.Flight_Date__c +'_'+ fsch.Departure_Terminal__c +'_'+ fsch.STD__c;
+                else if(arrTerminal != '')
+                    fschKey = fsch.Flight_Detail__c +'_'+ fsch.Flight_Date__c +'_'+ fsch.Arrival_Terminal__c +'_'+ fsch.STA__c;
+                if(fschKey != null)
+                    flightScheduleMap.put(fschKey, fsch);   
+            }
+
+            for(Transit_Flight_Detail__c transit : [SELECT Id, Transit_Airport__c, Main_Flight__c, Connecting_Flight__c FROM Transit_Flight_Detail__c WHERE Main_Flight__c != null AND Connecting_Flight__c != null LIMIT 49999]){
+                String transitKey = transit.Transit_Airport__c +'_'+ transit.Main_Flight__c +'_'+ transit.Connecting_Flight__c; 
+                transitFlightDetailMap.put(transitKey, transit);
             }
 
             for(Airline__c aline : [SELECT id, Airline_Code__c, Airline_Name__c  FROM Airline__c LIMIT 49999]){
@@ -61,7 +85,6 @@ public class FlightDetailsDataImportController {
                 }
             }
 
-            System.debug('rows.size()-->'+rows.size());
             for (Integer i = 1; i < rows.size(); i++) { // Skipping header row
                 List<String> columns = rows[i].split(',');
                 if (columns.size() < 11) continue;
@@ -74,13 +97,16 @@ public class FlightDetailsDataImportController {
 
                 // Insert the Flight_Detail__c record if it is not present in the system (chekcing flight Number, Arrival & Destination Airport values to find the existing record)
                 if(flightNumberDeparture != null && flightNumberDeparture != ''){
-                    if(!flightDetailsMap.containsKey(flightNumberDeparture) || !flightDetailsMap.get(flightNumberDeparture).containsKey(airportMap.get(destination).Id)
-                    || !flightDetailsMap.get(flightNumberDeparture).get(airportMap.get(destination).Id).containsKey(airportMap.get(airportCodeFromFileName).Id))
+                    
+                  //  if(!flightDetailsMap.containsKey(flightNumberDeparture) || !flightDetailsMap.get(flightNumberDeparture).containsKey(airportMap.get(destination).Id)
+                  //  || !flightDetailsMap.get(flightNumberDeparture).get(airportMap.get(destination).Id).containsKey(airportMap.get(airportCodeFromFileName).Id))
+                    if(!flightDetailsMap.containsKey(flightNumberDeparture +'_'+ airportMap.get(destination).Id +'_'+ airportMap.get(airportCodeFromFileName).Id))
                     {
                         System.debug('--flightNumberDepartue does not exist---');
                         flightDetail = new Flight_Detail__c(
                             Airline_Id__c = airlineMap.get(airline).Id,
                             Flight_Number__c = flightNumberDeparture,
+                            Name = airline + '-' + flightNumberDeparture,
                             Arrival_Airport__c = airportMap.get(destination).Id,
                             Departure_Airport__c = airportMap.get(airportCodeFromFileName).Id
                         );
@@ -89,13 +115,16 @@ public class FlightDetailsDataImportController {
                 }
 
                 if(flightNumberArrival != null && flightNumberArrival != ''){
-                    if(!flightDetailsMap.containsKey(flightNumberArrival) || !flightDetailsMap.get(flightNumberArrival).containsKey(airportMap.get(airportCodeFromFileName).Id)
-                    || !flightDetailsMap.get(flightNumberArrival).get(airportMap.get(airportCodeFromFileName).Id).containsKey(airportMap.get(origin).Id))
+                    
+                    //if(!flightDetailsMap.containsKey(flightNumberArrival) || !flightDetailsMap.get(flightNumberArrival).containsKey(airportMap.get(airportCodeFromFileName).Id)
+                    // || !flightDetailsMap.get(flightNumberArrival).get(airportMap.get(airportCodeFromFileName).Id).containsKey(airportMap.get(origin).Id))
+                    if(!flightDetailsMap.containsKey(flightNumberArrival +'_'+ airportMap.get(airportCodeFromFileName).Id +'_'+ airportMap.get(origin).Id))
                     {
                         System.debug('--flightNumberArrival does not exist---');
                         flightDetail = new Flight_Detail__c(
                             Airline_Id__c = airlineMap.get(airline).Id,
                             Flight_Number__c = flightNumberArrival,
+                            Name = airline + '-' + flightNumberArrival,
                             Arrival_Airport__c = airportMap.get(airportCodeFromFileName).Id, //'DEL',
                             Departure_Airport__c = airportMap.get(origin).Id
                         );
@@ -112,7 +141,10 @@ public class FlightDetailsDataImportController {
 
                 for (Flight_Detail__c fd : flightDetailsToInsert) {
 
-                    if (!flightDetailsMap.containsKey(fd.Flight_Number__c)) {
+                    String key = fd.Flight_Number__c +'_'+ fd.Arrival_Airport__c +'_'+ fd.Departure_Airport__c;
+                    flightDetailsMap.put(key, fd);
+
+                    /*if (!flightDetailsMap.containsKey(fd.Flight_Number__c)) {
                         flightDetailsMap.put(fd.Flight_Number__c, new Map<String, Map<String, Flight_Detail__c>>());
                     }
                     if (!flightDetailsMap.get(fd.Flight_Number__c).containsKey(fd.Arrival_Airport__c)) {
@@ -120,12 +152,12 @@ public class FlightDetailsDataImportController {
                     }
                     if (!flightDetailsMap.get(fd.Flight_Number__c).get(fd.Arrival_Airport__c).containsKey(fd.Departure_Airport__c)) {
                         flightDetailsMap.get(fd.Flight_Number__c).get(fd.Arrival_Airport__c).put(fd.Departure_Airport__c, fd);
-                    }
+                    }*/
                 }
                 System.debug('flightDetailsMap.values()-->'+flightDetailsMap.values());
             }
 
-            // Process Flight_Schedule__c records
+            // Process Flight_Schedule__c and Transit_Flight_Detail__c records
             for (Integer i = 1; i < rows.size(); i++) {
                 List<String> columns = rows[i].split(',');
                 if (columns.size() < 11) continue;
@@ -142,51 +174,65 @@ public class FlightDetailsDataImportController {
                 fromDate = Date.parse(columns[8]);
                 toDate = Date.parse(columns[9]);
             
-                // Ensure flightDetail is retrieved correctly
+                //Process Flight_Schedule__c records for Departing flights    
                 if (flightNumberDeparture != null && flightNumberDeparture != '' )
                 {
-                    if(flightDetailsMap.containsKey(flightNumberDeparture) && flightDetailsMap.get(flightNumberDeparture).containsKey(airportMap.get(destination).Id)
-                    && flightDetailsMap.get(flightNumberDeparture).get(airportMap.get(destination).Id).containsKey(airportMap.get(airportCodeFromFileName).Id))
-
+                    // Ensure flightDetail is retrieved correctly
+                    String flightDetailKey = flightNumberDeparture +'_'+ airportMap.get(destination).Id +'_'+ airportMap.get(airportCodeFromFileName).Id;
+                   // if(flightDetailsMap.containsKey(flightNumberDeparture) && flightDetailsMap.get(flightNumberDeparture).containsKey(airportMap.get(destination).Id)
+                    //&& flightDetailsMap.get(flightNumberDeparture).get(airportMap.get(destination).Id).containsKey(airportMap.get(airportCodeFromFileName).Id))
+                    if(flightDetailsMap.containsKey(flightDetailKey))
                     {
-                        Id flightDetailId = flightDetailsMap.get(flightNumberDeparture).get(airportMap.get(destination).Id).get(airportMap.get(airportCodeFromFileName).Id).Id;
+                        Id flightDetailId = flightDetailsMap.get(flightDetailKey).Id;
+                        Id terminalId = terminalMap.get(airportMap.get(airportCodeFromFileName).Id).get(departureTerminal).Id;
                         Date currentDate = fromDate;
+
                         while (currentDate <= toDate) {
-                            System.debug('currentDate-->'+currentDate);
                             DateTime fromDateTime = (DateTime)currentDate;
                             String dayOfWeek = daysOfWeekMap.get(fromDateTime.format('EEEE'));
-                            System.debug('dayOfWeek-->'+dayOfWeek);
                         
                             if(frequency.contains(dayOfWeek)){
                                 Integer minutes = Integer.valueOf(departureTime.substring(departureTime.length() - 2));
                                 Integer hours = (departureTime.length() > 2) ? Integer.valueOf(departureTime.substring(0, departureTime.length() - 2)) : 0;
+                                Time t = Time.newInstance(hours, minutes, 0, 0);
+                                String k = flightDetailId +'_'+ currentDate +'_'+ terminalId +'_'+ t;
+                                System.debug('key--k-->'+k);
 
-                                flightSchedulesToInsert.add(new Flight_Schedule__c(
+                                // Insert the Flight_Schedule__c record if it is not present in the system (with same flightDetailId, date, termial and time)
+                                if(!flightScheduleMap.containsKey(k)){
+                                    flightSchedulesToInsert.add(new Flight_Schedule__c(
                                         Flight_Detail__c = flightDetailId,
                                         Flight_Date__c = currentDate,
-                                        Departure_Terminal__c = terminalMap.get(airportMap.get(airportCodeFromFileName).Id).get(departureTerminal).Id,
-                                        STD__c = Time.newInstance(hours, minutes, 0, 0)
+                                        Departure_Terminal__c = terminalId,
+                                        STD__c = t
                                     ));
+                                }
+                                
                             }   
                             currentDate = currentDate.addDays(1);
                         } 
-                        if(!rowVsDepartureArrivalFlightIds.containsKey(i))
+                       /* if(!rowVsDepartureArrivalFlightIds.containsKey(i))
                         {
                             rowVsDepartureArrivalFlightIds.put(i, new List<Id>{flightDetailId});
                         }
                         else{
                             rowVsDepartureArrivalFlightIds.get(i).add(flightDetailId);
                         }
-                        System.debug('departure--rowVsDepartureArrivalFlightIds.get(i)-->'+rowVsDepartureArrivalFlightIds.get(i));   
+                        System.debug('departure--rowVsDepartureArrivalFlightIds.get(i)-->'+rowVsDepartureArrivalFlightIds.get(i));  */ 
                     }
                 }
 
+                //Process Flight_Schedule__c records for arriving flights  
                 if (flightNumberArrival != null && flightNumberArrival != '' )
                 {
-                    if(flightDetailsMap.containsKey(flightNumberArrival) && flightDetailsMap.get(flightNumberArrival).containsKey(airportMap.get(airportCodeFromFileName).Id)
-                    && flightDetailsMap.get(flightNumberArrival).get(airportMap.get(airportCodeFromFileName).Id).containsKey(airportMap.get(origin).Id))
+                    String flightDetailKey = flightNumberArrival +'_'+ airportMap.get(airportCodeFromFileName).Id +'_'+ airportMap.get(origin).Id;
+                
+                   // if(flightDetailsMap.containsKey(flightNumberArrival) && flightDetailsMap.get(flightNumberArrival).containsKey(airportMap.get(airportCodeFromFileName).Id)
+                   // && flightDetailsMap.get(flightNumberArrival).get(airportMap.get(airportCodeFromFileName).Id).containsKey(airportMap.get(origin).Id))
+                    if(flightDetailsMap.containsKey(flightDetailKey))
                     {
-                        Id flightDetailId = flightDetailsMap.get(flightNumberArrival).get(airportMap.get(airportCodeFromFileName).Id).get(airportMap.get(origin).Id).Id;
+                        Id flightDetailId = flightDetailsMap.get(flightDetailKey).Id;
+                        Id terminalId = terminalMap.get(airportMap.get(airportCodeFromFileName).Id).get(arrivalTerminal).Id;
                         Date currentDate = fromDate;
                         while (currentDate <= toDate) {
                             System.debug('currentDate-->'+currentDate);
@@ -197,24 +243,46 @@ public class FlightDetailsDataImportController {
                             if(frequency.contains(dayOfWeek)){
                                 Integer minutes = Integer.valueOf(arrivalTime.substring(arrivalTime.length() - 2));
                                 Integer hours = (arrivalTime.length() > 2) ? Integer.valueOf(arrivalTime.substring(0, arrivalTime.length() - 2)) : 0;
+                                Time t = Time.newInstance(hours, minutes, 0, 0);
 
-                                flightSchedulesToInsert.add(new Flight_Schedule__c(
-                                        Flight_Detail__c = flightDetailId,
-                                        Flight_Date__c = currentDate,
-                                        Arrival_Terminal__c = terminalMap.get(airportMap.get(airportCodeFromFileName).Id).get(arrivalTerminal).Id,
-                                        STA__c = Time.newInstance(hours, minutes, 0, 0)
-                                    ));
+                                String k = flightDetailId +'_'+ currentDate +'_'+ terminalId +'_'+ t;
+
+                                if(!flightScheduleMap.containsKey(k)){
+                                    flightSchedulesToInsert.add(new Flight_Schedule__c(
+                                            Flight_Detail__c = flightDetailId,
+                                            Flight_Date__c = currentDate,
+                                            Arrival_Terminal__c = terminalId,
+                                            STA__c = t
+                                        ));
+                                }
                             }
                             currentDate = currentDate.addDays(1);
                         }
-                        if(!rowVsDepartureArrivalFlightIds.containsKey(i))
+                        /*if(!rowVsDepartureArrivalFlightIds.containsKey(i))
                             {
                                 rowVsDepartureArrivalFlightIds.put(i, new List<Id>{flightDetailId});
                             }
                             else{
                                 rowVsDepartureArrivalFlightIds.get(i).add(flightDetailId);
                             }
-                            System.debug('arrival--rowVsDepartureArrivalFlightIds.get(i)-->'+rowVsDepartureArrivalFlightIds.get(i));
+                            System.debug('arrival--rowVsDepartureArrivalFlightIds.get(i)-->'+rowVsDepartureArrivalFlightIds.get(i));*/
+                    }
+                }
+
+                //Process Transit_Flight_Detail__c records (only when a row has both Arrival and Departure details AND if it is not present in the system)
+                if(flightNumberDeparture != null && flightNumberDeparture != ''  && flightNumberArrival != null && flightNumberArrival != ''){
+                    
+                    Id departureFlightId = flightDetailsMap.get(flightNumberDeparture +'_'+ airportMap.get(destination).Id +'_'+ airportMap.get(airportCodeFromFileName).Id).Id;
+                    Id arrivalFlightId = flightDetailsMap.get(flightNumberArrival +'_'+ airportMap.get(airportCodeFromFileName).Id +'_'+ airportMap.get(origin).Id).Id;
+                    String transitFlightKey = airportMap.get(airportCodeFromFileName).Id +'_'+ arrivalFlightId +'_'+ departureFlightId;
+
+                    if(!transitFlightDetailMap.containsKey(transitFlightKey))
+                    {
+                        transitFlightDetailsToInsert.add(new Transit_Flight_Detail__c(
+                                Main_Flight__c = arrivalFlightId,
+                                Connecting_Flight__c = departureFlightId,
+                                Transit_Airport__c = airportMap.get(airportCodeFromFileName).Id
+                            ));
                     }
                 }
                 
@@ -226,7 +294,7 @@ public class FlightDetailsDataImportController {
             }
 
             //Insert Transit_Flight_Detail__c records (only when a row has both Arrival and Departure details)
-            if(!rowVsDepartureArrivalFlightIds.isEmpty()){
+           /* if(!rowVsDepartureArrivalFlightIds.isEmpty()){
                 for(Integer i : rowVsDepartureArrivalFlightIds.keySet()){
                     System.debug('rowVsDepartureArrivalFlightIds.get(i).size()-->'+rowVsDepartureArrivalFlightIds.get(i).size());
                     if(rowVsDepartureArrivalFlightIds.get(i).size() == 2){
@@ -238,19 +306,20 @@ public class FlightDetailsDataImportController {
                     }
 
                 }
-            }
+            }*/
 
+            //Insert Transit_Flight_Detail__c records
             if(!transitFlightDetailsToInsert.isEmpty()){
                 insert transitFlightDetailsToInsert;
             }
 
-        }
+       /* }
         catch(Exception e){
             System.debug('exception-->'+e.getMessage());
             if(e.getMessage().contains('Invalid date'))
                 throw new AuraHandledException('Please make sure to have the From (Date) & To (Date) in dd/mm/yyyy format');
             else
                 throw new AuraHandledException(e.getMessage());
-        }     
+        }  */   
     }
 }
