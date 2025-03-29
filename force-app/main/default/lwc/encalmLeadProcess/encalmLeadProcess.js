@@ -49,7 +49,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             this.currentStage = fieldValue;
 
             // Set showMarkStatusButton based on the current stage
-            this.showMarkStatusButton = this.currentStage === 'Awaiting Customer response';
+            this.showMarkStatusButton = this.currentStage === 'Open';
             console.log('Current Stage is ------->' + this.currentStage);
 
             this.showcustompath = true;

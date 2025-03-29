@@ -198,7 +198,6 @@ public class RescheduleBooking {
                     Opportunity opp = new Opportunity(Id = oppId);
                     for (String fieldName : opportunityFieldValues.keySet()) {
                         opp.put(fieldName, opportunityFieldValues.get(fieldName));
-                        system.debug('opp.saveData-->> '+ opp);
                     }
                     update opp; // Save the updates
                 }
@@ -281,7 +280,7 @@ public class RescheduleBooking {
                 transactionRec.Booking_Id__c = opp.Id;
                 transactionRec.Rescheduling_Charges__c = totalReschedulingAmount;
                 transactionRec.Name = opp.Name;
-                transactionRec.Transaction_Type__c = 'Debit';
+                transactionRec.Transaction_Type__c = 'Credit';
                 
                 transactionList.add(transactionRec);
             } 

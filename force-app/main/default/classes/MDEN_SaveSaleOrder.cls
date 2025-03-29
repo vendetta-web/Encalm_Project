@@ -10,7 +10,7 @@ global class MDEN_SaveSaleOrder {
         RestRequest request = RestContext.request;
         System.debug('========request.requestBody.toString()====' + request.requestBody.toString());
 
-        JSONWrapper customerPostPayload = (JSONWrapper) JSON.deserialize(request.requestBody.toString(), JSONWrapper.class);
+        JSONWrapper customerPostPayload = (JSONWrapper)JSON.deserialize(request.requestBody.toString(), JSONWrapper.class);
         System.debug('======customerPostPayload===' + customerPostPayload);
          String bookingId;
          ReturnResponseWrapper response = new ReturnResponseWrapper('');
@@ -23,7 +23,7 @@ global class MDEN_SaveSaleOrder {
                 PersonEmail = customerPostPayload.customer_post_payload.email,
                 PersonMobilePhone = customerPostPayload.customer_post_payload.mobile,
                 PersonGenderIdentity = customerPostPayload.customer_post_payload.gender,
-                PersonBirthdate = customerPostPayload.customer_post_payload.dob,
+               //PersonBirthdate = customerPostPayload.customer_post_payload.dob,
                 BillingCity = customerPostPayload.customer_post_payload.city,
                 BillingCountry = customerPostPayload.customer_post_payload.country_id,
                 Pin_Code__c = customerPostPayload.customer_post_payload.pincode
@@ -142,7 +142,7 @@ global class MDEN_SaveSaleOrder {
         global String country_code;
         global String mobile;
         global String gender;
-        global Date dob;
+        global String dob ;
         global String address;
         global String city;
         global String state;

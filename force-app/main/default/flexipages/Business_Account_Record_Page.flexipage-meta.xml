@@ -186,6 +186,16 @@
                 <identifier>RecordAccount_Status__cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Surcharge_waived_off__c</fieldItem>
+                <identifier>RecordSurcharge_waived_off__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-6e6b244e-e95f-4d90-9f33-a4dc615c4b02</name>
         <type>Facet</type>
     </flexiPageRegions>

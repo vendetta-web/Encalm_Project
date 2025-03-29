@@ -19,6 +19,10 @@
         <value xsi:type="xsd:string">ADL-MGZjMjE0M</value>
     </values>
     <values>
+        <field>Surcharge_Applicable_Hours_Within__c</field>
+        <value xsi:type="xsd:double">12.0</value>
+    </values>
+    <values>
         <field>Transit_Max_Flight_Gap_Hr__c</field>
         <value xsi:type="xsd:string">8</value>
     </values>

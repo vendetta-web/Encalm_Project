@@ -1,4 +1,4 @@
-<apex:page controller="MDEN_PdfAttachmentController" renderAs="pdf" applyHtmlTag="false" applyBodyTag="false" showHeader="false" sidebar="false">
+<apex:page controller="MDEN_PdfAttachmentController" applyHtmlTag="false" renderAs="pdf" applyBodyTag="false" showHeader="false" sidebar="false">
     <html>
         <head>
             <style type="text/css" media="print">
@@ -39,6 +39,7 @@
                 
                 .custom-table {
                     width: 100%;
+                	table-layout: auto; <!--table-layout: fixed;-->
                     border-collapse: collapse;
                     border:  solid #e0e0e0;
                 }
@@ -47,6 +48,13 @@
                     padding: 8px;
                 	text-align: left;
                 	word-wrap: break-word; /* Allows wrapping for long content */
+                	overflow-wrap: break-word; /* Forces text to break inside the cell.*/
+                	white-space: normal;
+                	max-width: 50px;
+                	page-break-inside: avoid;
+                }
+                .custom-table tr {
+                	page-break-inside: avoid;
                 }
                 
             </style>
@@ -89,8 +97,8 @@
                             <p><b>BILLED TO: </b>{!opp.Account.Name}</p>
                             <p>{!opp.Account.BillingState} </p>
                             <p>{!opp.Account.BillingCountry}</p>  
-                            <p><b>State Code: </b>need to be discussed</p>
-                            <p><b>Place Of Supply: </b>need to be discussed</p>
+                            <p><b>State Code: </b>State master data is not yet done</p>
+                            <p><b>Place Of Supply: </b>{!opp.Service_Airport__c}</p>
                             <p><b>GSTIN: </b>{!opp.Account.GST__c}</p>
                         </td>
                         
@@ -104,13 +112,13 @@
                 <br/><br/>
                  <table class="custom-table" border="1p">
                     <tr>
-                        <th>Source</th><th>Sr.No</th><th>Description</th><th>HSN/HAC</th><th>Quantity</th><th>Unit Price</th><th>Taxes</th><th>Amount</th>
+                        <!--<th>Source</th>--><th>Sr.No</th><th>Description</th><th>HSN/HAC</th><th>Quantity</th><th>Unit Price</th><th>Taxes</th><th>Amount</th>
                     </tr>
                     <apex:repeat value="{!oppLineItems}" var="item">
                         <tr>
-                            <td>{!opp.Name}</td>
+                            <!--<td>{!opp.Name}</td>-->
                             <td>{!item.SrNo}</td>
-                            <td>{!item.oppLineItem.Product2.Name}</td>
+                            <td>{!opp.Service_Type__c} ({!item.oppLineItem.Product2.Name})</td>
                             <td>{!item.oppLineItem.HSN_HAC__c}</td>
                             <td>{!item.oppLineItem.Quantity}</td>
                             <td>{!item.oppLineItem.UnitPrice}</td>
@@ -120,15 +128,14 @@
                     </apex:repeat>
                 </table>
                 <br/>
+                
                 <div style="display: flex; width: 100%;">
-                    <!-- Left Half (Always Empty) -->
-                    <div style="width: 50%;"></div>
-                		<!-- Right Half (Table) -->
-                    <div style="width: 50%; display: flex; justify-content: right;">
-                        <table>
+                    <!-- Right Half (Table) - Pushes to the right using margin-left: auto -->
+                    <div style="margin-left: auto; width: 50%;">
+                        <table style="border-collapse: collapse; width: 100%; border: 1px solid lightgray;">
                             <tr>
-                                <td style="text-align: left;">Taxable Amount</td>
-                                <td style="text-align: right;">{}</td>
+                                <td style="text-align: left; width: 70%;">Taxable Amount</td>
+                                <td style="text-align: right; width: 30%;">{}</td>
                             </tr>
                             <tr>
                                 <td style="text-align: left;">SGST (9%) on {}</td>
@@ -139,52 +146,57 @@
                                 <td style="text-align: right;">{}</td>
                             </tr>
                             <tr>
-                                <td style="text-align: left;">Total</td>
+                                <td style="text-align: left;"><b>Total</b></td>
                                 <td style="text-align: right;"><b>{!totalAmount}</b></td>
                             </tr>
                         </table>
                     </div>
                 </div>
 
-            <p class="total-words">
-                <b>Total (In Words):</b> {!totalAmountInWords}
-            </p>
 
-            <p class="terms">
-                <b>Terms &amp; Conditions:</b> 1. Payment under this PI should be made through Electronic Fund Transfer (NEFT/RTGS):-
-                Account No.: - 57500000786110 &nbsp; IFSC: HDFC0000572 2. For All Payments Effected, kindly forward the following details to: 
-                accounts@encalm.com a) PI No: &nbsp; b) TDS Deduction: &nbsp; c) Any Other Deduction (with reasons) &nbsp; d) Net Amount Paid
-            </p>
+
+                <div>
+                    <p class="total-words">
+                        <b>Total (In Words):</b> {!totalAmountInWords}
+                    </p>
+        
+                    <p class="terms">
+                        <b>Terms &amp; Conditions:</b> 1. Payment under this PI should be made through Electronic Fund Transfer (NEFT/RTGS):-
+                        Account No.: - 57500000786110 &nbsp; IFSC: HDFC0000572 2. For All Payments Effected, kindly forward the following details to: 
+                        accounts@encalm.com a) PI No: &nbsp; b) TDS Deduction: &nbsp; c) Any Other Deduction (with reasons) &nbsp; d) Net Amount Paid
+                    </p>
+                    
+                </div>
+            
                 
                 <div class="page-break"></div>
                 
-                <br/><br/>
                <table class="custom-table" border="1p">
                     <tr>
-                        <th colspan="8" style="text-align: center;">Annexure 1: Service Details ({!opp.Name})</th>
+                        <th colspan="7"  style="text-align: center;">Annexure 1: Service Details ({!opp.Name})</th>
                     </tr>
                     <tr>
-                        <th>Source</th><th>Confirmation No:</th><th>Sercice Date &amp; Time</th><th>Booking Date &amp; Time</th><th>Service Airport</th><th>Sector of Travel</th><th>From Airport</th><th>To Airport</th>
+                        <!--<th>Source</th>--><th>Confirmation No:</th><th>Service Date &amp; Time</th><th>Booking Date &amp; Time</th><th>Service Airport</th><th>Sector of Travel</th><th>From Airport</th><th>To Airport</th>
                     </tr>
                         <tr>
+                            <!--<td>{!opp.Name}</td>-->
                             <td>{!opp.Name}</td>
-                            <td>{!opp.Name}</td>
-                            <td>{!opp.Service_Time__c}</td>
-                            <td>{!NOW()}</td>
-                            <td>{!opp.Service_Airport__c}</td>
-                            <td>{!opp.Flight_Type__c}</td>
-                            <td>{!opp.Departure_Airport__c}</td>
-                            <td>{!opp.Arriving_Airport__c}</td>
+                            <td>{!serviceDetails.serviceDateTime}</td>
+                            <td>{!serviceDetails.bookingDateTime}</td>
+                            <td>{!serviceDetails.serviceAirport}</td>
+                            <td>{!serviceDetails.sectorOfTravel}</td>
+                            <td>{!serviceDetails.fromAirport}</td>
+                            <td>{!serviceDetails.toAirport}</td>
                         </tr>
                 </table>
                 <br/><br/>
     
                  <table class="custom-table" border="1p">
                     <tr>
-                        <th colspan="6" style="text-align: center;">Annexure 2: Guest Details ({!opp.Name})</th>
+                        <th colspan="5" style="text-align: center;">Annexure 2: Guest Details ({!opp.Name})</th>
                     </tr>
                     <tr>
-                        <th>Source</th>
+                        <!--<th>Source</th>-->
                         <th>Sr. No</th>
                         <th>Guest Name</th>
                         <th>Travel Class</th>
@@ -193,7 +205,7 @@
                     </tr>
                     <apex:repeat value="{!passengers}" var="passenger">
                         <tr>
-                            <td>{!opp.Name}</td>
+                           <!-- <td>{!opp.Name}</td>-->
                             <td>{!passenger.SrNo}</td>
                             <td>{!passenger.Passenger.Name}</td>
                             <td>{!passenger.Passenger.Travel_Class__c}</td>
@@ -206,19 +218,21 @@
                     
                 <table class="custom-table" border="1p">
                     <tr>
-                        <th colspan="8" style="text-align: center;">Annexure 3: Flight Details ({!opp.Name})</th>
+                        <th colspan="7" style="text-align: center;">Annexure 3: Flight Details ({!opp.Name})</th>
                     </tr>
-                    <tr><th>Source</th><th>Flight Info</th><th>Airlines</th><th>Flight No</th><th>Flight Date &amp; Time</th><th>Terminal</th><th>Payment Method</th><th>Payment Info</th></tr>
-                    <tr>
-                        <td>{!opp.Name}</td>
-                        <td>{!flightDetails.flightNo}</td>
-                        <td>{!flightDetails.airline}</td>
-                        <td>{!flightDetails.flightNo}</td>
-                        <td>{!flightDetails.flightDateTime}</td>
-                        <td>{!flightDetails.terminal}</td>
-                        <td></td>
-                        <td></td>
-                    </tr>
+                    <tr><!--<th>Source</th>--><th>Flight Info</th><th>Airlines</th><th>Flight No</th><th>Flight Date &amp; Time</th><th>Terminal</th><th>Payment Method</th><th>Payment Info</th></tr>
+                     <apex:repeat value="{!flightDetails}" var="flightItem">
+                        <tr>
+                            <!--<td>{!opp.Name}</td>-->
+                            <td>{!flightItem.flightNo}</td>
+                            <td>{!flightItem.airline}</td>
+                            <td>{!flightItem.flightNo}</td>
+                            <td>{!flightItem.flightDateTime}</td>
+                            <td>{!flightItem.terminal}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </apex:repeat>
                 </table>
             </div>
         </body>

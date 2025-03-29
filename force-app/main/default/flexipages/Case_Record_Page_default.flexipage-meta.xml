@@ -220,6 +220,56 @@
                 <identifier>RecordIssue_Time__cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.TAT_Hours__c</fieldItem>
+                <identifier>RecordTAT_Hours__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Feedback_ID__c</fieldItem>
+                <identifier>RecordFeedback_ID__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Reservations_Query__c</fieldItem>
+                <identifier>RecordReservations_Query__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Operations_Query__c</fieldItem>
+                <identifier>RecordOperations_Query__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Booking__c</fieldItem>
+                <identifier>RecordBooking__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-0f45841b-c20e-4911-849d-cfe2ca41aeb1</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -333,10 +383,17 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>required</value>
+                    <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Location__c</fieldItem>
-                <identifier>RecordLocation__cField</identifier>
+                <fieldItem>Record.Query_del__c</fieldItem>
+                <identifier>RecordQuery_del_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Query</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -345,13 +402,63 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Please_Specify_Location__c</fieldItem>
-                <identifier>RecordPlease_Specify_Location_cField</identifier>
+                <fieldItem>Record.Reservations_Query__c</fieldItem>
+                <identifier>RecordReservations_Query_cField</identifier>
                 <visibilityRule>
                     <criteria>
-                        <leftValue>{!Record.ShowLocationOther__c}</leftValue>
+                        <leftValue>{!Record.Query_del__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>Show</rightValue>
+                        <rightValue>Reservations Query</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Operations_Query__c</fieldItem>
+                <identifier>RecordOperations_Query_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.Query_del__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Operations Query</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.OwnerId</fieldItem>
+                <identifier>RecordOwnerIdField2</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2 AND 3 AND 4</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.Operations_Query__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Athithya</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Operations_Query__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Lounge</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Operations_Query__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>SPA</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Operations_Query__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Nap &amp; Shower</rightValue>
                     </criteria>
                 </visibilityRule>
             </fieldInstance>
@@ -432,6 +539,33 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Services__c</fieldItem>
                 <identifier>RecordServices_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>required</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Location__c</fieldItem>
+                <identifier>RecordLocation__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Please_Specify_Location__c</fieldItem>
+                <identifier>RecordPlease_Specify_Location_cField</identifier>
+                <visibilityRule>
+                    <criteria>
+                        <leftValue>{!Record.ShowLocationOther__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Show</rightValue>
+                    </criteria>
+                </visibilityRule>
             </fieldInstance>
         </itemInstances>
         <name>Facet-9b17439f-1625-4966-82ed-505de577e5b5</name>

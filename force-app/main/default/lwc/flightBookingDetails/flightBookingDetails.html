@@ -61,7 +61,9 @@
                                 <lightning-button 
                                     label={pack.buttonLabel} 
                                     data-index={index} 
-                                    onclick={handleSelect}>
+                                    onclick={handleSelect}
+                                    class={pack.class}
+                                    variant="brand">
                                 </lightning-button>
                             </div>
                         </div>
@@ -78,50 +80,65 @@
                 <template for:each={getAddonDetail} for:item="pack"  for:index="index">
                     <div key={pack.packageName} class="slds-col slds-size_1-of-3 column">
                         <div class="package">
-                             
                             <div class="slds-text-heading_small package-name row" style="padding-left: 10px;">
-                            <!-- Apply the class to package name
-                            <div class="slds-text-heading_small package-name row" style="padding-left: 10px;">{currency} {pack.addOnTag}</div>-->
-                            <span class="left-value-addon">{pack.addOnName}</span>
-                            <span class="right-value-addon">{currency} {pack.addOnTag}</span>
+                                <span class="left-value-addon">{pack.addOnName}</span>
+                                <span class="right-value-addon">{currency} {pack.addOnTag}</span>
                             </div>
+                
                             <div class="slds-m-top_medium">
-                        </br>
-                        <div>
-                            <!-- First Picklist -->
-                                <lightning-combobox
-                                name="pickup"
-                                label="Pickup Terminal"
-                                options={pickupTerminalOptions}
-                                value={pack.pickupTerminal}
-                                onchange ={handleTerminalChange}
-                                data-id={pack.pickupDataId}
-                                required
-                            ></lightning-combobox>
-
-                            <!-- Second Picklist -->
-                            <lightning-combobox
-                                name="drop"
-                                label="Drop Terminal"
-                                options={dropTerminalOptions}
-                                value={pack.dropTerminal}
-                                onchange ={handleTerminalChange}
-                                data-id={pack.dropDataId}
-                                required
-                            ></lightning-combobox>
-                        </div>
-                            <div class="counter">
-                                <span>Qty</span>
-                                <button data-id="decrementAddOn" data-index={index}  onclick={decrementAddOn} class="btn minus">-</button>
-                                <span class="count">{pack.adddOnCount}</span>
-                                <button data-id="incrementAddOn" data-index={index} onclick={incrementAddOn} class="btn plus">+</button>
-                            </div>
-                        </br>
-                        <button onclick={handleAddOnSelect} data-index={index} class={pack.class}>{pack.buttonLabel}</button> 
+                                <div>
+                                    <!-- Pickup Terminals -->
+                                    <template for:each={pack.pickupTerminals} for:item="terminal" for:index="index">
+                                        <lightning-combobox
+                                            key={terminal.id}
+                                            name="pickup"
+                                            label={terminal.id}
+                                            options={pickupTerminalOptions}
+                                            value={terminal.value}
+                                            data-index={index}
+                                            data-id={pack.addOnName}
+                                            onchange={handleTerminalChange}
+                                            required
+                                            message-when-value-missing="Please select a Pickup Terminal"
+                                            class={pack.pickupErrorClass} 
+                                            disabled={pack.disablePickup}>
+                                        </lightning-combobox>
+                                    </template>
+                
+                                    <!-- Drop Terminals -->
+                                    <template if:false={pack.hideDropTerminal}>
+                                        <template for:each={pack.dropTerminals} for:item="terminal" for:index="index">                                        
+                                            <lightning-combobox
+                                                key={terminal.id}
+                                                name="drop"
+                                                label={terminal.id}
+                                                options={dropTerminalOptions}
+                                                value={terminal.value}
+                                                data-index={index}
+                                                data-id={pack.addOnName}
+                                                onchange={handleTerminalChange}
+                                                required
+                                                message-when-value-missing="Please select a Drop Terminal"
+                                                class={pack.dropErrorClass} 
+                                                disabled={pack.disableDrop}>
+                                            </lightning-combobox>
+                                        </template>
+                                    </template>
+                                </div>
+                
+                                <div class="counter">
+                                    <span>Qty</span>
+                                    <button data-id="decrementAddOn" data-index={index} onclick={decrementAddOn} class="btn minus">-</button>
+                                    <span class="count">{pack.adddOnCount}</span>
+                                    <button data-id="incrementAddOn" data-index={index} onclick={incrementAddOn} class="btn plus">+</button>
+                                </div>
+                
+                                <button onclick={handleAddOnSelect} data-index={index} class={pack.class}>{pack.buttonLabel}</button>
                             </div>
                         </div>
                     </div>
                 </template>
+                
             </div>
         </div>
     </template>
@@ -144,8 +161,10 @@
                                 </lightning-layout>  
                             </div>
                         </template>
-                        
-                        <strong>Final Amount : &#8377; {totalAmount}</strong> <!-- Show the param2 of the selected row --> 
+                        <template if:true={showDiscount}>
+                            <strong>Total Discount Amount : &#8377; {totalAmountAfterDiscount}</strong>
+                        </template>
+                        <strong>{amountMessage} : &#8377; {totalAmount}</strong> <!-- Show the amount or amount after discount --> 
                     </div>
                 </div>
             </template>
@@ -179,21 +198,22 @@
                                     options={titleOptions} 
                                     onchange={handleChange}
                                     data-index={index}
-                                    required>
+                                    required
+                                    onblur={handleBlur}>
                                 </lightning-combobox>
                                 </lightning-layout-item>
                                 
                                 <!-- First Name field -->
                                 <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
-                                <lightning-input class="input-field" type="text" required data-index={index} label="First Name" pattern="[a-zA-Z\s]*" value={guest.firstname} onchange={handleChange}></lightning-input>
+                                <lightning-input class="input-field" type="text" required onblur={handleBlur} data-index={index} label="First Name" pattern="[a-zA-Z\s]*" value={guest.firstname} onchange={handleChange}></lightning-input>
                                 </lightning-layout-item>
                                 <!-- Last Name field -->
                                 <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
-                                <lightning-input class="input-field" type="text" required data-index={index} label="Last Name" pattern="[a-zA-Z\s]*" value={guest.lastname} onchange={handleChange}></lightning-input>
+                                <lightning-input class="input-field" type="text" required onblur={handleBlur} data-index={index} label="Last Name" pattern="[a-zA-Z\s]*" value={guest.lastname} onchange={handleChange}></lightning-input>
                                 </lightning-layout-item>
                                 <!-- Gender field (Picklist) -->
                                 <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
-                                <lightning-combobox class="input-field" required data-index={index} label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
+                                <lightning-combobox class="input-field" required onblur={handleBlur} data-index={index} label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
                                 </lightning-layout-item>
                                 <!-- Age field -->
                                 <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
@@ -242,6 +262,9 @@
                                 <!-- Travel Mobile field -->
                                 <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
                                     <lightning-input class="input-field" data-index={index} type ="text" pattern="^[\+\-]?[0-9]+$" label="Phone" value={guest.phone} onchange={handleChange}></lightning-input>
+                                    <template if:true={showPhoneErrorMessage}>
+                                        <div class="error-message">At least one phone is required</div>
+                                    </template>
                                 </lightning-layout-item>
                                 <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
                                     <lightning-input type="radio" label="Show as Placard?" value={guest.id} 
@@ -433,7 +456,7 @@
                     <footer class="slds-modal__footer">
                         <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
                         <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button>
-                        <lightning-button label="Proceed to Checkout" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
+                        <lightning-button label="Confirm Booking" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
                     </footer>
                 
             </template>

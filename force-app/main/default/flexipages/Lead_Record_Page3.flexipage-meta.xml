@@ -14,13 +14,6 @@
                         </valueListItems>
                         <valueListItems>
                             <value>Lead.Send_Shopping_Email</value>
-                            <visibilityRule>
-                                <criteria>
-                                    <leftValue>{!Record.Status}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Open</rightValue>
-                                </criteria>
-                            </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Delete</value>

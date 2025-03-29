@@ -7,7 +7,7 @@
 global class MDEN_Vesta {
     @HttpPost
     global static GetResponseWrapper createCaseWithTask(){
-         GetResponseWrapper response = new GetResponseWrapper('');
+        GetResponseWrapper response = new GetResponseWrapper('');
         try{
             String caseInfo;
             RestRequest request = RestContext.request;
@@ -18,49 +18,64 @@ global class MDEN_Vesta {
                 List<Account> accList = [SELECT Id FROM Account WHERE PersonEmail =: requestMap.customer_email AND Phone = :requestMap.customer_phone AND Name =: requestMap.customer_name  ];
                 case caseRec = new case();
                 caseRec.Origin = 'Vesta';
-                caseRec.Location__c  = requestMap.location;
+                caseRec.Status = 'New';
+                if( requestMap.feedback_id != null &&  requestMap.item_name != null && requestMap.resolution_date != null && requestMap.request_id != null){
+                    caseRec.Status = 'Closed';
+                     caseRec.Resolution_Date__c = requestMap.resolution_date ;
+                     caseRec.Resolution_Time__c =  requestMap.resolution_time;// convertedTime;//Time.valueOf(requestMap.resolution_time); //Time.(timeStr)
+                     caseRec.Resolved_By__c  = requestMap.resolved_by;
+                    caseRec.Total_Resolution_Time__c = requestMap.total_resolution_time;
+                    caseRec.Resolution_Comments__c  = requestMap.resolution_comments;
+                    caseRec.Feedback_ID__c = requestMap.feedback_id;
+                   
+                  
+                }else{
+                      caseRec.Location__c  = requestMap.location;
                 caseRec.Services__c = requestMap.services;
                 caseRec.Rating__c = requestMap.rating;
                 caseRec.Issue__c = requestMap.issue;
-                caseRec.Issue_Time__c = getTime(requestMap.issue_time);
+                caseRec.Issue_Time__c = requestMap.issue_time;
                 caseRec.Feedback__c	 = requestMap.feedback;
                 caseRec.Category__c = requestMap.category;
                 caseRec.Issue_Date__c = requestMap.issue_date;
-                caseRec.Resolution_Time__c =  getTime(requestMap.resolution_time);// convertedTime;//Time.valueOf(requestMap.resolution_time); //Time.(timeStr)
-                caseRec.Total_Resolution_Time__c = requestMap.total_resolution_time;
                 caseRec.Guest_Satisfaction_Level__c = requestMap.guest_satisfaction_level;
-                caseRec.Resolution_Comments__c  = requestMap.resolution_comments;
-                caseRec.Resolved_By__c  = requestMap.resolved_by;
-                insert caseRec;
+                caseRec.Feedback_ID__c = requestMap.feedback_id; 
+                }
+             
+                upsert caseRec Feedback_ID__c ;
+                caseInfo = caseRec.Id;
+                system.debug('-----caseRec.Id-------------'+caseRec.Id);
                 List<Item__c> itemList = new List<Item__c>();
-                if(caseRec != null){
+                if(caseRec != null && requestMap.request_id != null && requestMap.item_name != null){
                     caseInfo = caseRec.Id;
-                    for(ItemWrapper item: requestMap.items){
-                        Item__c itemRec = new  Item__c();
-                        itemRec.Name = item.item_name ;
-                        itemRec.Feedback_Id__c = item.feedback_id ;
-                        itemRec.Request_Id__c = item.request_id;
-                        itemRec.Case__c =  caseRec.Id;
-                        itemList.add(itemRec);
-                    }                    
-                    if(!itemList.isEmpty()){
-                        insert itemList;
-                        system.debug('----itemList-----------------'+itemList);
+                    Item__c itemRec = new  Item__c();
+                    itemRec.Name = requestMap.item_name;
+                    itemRec.Feedback_Id__c = requestMap.feedback_id ;
+                    itemRec.Request_Id__c = requestMap.request_id;
+                    itemRec.Case__c =  caseRec.Id;
+                    
+                    if(itemRec != null)
+                    { 
+                        insert  itemRec;  
+                        System.debug('-----------itemRec-------'+itemRec.Id);
                     }
+                    
                 }
             }
-            // mden_responseWrapper = new MDEN_GetResponseWrapper('false', 'data not found.');
-            return response    = new GetResponseWrapper(caseInfo); //'Case created sucessful'+' '+caseInfo  ;
+            
+            return response    = new GetResponseWrapper(caseInfo); 
         }catch(Exception e){
-            return response = new GetResponseWrapper(e.getMessage());          
+            System.debug('----error line-------------'+e.getLineNumber());
+            return response = new GetResponseWrapper(e.getMessage());
+            
         }
         
     }	
-
-
-  global class GetResponseWrapper {
+    
+    
+    global class GetResponseWrapper {
         global String Id; 
-       global GetResponseWrapper(String Id) {
+        global GetResponseWrapper(String Id) {
             this.Id = Id;
             
         }        
@@ -106,12 +121,10 @@ global class MDEN_Vesta {
         global String total_resolution_time;
         global String guest_satisfaction_level;
         global String resolution_comments;
-        global List<ItemWrapper> items;
-    }
-    global class ItemWrapper {
         global String feedback_id;
         global String request_id;
         global String item_name;
         
     }
+    
 }

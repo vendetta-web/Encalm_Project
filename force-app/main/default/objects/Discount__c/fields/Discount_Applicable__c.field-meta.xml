@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Discount_percent__c</fullName>
-    <label>Discount %</label>
-    <precision>2</precision>
+    <fullName>Discount_Applicable__c</fullName>
+    <externalId>false</externalId>
+    <label>Discount Applicable</label>
+    <precision>18</precision>
     <required>false</required>
     <scale>0</scale>
     <trackTrending>false</trackTrending>
-    <type>Percent</type>
+    <type>Number</type>
+    <unique>false</unique>
 </CustomField>

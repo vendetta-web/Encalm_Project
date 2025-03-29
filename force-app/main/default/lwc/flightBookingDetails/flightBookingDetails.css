@@ -1,3 +1,10 @@
+.selectbtn {
+    --sds-c-button-brand-color-background: #debd80;
+    --sds-c-button-brand-color-border: #debd80;
+    --sds-c-button-brand-color-background-hover: #debd80;
+    --sds-c-button-brand-color-border-hover: #debd80;
+}
+
 .encalmbg {
     --sds-c-button-brand-color-background: #cda45e;
     --sds-c-button-brand-color-border: #cda45e;
@@ -282,4 +289,14 @@ span {
 .input-field {
     box-sizing: border-box;
     width: 100%;
+}
+
+.error-message {
+    color: #BA0517; /* Red text */
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.slds-input.error {
+    border: 2px solid #ff4c4c; /* Apply custom border styling */
 }

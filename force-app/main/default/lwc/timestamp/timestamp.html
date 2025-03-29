@@ -1,0 +1,15 @@
+<!-- CaseStatusChangeComponent.html (Lightning component UI) -->
+<template>
+    <lightning-card title="Status Change History">
+        <template if:true={statusChanges}>
+            <lightning-datatable
+                data={statusChanges}
+                columns={columns}
+                key-field="Id">
+            </lightning-datatable>
+        </template>
+        <template if:true={error}>
+            <p>Error loading status changes</p>
+        </template>
+    </lightning-card>
+</template>

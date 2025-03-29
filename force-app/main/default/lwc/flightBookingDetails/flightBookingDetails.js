@@ -43,6 +43,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     pickupTerminalOptions = [];
     dropTerminalOptions = [];
     totalAmount=0;
+    totalDiscountAmount=0;
+    totalAmountAfterDiscount=0;
     @track oliFieldValues = {};
     serviceAirport;
     flightNumber;
@@ -51,6 +53,13 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     nationalityOptions = [];
     filteredNationalityOptions = [];
     selectedNationality;
+    // Variables to track error classes
+    pickupErrorClass = '';
+    dropErrorClass = '';
+    //variable to show error for phone
+    showPhoneErrorMessage = false;
+    showDiscount = false;
+    amountMessage = 'Final Amount';
 
 
     //Individual Passenger Details
@@ -133,6 +142,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.orderSummaryAddon=[];
         this.orderSummary=[];
         this.totalAmount=0;
+        this.totalDiscountAmount = 0;
+        this.totalAmountAfterDiscount = 0;
         this.loadPackageData();
         this.loadAddonData();
         this.loadPassengerData();
@@ -179,11 +190,12 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         getPackageDetails({oppId: this.recordId})
         .then((result) => {
             this.getPackage = result; 
-            console.log('packagelog->> ',JSON.stringify(this.getPackage));
             this.getPackage = result.map((item) => ({
                 ...item, // Spread the existing properties
-                buttonLabel: 'Select' // Add buttonLabel to each item
+                buttonLabel: 'Select', // Add buttonLabel to each item
+                class: 'selectbtn'
             }));
+            console.log('getPackage-->> ',JSON.stringify(this.getPackage));
         })
         .catch((error) => {
             console.error(error);
@@ -200,16 +212,21 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     loadAddonData() {
-        getAddOnDetails({oppId: this.recordId})
+        getAddOnDetails({ oppId: this.recordId })
         .then((result) => {
-            this.getAddonDetail = result; 
             this.getAddonDetail = result.map((item) => ({
                 ...item, // Spread the existing properties
-                buttonLabel: 'Select', // Add buttonLabel to each item
-                adddOnCount: this.adddOnCount,
-                class: 'btns select',
-                pickupDataId: `${item.addOnName}-pickup`,  // Unique data-id for pickup terminal,
-                dropDataId: `${item.addOnName}-drop`,  // Unique data-id for drop terminal
+                buttonLabel: 'Select', // Button label for the add-ons
+                adddOnCount: 1, // Default count
+                class: 'btns select', // Default class
+                disablePickup: item.pickupTerminal ? true : false, // Disable pickup if it has a value
+                disableDrop: item.dropTerminal ? true : false, // Disable drop if it has a value
+                pickupTerminals: [
+                    { id: 'Pickup Terminal 1', value: item.pickupTerminal || '' } // Initialize Pickup Terminal
+                ],
+                dropTerminals: [
+                    { id: 'Drop Terminal 1', value: item.dropTerminal || '' } // Initialize Drop Terminal
+                ],
             }));
             this.getTerminals();
         })
@@ -217,28 +234,65 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             console.error(error);
         });
     }
+    
     incrementAddOn(event) {
-        const ind = event.target.dataset.index;  // Get the index of the clicked row
+        const ind = event.target.dataset.index; // Get the index of the clicked row
         this.getAddonDetail = this.getAddonDetail.map((wrapper, index) => {
-            return {
-                ...wrapper, 
-                adddOnCount: ind == index ? wrapper.adddOnCount += 1 :  wrapper.adddOnCount
-            };
+            if (ind == index) {
+                // Check if the adddOnCount is less than 5 before incrementing
+                if (wrapper.adddOnCount < 5) {
+                    // Increment count
+                    wrapper.adddOnCount += 1;
+                }
+    
+                // Ensure arrays are initialized
+                wrapper.pickupTerminals = wrapper.pickupTerminals || [];
+                wrapper.dropTerminals = wrapper.dropTerminals || [];
+    
+                // Check if Pickup Terminal has a value
+                if (wrapper.pickupTerminals.some(terminal => terminal.value !== '')) {
+                    // Only add to Drop Terminals if it doesn't exceed max limit (5)
+                    if (wrapper.dropTerminals.length < 5) {
+                        wrapper.dropTerminals.push({
+                            id: `Drop Terminal ${wrapper.dropTerminals.length + 1}`,
+                            value: '' // Default to empty value
+                        });
+                    }
+                } else {
+                    // Only add to Pickup Terminals if it doesn't exceed max limit (5)
+                    if (wrapper.pickupTerminals.length < 5) {
+                        wrapper.pickupTerminals.push({
+                            id: `Pickup Terminal ${wrapper.pickupTerminals.length + 1}`,
+                            value: '' // Default to empty value
+                        });
+                    }
+                }
+            }
+            return wrapper;
         });
-        //this.adddOnCount += 1;
     }
+    
+    
 
     decrementAddOn(event) {
-        const ind = event.target.dataset.index;  // Get the index of the clicked row
+        const ind = event.target.dataset.index; // Get the index of the clicked row
         this.getAddonDetail = this.getAddonDetail.map((wrapper, index) => {
-            return {
-                ...wrapper, 
-                adddOnCount: ind == index ? wrapper.adddOnCount >1 ? wrapper.adddOnCount -= 1 :  1 : wrapper.adddOnCount
-            };
+        if (ind == index && wrapper.adddOnCount > 1) {
+            // Decrement count
+            wrapper.adddOnCount -= 1;
+
+            // Remove the last Drop Terminal if more than one exists
+            if (wrapper.dropTerminals.length > 1) {
+                wrapper.dropTerminals.pop();
+            }
+
+            // Remove the last Pickup Terminal if more than one exists
+            if (wrapper.pickupTerminals.length > 1) {
+                wrapper.pickupTerminals.pop();
+            }
+        }
+        return wrapper;
         });
-        /*if (this.adddOnCount > 1) {
-            this.adddOnCount -= 1;
-        }*/
     }
     // Handle row selection
     handleSelect(event) {
@@ -262,6 +316,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.priceTag,
                     count: this.numberOfAdults, // Set the count, potentially modify later based on adults
+                    discountValue: this.calculateDiscount(wrapper.priceTag * this.numberOfAdults, wrapper.discountValue, wrapper.isDiscountInPercent),
                     isChild: false,
                     isInfant: false
                 });
@@ -274,6 +329,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
+                        discountValue: this.calculateDiscount( wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, wrapper.discountValue, wrapper.isDiscountInPercent),
                         isChild: true,
                         childCount: this.numberOfChildren  //to create child oli records
                     });
@@ -287,6 +343,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
+                        discountValue: 0,
                         isInfant: true,
                         isChild: false,
                         infantCount: this.numberOfInfants  //to create infant oli records
@@ -302,66 +359,122 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         //this.orderSummary = [...this.orderSummary, (this.selectedPackage + ' '+ this.selectedAmount)];
         
     }
+    //logic to calculate discount amount
+    calculateDiscount(amount, discountValue, isDiscountInPercent) {
+        // Ensure inputs are valid
+        if (isNaN(amount) || isNaN(discountValue) || amount <= 0 || discountValue < 0) {
+            return 0;
+        }
+    
+        let finalDiscountValue;
+        
+        if (isDiscountInPercent) {
+            // If discount is in percent, calculate the discount value
+            finalDiscountValue = (amount * discountValue) / 100;
+        } else {
+            // If discount is a fixed value, use it directly
+            finalDiscountValue = discountValue;
+        }
+    
+        // Ensure the discount doesn't exceed the total amount
+        if (finalDiscountValue > amount) {
+            return amount;
+        }    
+        // Calculate final amount after applying discount
+        //const discountedAmount = amount - finalDiscountValue;    
+        return finalDiscountValue; //round off to 2 decimal places
+    }
+
     handleUnselect(event) {
         //const indexToRemove = event.target.dataset.index; // Get the index from the button's dataset
         this.orderSummary = this.orderSummary.filter((value, index) => value != (this.selectedPackage + ' '+ this.selectedAmount)); // Remove the item at that index
     }
-    handleAddOnSelect(event){
+
+    // Method to handle validation of terminals
+    validatePicklistSelections(index) {
+        let isValid = true;
+        const item = this.getAddonDetail[index]; // Get the specific item based on the passed index
+    
+        // If buttonLabel is 'Remove', skip validation for this item
+        if (item.buttonLabel === 'Remove' || item.hideDropTerminal) {
+            return true; // Skip validation for this item
+        }
+    
+        // Initialize error classes for the specific item
+        let pickupErrorClass = ''; 
+        let dropErrorClass = '';
+    
+        // Validate Pickup Terminals
+        item.pickupTerminals.forEach((terminal) => {
+            if (!terminal.value) {
+                isValid = false;
+                pickupErrorClass = 'slds-has-error'; // Apply error class for pickup terminal
+            }
+        });
+    
+        // Validate Drop Terminals
+        item.dropTerminals.forEach((terminal) => {
+            if (!terminal.value) {
+                isValid = false;
+                dropErrorClass = 'slds-has-error'; // Apply error class for drop terminal
+            }
+        });
+    
+        // Update the error classes for the item
+        item.pickupErrorClass = pickupErrorClass;
+        item.dropErrorClass = dropErrorClass;
+    
+        return isValid;
+    }
+    
+    
+    
+
+    handleAddOnSelect(event) {
         const index = event.target.dataset.index;  // Get the index of the clicked row
-        // Get the data-id values for pickup and drop terminals based on the selected index
-        const pickupDataId = this.getAddonDetail[index].pickupDataId;
-        const dropDataId = this.getAddonDetail[index].dropDataId;
-
-        // Target the comboboxes for the selected index using the data-id attributes
-        const pickupCombobox = this.template.querySelector(`[data-id="${pickupDataId}"]`);
-        const dropCombobox = this.template.querySelector(`[data-id="${dropDataId}"]`);
-
-        // Validate pickup and drop terminals for the selected index
-        const All_Compobox_Valid = [pickupCombobox, dropCombobox].reduce((validSoFar, input_Field_Reference) => {
-            input_Field_Reference.reportValidity();
-            return validSoFar && input_Field_Reference.checkValidity();
-        }, true);
-
-        if (All_Compobox_Valid) {
-        this.selectedAddonRowIndex = index;  // Update selected row
-        this.updateButtonAddonLabels(index);
-        this.selectedAddon=this.getAddonDetail[index].addOnName;
-        this.selectedAddonAmount=this.getAddonDetail[index].addOnTag;
-        //this.orderSummary = [...this.orderSummary, (this.selectedPackage + ' '+ this.selectedAmount)];
-        
-        this.orderSummaryAddon = this.getAddonDetail
-            .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
-            .map(wrapper => {
-                return {
-                    name: wrapper.addOnName+' ' +wrapper.adddOnCount+' Qty',        // Copy the 'name' value
-                    amount: wrapper.addOnTag*wrapper.adddOnCount,  // Copy the 'amount' value
-                    totalAmount: wrapper.addOnTag*wrapper.adddOnCount,
-                    button: true,
-                    productId: wrapper.productId,
-                    pricebookEntryId: wrapper.pricebookEntryId,
-                    unitPrice: wrapper.addOnTag,
-                    count: wrapper.adddOnCount,
-                    pickup: wrapper.pickup,
-                    drop: wrapper.drop,
-                    isChild: false,
-                    isInfant: false
-                };
-            });
-            
+        const isValid = this.validatePicklistSelections(index);  // Pass the index to validate only the clicked add-on
+    
+        if (isValid) {
+            this.selectedAddonRowIndex = index;  // Update selected row
+            this.updateButtonAddonLabels(index);
+            this.selectedAddon = this.getAddonDetail[index].addOnName;
+            this.selectedAddonAmount = this.getAddonDetail[index].addOnTag;    
+            this.orderSummaryAddon = this.getAddonDetail
+                .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
+                .map(wrapper => {
+                    return {
+                        name: wrapper.addOnName + ' ' + wrapper.adddOnCount + ' Qty',
+                        amount: wrapper.addOnTag * wrapper.adddOnCount,
+                        totalAmount: wrapper.addOnTag * wrapper.adddOnCount,
+                        button: true,
+                        productId: wrapper.productId,
+                        pricebookEntryId: wrapper.pricebookEntryId,
+                        unitPrice: wrapper.addOnTag,
+                        count: wrapper.adddOnCount,
+                        pickupTerminals: wrapper.pickupTerminals.map(terminal => terminal.value),
+                        dropTerminals: wrapper.dropTerminals.map(terminal => terminal.value),
+                        discountValue: 0,
+                        isChild: false,
+                        isInfant: false
+                    };
+                });
+    
             this.orderSummary = [...this.orderSummaryPackage, ...this.orderSummaryAddon];
             this.calculateTotalPackage();
+            console.log('orderSummary-->> ', JSON.stringify(this.orderSummary));
         } else {
             this.showToast('Error', 'Please select terminals', 'error');
         }
-        
     }
+    
 
     // Precompute button labels for each row
     updateButtonPackageLabels() {
         this.getPackage = this.getPackage.map((wrapper, index) => {
             return {
                 ...wrapper, // Keep existing properties
-                buttonLabel: this.selectedRowIndex == index ? 'Selected' : 'Select' // Change label based on selection
+                buttonLabel: this.selectedRowIndex == index ? 'Selected' : 'Select', // Change label based on selection
+                class: this.selectedRowIndex == index ? 'encalmbg' : 'selectbtn' //change the class as per selection
             };
         });
     }
@@ -385,6 +498,21 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.totalAmount = this.orderSummary.reduce((sum, currentItem) => {
             return sum + currentItem.totalAmount;
         }, 0);
+        this.calculateTotalPackageDiscount();
+        this.totalAmountAfterDiscount = this.totalAmount - this.totalDiscountAmount;
+    }
+    calculateTotalPackageDiscount() {
+        this.totalDiscountAmount = this.orderSummary.reduce((sum, currentItem) => {
+            return sum + currentItem.discountValue;
+        }, 0); 
+        //to show the amount in order summary  
+        if (this.totalDiscountAmount>0) {
+            this.showDiscount = true;
+            this.amountMessage = 'Final Amount After Discount';
+        }  else {
+            this.showDiscount = false;
+            this.amountMessage = 'Final Amount';
+        }  
     }
     openPassengerPage() {
         let matchFound = false;
@@ -409,7 +537,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     // Method to call Apex and create Opportunity Line Items
     createOLIs() {
         console.log('order->> ', JSON.stringify(this.orderSummary));
-        createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmount })
+        createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount })
             .then(result => {
                 //this.showToast('Success', 'Opportunity Line Items created successfully: !', 'success');
                 console.log('Opportunity Line Items created successfully: ', result);
@@ -490,6 +618,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         ) {
             this.selectedPassenger = { ...this.guestRows[0] };
         }
+         // Validate after each change (onblur event)
+         this.validatePhoneNumbers();
         
     }
 
@@ -541,6 +671,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         });
         // Reassign updatedGuestRows back to guestRows (this triggers reactivity)
         this.guestRows = updatedGuestRows;
+        this.handleBlur();
     }
 
     handleNationalityOptionSelect(event) {
@@ -576,19 +707,29 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         const id = event.target.dataset.id.split('-')[0];  // Extract the unique id from the data-id
         const value = event.target.value;    // Get the selected value
         const field = event.target.name;     // Get the picklist name (drop or pickup)
-
-        // Find the item in the array and update the corresponding field (drop or pickup)
+        const index = event.target.dataset.index; // Get the index for the terminal (if applicable)
+    
+        // Find the item in the array by matching the addOnName (unique ID)
         const item = this.getAddonDetail.find(item => item.addOnName == id);
+    
         if (item) {
-            item[field] = value;
+            // Determine which terminal we are updating (pickup or drop)
+            if (field === 'pickup') {
+                // Update the corresponding pickup terminal at the correct index
+                item.pickupTerminals[index].value = value;
+                // Also update the record field (pickupTerminal) if necessary
+                item.pickupTerminal = value;
+            } else if (field === 'drop') {
+                // Update the corresponding drop terminal at the correct index
+                item.dropTerminals[index].value = value;
+                // Also update the record field (dropTerminal) if necessary
+                item.dropTerminal = value;
+            }
         }
-        // Update the value for pack.dropTerminal or pack.pickupTerminal
-        if (field === 'drop') {
-            item.dropTerminal = value; // Update the dropTerminal in the pack
-        } else if (field === 'pickup') {
-            item.pickupTerminal = value; // Update the pickupTerminal in the pack
-        }
+        console.log('ter-->> ',JSON.stringify(this.getAddonDetail));
     }
+    
+    
 
     //to get field values to save in opp record
     handleFieldChange(event) {
@@ -623,24 +764,20 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             return validSoFar && input_Field_Reference.checkValidity();
         }, true);
         var errorMessage = 'Please resolve all the required checks.'
-        var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter phone number of minimum 1 adult passenger';
-
-        if(All_Input_Valid && All_Compobox_Valid) {
-            if (this.checkPhoneNumber()) {
-                savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
-                .then(() => {
-                    this.showPreview = true;
-                    this.passengerDetailPage = false;
-                    this.savePlacardDetails();// save placard details
-                })
-                .catch(error => {
-                    // Handle error
-                    console.error('Error saving passenger details:', error);
-                    this.showToast('Error', 'Error saving Passenger details', 'error');
-                });
-            } else {
-                this.showToast('Error', validationMessage, 'error');
-            }
+        //var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter phone number of minimum 1 adult passenger';
+        
+        if(All_Input_Valid && All_Compobox_Valid && !this.showPhoneErrorMessage) {
+            savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
+            .then(() => {
+                this.showPreview = true;
+                this.passengerDetailPage = false;
+                this.savePlacardDetails();// save placard details
+            })
+            .catch(error => {
+                // Handle error
+                console.error('Error saving passenger details:', error);
+                this.showToast('Error', 'Error saving Passenger details', 'error');
+            });            
         }
         else {
             this.showToast('Error', errorMessage, 'error');
@@ -662,6 +799,36 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         } else {
             return false;
         }
+    }
+
+    // Validate the phone fields and check if all required fields are filled
+    validatePhoneNumbers() {
+        let allRequiredFieldsFilled = true;
+        let isPhoneValid = false;
+
+        // Check if all required fields are filled
+        this.guestRows.forEach(guest => {
+            if (
+                !guest.title || !guest.firstname || !guest.lastname || !guest.gender || !guest.nationality
+            ) {
+                allRequiredFieldsFilled = false;
+            }
+            // Check if at least one phone number is entered
+            if (guest.phone && guest.phone.trim() !== '') {
+                isPhoneValid = true;
+            }
+        });
+
+        // If all required fields are filled and no phone number is entered, show error
+        this.showPhoneErrorMessage = allRequiredFieldsFilled && !isPhoneValid;
+
+        return allRequiredFieldsFilled && isPhoneValid;
+    }
+    
+
+    // Handle the blur event to trigger validation when a required field loses focus
+    handleBlur() {
+        this.validatePhoneNumbers();
     }
 
     savePlacardDetails() {
@@ -696,7 +863,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.showPreview = false;
     }
     //generate PDF file
-    /*generatePdf() {
+   /* generatePdf() {
         if (this.jsPDFInitialized) {
             this.isLoading = true;
             // Make sure to correctly reference the loaded jsPDF library.
@@ -791,16 +958,17 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.isLoading = false;
     }*/
 
-    generatePdf(){
-         generateAndSavePDF({ recordId: this.recordId })
-            .then(fileId => {
-                this.showToast('Success', 'PDF generated and saved!', 'success');
+    generatePdf() {
+        // Call Apex method to generate and save PDF with the current record
+        generateAndSavePDF({ recordId: this.recordId})
+            .then((result) => {
+                this.showToast('Success', 'Booking Voucher created successfully', 'success');
+                this.dispatchEvent(new RefreshEvent());
             })
-            .catch(error => {
-                console.error('Error:', error);
-                this.showToast('Error', 'Failed to generate PDF.', 'error');
+            .catch((error) => {
+                this.showToast('Error', 'Error while generating Voucher', 'error');
+                console.error(error);
             });
-
     }
 
     // Helper function to convert ArrayBuffer to Base64

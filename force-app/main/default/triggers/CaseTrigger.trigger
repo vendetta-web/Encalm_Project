@@ -3,10 +3,11 @@ trigger CaseTrigger on Case (before insert, before update, after insert, after u
         if (Trigger.isBefore) {
             if(Trigger.isInsert){
                 CaseTriggerHandler.handleBeforeInsert(trigger.new);
-                //CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
+                CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
             }
              if(trigger.isUpdate){
-                //CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
+                CaseTriggerHandler.beforeUpdateAddEntitlementOnCase(Trigger.new, Trigger.oldMap); // By sidhant
+                 CaseTriggerHandler.handleStatusChange(Trigger.new, Trigger.oldMap); // By Saurabh
             } 
         }
         
@@ -16,7 +17,7 @@ trigger CaseTrigger on Case (before insert, before update, after insert, after u
                 //CaseTriggerHandler.processCaseInsert(Trigger.new);
             }
             if(trigger.isUpdate){
-                CaseTriggerHandler.afterUpdateReopenMilestone(Trigger.new, Trigger.oldMap); // By sidhant
+                CaseTriggerHandler.afterUpdateReopenMilestone(Trigger.new, Trigger.oldMap);
             }
             
         }

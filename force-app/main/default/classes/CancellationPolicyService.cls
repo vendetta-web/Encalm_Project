@@ -53,8 +53,6 @@ public class CancellationPolicyService {
         // Calculate the difference in hours between the service and cancellation times
         Long hoursDifference = serviceDateTime.getTime() - cancellationDateTime.getTime();
         hoursDifference = hoursDifference / (1000 * 60 * 60);  // Convert milliseconds to hours
-        system.debug('hoursDifference ->> '+hoursDifference);
-        system.debug('packageName ->> '+packageName);
         if (refundPolicy != '') {
             addAnd = ' & ';
         } else {
@@ -71,17 +69,14 @@ public class CancellationPolicyService {
 
         // Iterate through policies to find the applicable one
         for (Cancellation_And_Refund__mdt policy : policies) {
-            system.debug('policy list-->> '+policy);
                 if (policy.Less_Than__c &&  hoursDifference < Long.valueOf(policy.Time_Frame__c)) {
                     if (policy.Charges_in_Percentage__c) {
-                        system.debug('policy ->> '+policy.Refund_Policy__c);
                         if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                             checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                             refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
                         }
                         return bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                     } else {
-                        system.debug('policy ->> '+policy.Refund_Policy__c);
                         if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                             checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                             refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
@@ -91,14 +86,12 @@ public class CancellationPolicyService {
                 } 
                 else if (policy.Greater_Than__c && Long.valueOf(policy.Time_Frame__c) < hoursDifference) {
                     if (policy.Charges_in_Percentage__c) {
-                        system.debug('policy ->> '+policy.Refund_Policy__c);
                         if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                             checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                             refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
                         }
                         return bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                     } else {
-                        system.debug('policy ->> '+policy.Refund_Policy__c);
                         if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                             checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                             refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
@@ -108,21 +101,16 @@ public class CancellationPolicyService {
                 }
                 else if (policy.Time_Frame__c.contains('-')) {
                     List<String> rangeValues = policy.Time_Frame__c.split('-');
-                    system.debug('rangeValues '+rangeValues);
                     Integer lowerValue = Integer.valueOf(rangeValues[0]); // First value (24)
                     Integer upperValue = Integer.valueOf(rangeValues[1]); // Second value (48)
-                    system.debug('lowerValue '+lowerValue);
-                    system.debug('upperValue '+upperValue);
                     if (hoursDifference > lowerValue && hoursDifference < upperValue) {
                         if (policy.Charges_in_Percentage__c) {
-                            system.debug('policy ->> '+policy.Refund_Policy__c);
                             if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                                 checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                                 refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
                             }
                             return bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                         } else {
-                            system.debug('policy ->> '+policy.Refund_Policy__c);
                             if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                                 checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                                 refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
@@ -133,14 +121,12 @@ public class CancellationPolicyService {
                 }
                 else if (policy.Time_Frame__c == 'Unlimited') {
                     if (policy.Charges_in_Percentage__c) {
-                        system.debug('policy ->> '+policy.Refund_Policy__c);
                         if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                             checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                             refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
                         }
                         bookingAmount = bookingAmount - (bookingAmount * (policy.Charges__c / 100));
                     } else {
-                        system.debug('policy ->> '+policy.Refund_Policy__c);
                         if (!checkUniqueRefundPolicy.contains(policy.Refund_Policy__c)) {
                             checkUniqueRefundPolicy.add(policy.Refund_Policy__c);
                             refundPolicy = refundPolicy + addAnd + policy.Refund_Policy__c;
@@ -151,7 +137,6 @@ public class CancellationPolicyService {
             
         }
         // Default to no charge if no policy matches
-        system.debug('policy ->> no policy ');
         return bookingAmount;
     }
 
@@ -166,10 +151,13 @@ public class CancellationPolicyService {
         List<OpportunityLineItem> oliList = new List<OpportunityLineItem>();
         cancellationDetailsWrapper wrp = new cancellationDetailsWrapper();
         List<Transaction_History__c> transactionList= new List<Transaction_History__c>();
+        List<Case> caseList = new List<Case>();
+        DateTime requestDateTime;
         DateTime serviceDateTime;
         String dateText;
         String timeText;
         String combinedDateTimeStr;
+        
         // Query OpportunityLineItems based on OpportunityId
         Opportunity opp = [
             SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,Name,
@@ -178,6 +166,20 @@ public class CancellationPolicyService {
             WHERE Id=:opportunityId
             LIMIT 1
         ];
+
+        caseList = [
+            SELECT Id, CreatedDate
+            FROM Case
+            WHERE Booking__c =:opportunityId
+            ORDER BY CreatedDate DESC
+            LIMIT 1
+        ];
+
+        if (!caseList.isEmpty() && caseList !=null) {
+            requestDateTime = caseList[0].CreatedDate;
+        } else {
+            requestDateTime = DateTime.now();
+        }
         
         if (opp.STA_Time__c != null) {
             dateText=opp.Date_of_Arrival__c;
@@ -197,7 +199,6 @@ public class CancellationPolicyService {
             combinedDateTimeStr=dateText + ' ' + timeText;
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
         }
-
         //both scenarios of preview of cancellation and creating cancellation records for full cancellation
         if (cancelType =='fullCancel') {    
             numberOfPax = opp.opportunitylineitems.size();    
@@ -206,7 +207,7 @@ public class CancellationPolicyService {
             for (opportunitylineitem oli: opp.opportunitylineitems) {
                 packageName = oli.Product2.Family;
                 bookingAmount += oli.UnitPrice; 
-                decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), oli.UnitPrice, packageName); 
+                decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, requestDateTime, oli.UnitPrice, packageName); 
                 refundAmount += refundAmountPerOli;
                 // to create final cancellation records
                 if(submit) {
@@ -219,7 +220,7 @@ public class CancellationPolicyService {
             update oliList;   
             
             //to show preview of full cancellation
-            decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), refundAmount);
+            decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmount);
             wrp.bookingAmount = bookingAmount;
             wrp.refundAmount = afterGeneralCancellationRefund;
             wrp.deductedAmount = bookingAmount - afterGeneralCancellationRefund;
@@ -235,11 +236,12 @@ public class CancellationPolicyService {
                 transactionRec.Cancellation_Charges__c = bookingAmount - afterGeneralCancellationRefund;
                 transactionRec.Refund_Charges__c = afterGeneralCancellationRefund;
                 transactionRec.Name = opp.Name;
-                transactionRec.Transaction_Type__c = 'Credit';
+                transactionRec.Transaction_Type__c = 'Debit';
                 
                 transactionList.add(transactionRec);
+                
+                insert transactionList;
             } 
-            insert transactionList;
         }
 
         /*
@@ -264,11 +266,11 @@ public class CancellationPolicyService {
             for (Map<String, Object> row : selectedOrders) {      
                 String pckName = (String) row.get('packageName');
                 Decimal perUnitPrice = (Decimal) row.get('unitPrice');               
-                decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, DateTime.now(), perUnitPrice, pckName);
+                decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, requestDateTime, perUnitPrice, pckName);
                 refundAmountWithoutGeneralCharges += refundAmountPerOli;
                 generalDeduction = refundAmountWithoutGeneralCharges;
                 if (count == 0) {
-                    generalDeduction =  getGeneralCancellationPolicyAmount(serviceDateTime, DateTime.now(), refundAmountWithoutGeneralCharges);
+                    generalDeduction =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmountWithoutGeneralCharges);
                     paxNames = (String) row.get('name') !=null ? (String) row.get('name') : '';
                 } else {
                     paxNames = paxNames + ', ' + (String) row.get('name');
@@ -304,7 +306,7 @@ public class CancellationPolicyService {
                     transactionRec.Cancellation_Charges__c = wrp.deductedAmount;
                     transactionRec.Refund_Charges__c = wrp.refundAmount;
                     transactionRec.Name = opp.Name;
-                    transactionRec.Transaction_Type__c = 'Credit';
+                    transactionRec.Transaction_Type__c = 'Debit';
                     
                     transactionList.add(transactionRec);
                 } 

@@ -1,4 +1,6 @@
 public class EmailMessageHandler {
+
+    // logic for processing Case
     public static void updateCaseStatus(List<EmailMessage> emailMessages) {
         Set<Id> caseIds = collectCaseIds(emailMessages);
         
@@ -38,27 +40,37 @@ public class EmailMessageHandler {
     }
 
     private static void processCase(Case c, Map<Id, Case> casesToUpdate) {
-        System.debug('email message:::' + c.EmailMessages);
-        
+        System.debug('Processing case with ID: ' + c.Id);
+
         if (!c.EmailMessages.isEmpty()) { // Ensure there are email messages
             EmailMessage latestEmail = c.EmailMessages[0]; // Fetch the most recent email
-            
+
+            // If the case is in the 'New' status, it should be adjusted based on the first interaction
             if (c.Status == 'New') {
-                if (!latestEmail.Incoming && !latestEmail.Subject.contains('New')) { // Outbound email (agent sends email)
+                if (!latestEmail.Incoming && !latestEmail.Subject.contains('New')) {
+                    // Outbound email (agent sends email)
                     c.Status = 'Awaiting Customer Response';
                     System.debug('Updating Case ID ' + c.Id + ' to Awaiting Customer Response');
-                }
-            }
-
-            if (c.Origin == 'Email' && c.Status == 'New') {
-                c.Status = 'New';
-            }
-            
-            // Handle inbound email (customer responds)
-            else if (latestEmail.Incoming) {
-                if (c.Status != 'Customer Responded') {
+                } 
+                else if (latestEmail.Incoming) {
+                    // Inbound email (customer responds)
                     c.Status = 'Customer Responded';
                     System.debug('Updating Case ID ' + c.Id + ' to Customer Responded');
+                }
+            } 
+            // Case is in 'Awaiting Customer Response' or 'Customer Responded'
+            else if (c.Status == 'Awaiting Customer Response') {
+                if (latestEmail.Incoming) {
+                    // Inbound email (customer responds)
+                    c.Status = 'Customer Responded';
+                    System.debug('Updating Case ID ' + c.Id + ' to Customer Responded');
+                }
+            }
+            else if (c.Status == 'Customer Responded') {
+                if (!latestEmail.Incoming && !latestEmail.Subject.contains('New')) {
+                    // Outbound email (agent sends email)
+                    c.Status = 'Awaiting Customer Response';
+                    System.debug('Updating Case ID ' + c.Id + ' to Awaiting Customer Response');
                 }
             }
             
@@ -75,4 +87,8 @@ public class EmailMessageHandler {
             System.debug('Error updating cases: ' + e.getMessage());
         }
     }
+    
+    // logic for processing Lead
+    
+ 
 }

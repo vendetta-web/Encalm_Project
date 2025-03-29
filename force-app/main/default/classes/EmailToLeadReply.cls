@@ -17,12 +17,16 @@ global class EmailToLeadReply implements Messaging.InboundEmailHandler {
                 List<Lead> leads = [SELECT Id,Status,OwnerId,CreatedById FROM Lead WHERE Name = :leadName ORDER BY LastModifiedDate DESC LIMIT 1];
 
                 if (!leads.isEmpty()) {
+                    String senderInfo = 'Email received from: ' + email.fromName + ' <' + envelope.fromAddress + '>\n\n';
+                    String fullDescription = senderInfo + email.plainTextBody;
                     // Create a new task associated with the lead
                     Task newTask = new Task(
                         WhoId = leads[0].Id,
                         Subject = email.subject,
                         TaskSubtype = 'Email',
-                        Description = email.plainTextBody
+                        //Description = email.plainTextBody
+                        Description = fullDescription
+
                     );
 
                     // Insert the new task
