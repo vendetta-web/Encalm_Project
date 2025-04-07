@@ -28,6 +28,9 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     jsPDFInitialized = false;
     isLoading = false;
     getPackage;
+    isQuotationSent=false;
+    bookingStage='';
+    showPayment
     @track getAddonDetail;
     selectedRowIndex = -1;
     selectedAddonRowIndex = -1;
@@ -47,6 +50,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     totalAmountAfterDiscount=0;
     @track oliFieldValues = {};
     serviceAirport;
+    flightType ='Domestic';
     flightNumber;
     flightDate;
     selectedPassenger;
@@ -189,15 +193,17 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     loadPackageData() {
         getPackageDetails({oppId: this.recordId})
         .then((result) => {
+            this.isLoading = true;
             this.getPackage = result; 
             this.getPackage = result.map((item) => ({
                 ...item, // Spread the existing properties
                 buttonLabel: 'Select', // Add buttonLabel to each item
                 class: 'selectbtn'
             }));
-            console.log('getPackage-->> ',JSON.stringify(this.getPackage));
+            this.isLoading = false;
         })
         .catch((error) => {
+            this.isLoading = false;
             console.error(error);
         });
     }
@@ -214,6 +220,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     loadAddonData() {
         getAddOnDetails({ oppId: this.recordId })
         .then((result) => {
+            this.isLoading = true;
             this.getAddonDetail = result.map((item) => ({
                 ...item, // Spread the existing properties
                 buttonLabel: 'Select', // Button label for the add-ons
@@ -229,8 +236,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 ],
             }));
             this.getTerminals();
+            this.isLoading = false;
         })
         .catch((error) => {
+            this.isLoading = false;
             console.error(error);
         });
     }
@@ -551,20 +560,28 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     loadPassengerData() {
         getOpportunityDetails({opportunityId: this.recordId})
         .then((result) => {
+            this.isLoading = true;
             this.serviceAirport = result.serviceAirport;
+            this.flightType = result.flightType;
             this.flightNumber = result.flightNumber;
             this.flightDate = result.flightDate;
             this.numberOfAdults = result.NoOfAdult; 
             this.numberOfChildren = result.NoOfChild;
             this.numberOfInfants = result.NoOfInfant;
+            this.bookingStage = result.bookingStage;
+            if (this.bookingStage !='' && this.bookingStage == 'Quotation Sent') {
+                this.isQuotationSent = true;
+            }
 
             this.guestRows = []; 
             this.addGuestRows('Adult', this.numberOfAdults);
             this.addGuestRows('Child', this.numberOfChildren);
             this.addGuestRows('Infant', this.numberOfInfants);
+            this.isLoading = false;
         })
         .catch((error) => {
             console.error(error);
+            this.isLoading = false;
         });
     }
 
@@ -609,18 +626,19 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         if (this.guestRows[index]) {
             this.guestRows[index][field] = value;
         }
-        // Variable to store the selected passenger's details as placard for the first time
-        if (this.selectedPassenger == undefined &&
-            this.guestRows[0].firstname != '' &&
-            this.guestRows[0].lastname != '' &&
-            this.guestRows[0].title != '' &&
-            this.guestRows[0].gender != ''
-        ) {
-            this.selectedPassenger = { ...this.guestRows[0] };
+        // Find the selected passenger with isPlacard === true
+        const selectedGuest = this.guestRows.find(guest => guest.isPlacard);
+        if (selectedGuest) {
+            // Only update selectedPassenger if the user is editing guest details
+            this.selectedPassenger = { ...selectedGuest };
         }
          // Validate after each change (onblur event)
          this.validatePhoneNumbers();
         
+    }
+    //check for nationality only if internation
+    get isNationalityRequired() {
+        return this.flightType?.toLowerCase().includes("international");
     }
 
     handleNationalityChange(event) {
@@ -672,6 +690,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         // Reassign updatedGuestRows back to guestRows (this triggers reactivity)
         this.guestRows = updatedGuestRows;
         this.handleBlur();
+        this.handleNationalityCheck(event);
     }
 
     handleNationalityOptionSelect(event) {
@@ -699,8 +718,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             guest.isPlacard = guest.id === selectedPassengerId;
             return guest;
         });     
-        // Find the selected passenger and update the selectedPassenger variable
-        this.selectedPassenger = { ...this.guestRows.find(guest => guest.id === selectedPassengerId) };
+         // Find the new selected guest and update placard details
+        this.selectedPassenger = { ...this.guestRows.find(guest => guest.isPlacard) };
     }
 
     handleTerminalChange(event) {
@@ -809,7 +828,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         // Check if all required fields are filled
         this.guestRows.forEach(guest => {
             if (
-                !guest.title || !guest.firstname || !guest.lastname || !guest.gender || !guest.nationality
+                !guest.title || !guest.firstname || !guest.lastname || !guest.gender || (!guest.nationality && this.isNationalityRequired)
             ) {
                 allRequiredFieldsFilled = false;
             }
@@ -829,6 +848,25 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     // Handle the blur event to trigger validation when a required field loses focus
     handleBlur() {
         this.validatePhoneNumbers();
+    }
+
+    handleNationalityCheck(event){
+        const field = event.target.label.toLowerCase().replace(/ /g, '');
+        const value = event.target.value;
+        const index = event.target.dataset.index;
+
+        if (this.guestRows[index]) {
+            this.guestRows[index][field] = value;
+        }
+
+        // Perform validation only if Nationality is required
+        if (field === 'nationality' && this.isNationalityRequired && !value) {
+            event.target.setCustomValidity("Nationality is required for international flights.");
+        } else {
+            event.target.setCustomValidity("");
+        }
+
+        event.target.reportValidity();
     }
 
     savePlacardDetails() {
@@ -962,6 +1000,9 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         // Call Apex method to generate and save PDF with the current record
         generateAndSavePDF({ recordId: this.recordId})
             .then((result) => {
+                if (result == 'Quotation Sent') {
+                    this.isQuotationSent = true;
+                }
                 this.showToast('Success', 'Booking Voucher created successfully', 'success');
                 this.dispatchEvent(new RefreshEvent());
             })

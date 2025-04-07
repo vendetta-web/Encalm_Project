@@ -30,6 +30,7 @@ global class MDEN_SaveSaleOrderItem {
                     
             OpportunityLineItem opLItem = new OpportunityLineItem();
             opLItem.OpportunityId = requestMap.order_id;
+            System.debug('=== requestMap.product_id==================>'+ requestMap.product_id);
             opLItem.Product2Id = requestMap.product_id;
             opLItem.Quantity    = requestMap.product_uom_qty ;
             opLItem.UnitPrice    = requestMap.price_unit ;

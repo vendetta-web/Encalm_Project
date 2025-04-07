@@ -18,6 +18,7 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
     isLoading = false;
     accountId='';
     selectedAccount;
+    todayDate= new Date().toISOString().split('T')[0];
  airportOptions = [];
  flightNumbers = [];
  baseAirportOptions;
@@ -39,6 +40,9 @@ export default class FlightBooking extends NavigationMixin(LightningElement) {
 @track adultCount = 1;
 @track childCount = 0;
 @track infantCount = 0;
+errorMessage ='';
+errorMessageDep='';
+errorMessageArr='';
 transitVia;
 arrivingFrom;
 showOtherDropdown = false;
@@ -233,7 +237,7 @@ qtyVal = 0;
     staTime = '';
     stdTime = '';
     serviceTime = '';
-    sector='';
+    @track sector='';
 
     // Passenger details fields for Tab 2
     firstName = '';
@@ -320,12 +324,14 @@ handleTabChange(event) {
 
    handleArrivalDateChange(event) { 
        this.arrivalDate = event.target.value;
+       event.target.blur();
        if(this.isTabOne){
             this.loadFlightData(this.arrivalDate, this.departureAirport, this.arrivingAirport);
         }
     }
     handleDepartureDateChange(event){
         this.departureDate = event.target.value;
+        event.target.blur();
         if(this.isTabTwo){
             this.loadFlightData(this.departureDate, this.arrivingAirport, this.departureAirport);
         }
@@ -338,6 +344,15 @@ handleTabChange(event) {
             option.label.toLowerCase().includes(searchKey)
         );
         this.showFlightNumber = this.flightNumberOptions.length > 0;
+
+        // Validate if the entered value matches one of the picklist options
+        const isValid = this.filteredFlightOptions.some(option => option.value === this.flightNumber);
+
+        if (!isValid) {
+            this.errorMessage = 'Please select a valid value from the picklist.';
+        } else {
+            this.errorMessage = ''; // Clear error if valid
+        }
     }
 
     handleFlightOptionSelect(event) {
@@ -351,6 +366,7 @@ handleTabChange(event) {
             this.setStdTime();
             this.opportunityFieldValues['Departure_Flight_Schedule__c']=this.getFlightId(this.flightNumber);
         }
+        this.errorMessage = '';
     }
 
     handleArrivalFlightOptionSelect(event) {
@@ -359,6 +375,7 @@ handleTabChange(event) {
         this.flightNumberArrival = selectedValue;
         this.setStaTime();
         this.opportunityFieldValues['Arriving_Flight_Schedule__c'] = this.getFlightId(this.flightNumberArrival);
+        this.errorMessageArr = '';
     }
 
     handleDepartureFlightOptionSelect(event) {
@@ -367,6 +384,7 @@ handleTabChange(event) {
         this.flightNumberDeparture = selectedValue;
         this.setStdTime();
         this.opportunityFieldValues['Departure_Flight_Schedule__c'] = this.getFlightId(this.flightNumberDeparture);
+        this.errorMessageDep='';
     }
 
     // Method to retrieve flight ID based on flight number
@@ -415,7 +433,7 @@ handleTabChange(event) {
             }, true);
         var errorMessage = 'Please fill the mandatory fields.'
         // Check validity of the fields
-        if (!All_Input_Valid || !All_Compobox_Valid) {
+        if (!All_Input_Valid || !All_Compobox_Valid || this.errorMessage !='' || this.errorMessageArr !='' || this.errorMessageDep !='') {
             // If any of the fields are invalid, don't proceed with submission
             this.showToast('Error', errorMessage, 'error');
             return;
@@ -491,11 +509,26 @@ handleTabChange(event) {
     handleArrivingAirportChange(event) {
         if(this.isTabThree){           
             //logic for search key in picklist for Service airport
-            const searchKey = event.target.value.toLowerCase();
+            /*const searchKey = event.target.value.toLowerCase();
             this.filteredAirportOptionsDepTo = this.allAirportOptionsDepTo.filter(option =>
                 option.label.toLowerCase().includes(searchKey)
             );
-            this.showTransitArrDropdown = this.allAirportOptionsDepTo.length > 0;
+            this.showTransitArrDropdown = this.allAirportOptionsDepTo.length > 0;*/
+
+            const searchKey = event.target.value.toLowerCase();
+            // Debounce logic
+            clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = setTimeout(() => {
+                // Filter the list with limited results
+                this.filteredAirportOptionsDepTo = this.allAirportOptionsDepTo
+                    .filter(option => {
+                        // Log each option to verify if the filter is working as expected
+                        return option.label.toLowerCase().includes(searchKey);
+                    })
+                    .slice(0, 10); // Limit to top 10 results
+                // Show dropdown if we have results
+                this.showTransitArrDropdown = this.filteredAirportOptionsDepTo.length > 0;
+            }, 300); // Adjust debounce delay as needed
         } else {
             //logic for search key in picklist for Service airport
             const searchKey = event.target.value.toLowerCase();
@@ -508,19 +541,42 @@ handleTabChange(event) {
     handleDepartureAirportChange(event) {
         if (this.isTabThree) {
             //logic for search key in picklist for Service airport
-            const searchKey = event.target.value.toLowerCase();
+            /*const searchKey = event.target.value.toLowerCase();
             this.filteredAirportOptionsArrFrom = this.allAirportOptionsArrFrom.filter(option =>
                 option.label.toLowerCase().includes(searchKey)
             );
             this.showTransitDepDropdown = this.allAirportOptionsArrFrom.length > 0;
+            */
+            const searchKey = event.target.value.toLowerCase();
+            // Debounce logic
+            clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = setTimeout(() => {
+                // Filter the list with limited results
+                this.filteredAirportOptionsArrFrom = this.allAirportOptionsArrFrom
+                    .filter(option => {
+                        // Log each option to verify if the filter is working as expected
+                        return option.label.toLowerCase().includes(searchKey);
+                    })
+                    .slice(0, 10); // Limit to top 10 results
+                // Show dropdown if we have results
+                this.showTransitDepDropdown = this.filteredAirportOptionsArrFrom.length > 0;
+            }, 300); // Adjust debounce delay as needed
 
         } else {
-            //logic for search key in picklist for other than service airport
             const searchKey = event.target.value.toLowerCase();
-            this.filteredOtherOptions = this.allAirportOptions.filter(option =>
-                option.label.toLowerCase().includes(searchKey)
-            );
-            this.showOtherDropdown = this.allAirportOptions.length > 0;
+            // Debounce logic
+            clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = setTimeout(() => {
+                // Filter the list with limited results
+                this.filteredOtherOptions = this.allAirportOptions
+                    .filter(option => {
+                        // Log each option to verify if the filter is working as expected
+                        return option.label.toLowerCase().includes(searchKey);
+                    })
+                    .slice(0, 10); // Limit to top 10 results
+                // Show dropdown if we have results
+                this.showOtherDropdown = this.filteredOtherOptions.length > 0;
+            }, 300); // Adjust debounce delay as needed
         }
     }
 
@@ -553,18 +609,33 @@ handleTabChange(event) {
         this.flightNumber = '';
         this.showFlightNumber = true;
         this.filteredFlightOptions = this.flightNumberOptions;
+        if (this.flightNumberOptions != undefined && this.flightNumberOptions.length === 0) {
+            this.errorMessage = 'No flights found for the selected date'; // Display error message
+        } else {
+            this.errorMessage = ''; // Clear error message if options are available
+        }
     }
 
     handleArrivalFlightDropdownOpen() {
         this.flightNumberArrival = '';
         this.showFlightNumberArrival = true;
         this.filteredFlightNumberOptionsArrival = this.flightNumberOptionsArrival;
+        if (this.flightNumberOptionsArrival != undefined && this.flightNumberOptionsArrival.length === 0) {
+            this.errorMessageArr = 'No flights found for the selected date'; // Display error message
+        } else {
+            this.errorMessageArr = ''; // Clear error message if options are available
+        }
     }
 
     handleDepartureFlightDropdownOpen() {
         this.flightNumberDeparture = '';
         this.showFlightNumberDepart = true;
         this.filteredFlightNumberOptionsDeparture = this.flightNumberOptionsDeparture;
+        if (this.flightNumberOptionsDeparture != undefined && this.flightNumberOptionsDeparture.length === 0) {
+            this.errorMessageDep = 'No flights found for the selected date'; // Display error message
+        } else {
+            this.errorMessageDep = ''; // Clear error message if options are available
+        }
     }
 
     resetflightNumber(){
@@ -597,6 +668,14 @@ handleTabChange(event) {
             option.label.toLowerCase().includes(searchKey)
         );
         this.showFlightNumberArrival = this.flightNumberOptionsArrival.length > 0;
+        // Validate if the entered value matches one of the picklist options
+        const isValid = this.filteredFlightNumberOptionsArrival.some(option => option.value === this.flightNumberArrival);
+
+        if (!isValid) {
+            this.errorMessageArr = 'Please select a valid value from the picklist.';
+        } else {
+            this.errorMessageArr = ''; // Clear error if valid
+        }
     }
     handleFlightNumberChangeDeparture(event) {
         //logic for search key in picklist for flight number
@@ -605,6 +684,14 @@ handleTabChange(event) {
             option.label.toLowerCase().includes(searchKey)
         );
         this.showFlightNumberDepart = this.flightNumberOptionsDeparture.length > 0;
+        // Validate if the entered value matches one of the picklist options
+        const isValid = this.filteredFlightNumberOptionsDeparture.some(option => option.value === this.flightNumberDeparture);
+
+        if (!isValid) {
+            this.errorMessageDep = 'Please select a valid value from the picklist.';
+        } else {
+            this.errorMessageDep = ''; // Clear error if valid
+        }
     }
 
 
@@ -651,7 +738,7 @@ setTransitSector(){
     if (this.transitAirport !='' && this.countryMap.has(this.transitAirport)) {
         tempCountryTransit = this.countryMap.get(this.transitAirport);
     }
-    if (this.arrivingAirport !='' && this.countryMap.has(this.arrivingAirport)) {
+    if (this.arrivingAirport !='' && this.countryMap.has(this.arrivingAirport)) {        
         tempCountryArr = this.countryMap.get(this.arrivingAirport);
     }
     if (this.departureAirport !='' && this.countryMap.has(this.departureAirport)) {
@@ -665,9 +752,11 @@ setTransitSector(){
         this.sector = 'International to Domestic';
     }else if((tempCountryTransit == tempCountryDep) &&  (tempCountryTransit== tempCountryArr)) {
         this.sector = 'Domestic to Domestic';
-    } else if ((tempCountryArr != tempCountryTransit) && (tempCountryTransit == tempCountryDep)){
+    } else if ((tempCountryTransit == tempCountryDep) && (tempCountryArr != tempCountryTransit)){
+        this.sector = 'Domestic to International';
+    } else if ((tempCountryTransit != tempCountryDep) && (tempCountryArr == tempCountryTransit)){
         this.sector = 'International to Domestic';
-    } else {
+    }else {
         this.sector = 'International to International';
     }
     this.opportunityFieldValues['Flight_Type__c'] = this.sector;
@@ -697,6 +786,9 @@ resetFlightDetails(){
     this.stdTime='';
 }
 resetOnTabChange() {
+    this.errorMessage='';
+    this.errorMessageDep='';
+    this.errorMessageArr='';
     this.arrivingAirport = '';
     this.departureAirport = '';
     this.departureAirportLabel = '';
@@ -788,11 +880,13 @@ handleTransitAirportChange(event){
 }
 handleTransitArrivalDateChange(event){
     this.arrivalDate = event.target.value;
-        this.loadTransitFlightData(this.arrivalDate, this.departureAirport, '');
+    event.target.blur();
+    this.loadTransitFlightData(this.arrivalDate, this.departureAirport, '');
 }
 handleTransitDepartureDateChange(event){
     this.departureDate = event.target.value;
-        this.loadTransitFlightData(this.departureDate, '', this.arrivingAirport);
+    event.target.blur();
+    this.loadTransitFlightData(this.departureDate, '', this.arrivingAirport);
 }
 
 

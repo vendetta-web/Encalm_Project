@@ -13,6 +13,16 @@
                             <value>Lead.Encalm_Booking</value>
                         </valueListItems>
                         <valueListItems>
+                            <value>Lead.Follow_up</value>
+                            <visibilityRule>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>Awaiting Customer response</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
                             <value>Lead.Send_Shopping_Email</value>
                         </valueListItems>
                         <valueListItems>
@@ -260,7 +270,7 @@
             <fieldInstance>
                 <fieldInstanceProperties>
                     <name>uiBehavior</name>
-                    <value>none</value>
+                    <value>required</value>
                 </fieldInstanceProperties>
                 <fieldItem>Record.Type__c</fieldItem>
                 <identifier>RecordType_cField</identifier>

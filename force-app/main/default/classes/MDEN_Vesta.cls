@@ -71,37 +71,13 @@ global class MDEN_Vesta {
         }
         
     }	
-    
-    
     global class GetResponseWrapper {
         global String Id; 
         global GetResponseWrapper(String Id) {
             this.Id = Id;
             
         }        
-    }    global static Time getTime(String timeStr){
-        List<String> timeParts = timeStr.split(' ');
-        String timeValue = timeParts[0]; // "02:00"
-        String amPm = timeParts[1]; // "PM"
-        
-        // Extract hours and minutes
-        List<String> hmParts = timeValue.split(':');
-        Integer hours = Integer.valueOf(hmParts[0]);
-        Integer minutes = Integer.valueOf(hmParts[1]);
-        
-        // Convert to 24-hour format
-        if (amPm == 'PM' && hours != 12) {
-            hours += 12; // Convert PM hours (except 12 PM)
-        } else if (amPm == 'AM' && hours == 12) {
-            hours = 0; // Convert 12 AM to 00 hours
-        }
-        
-        // Create Time object
-        Time convertedTime = Time.newInstance(hours, minutes, 0, 0);
-        
-        System.debug('Converted Time: ' + convertedTime);
-        return convertedTime;
-    }
+    }    
     global class FeedbackWrapper {
         global String location;
         global String rating;

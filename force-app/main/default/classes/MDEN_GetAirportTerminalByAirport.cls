@@ -12,16 +12,13 @@ global class MDEN_GetAirportTerminalByAirport {
            
         try{
             //Uncomment below to call via Postman
-            /*RestRequest request = RestContext.request;
+            RestRequest request = RestContext.request;
             Map<String, Object> requestMap = (Map<String, Object>) JSON.deserializeUntyped(request.requestbody.toString());
-            */
+           
             //Uncomment below to call via Developer console using : MDEN_GetAirportTerminalByAirport.getAiportTerminals();
-            String reqBody =' { ' +
+           /* String reqBody =' { ' +
 	        ' "airport_code" : "T1" ' +
-            ' } ';
-            Map<String, Object> requestMap = (Map<String, Object>) JSON.deserializeUntyped(reqBody);
-            
-            
+            ' } ';*/
             system.debug('requestMap==>'+requestMap);
             
             //Parsing data from requestMap

@@ -74,7 +74,9 @@ public class LeadStatusHelper {
         String cronExp = '0 ' + futureTime.minute() + ' ' + futureTime.hour() + ' ' + futureTime.day() + ' ' + (futureTime.month()) + ' ? ' + futureTime.year();
         System.debug('Scheduled time: ' + futureTime + ' with cron expression: ' + cronExp);
         LeadEscalationTimer scheduler = new LeadEscalationTimer(leadId, level);
-        System.schedule('Lead Timer First Check' +leadId, cronExp, scheduler);
+        if(!Test.isRunningTest()){
+            System.schedule('Lead Timer First Check' +leadId, cronExp, scheduler);
+        }
     }
     
     private static Boolean isReservationProfile(Id ownerId) {

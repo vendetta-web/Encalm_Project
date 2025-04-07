@@ -112,7 +112,7 @@
                 <br/><br/>
                  <table class="custom-table" border="1p">
                     <tr>
-                        <!--<th>Source</th>--><th>Sr.No</th><th>Description</th><th>HSN/HAC</th><th>Quantity</th><th>Unit Price</th><th>Taxes</th><th>Amount</th>
+                        <!--<th>Source</th>--><th>Sr.No</th><th>Description</th><th>HSN/HAC</th><th>Quantity</th><th>Unit Price</th><th>Taxes</th><th>Amount</th><th>Discount Amount</th>
                     </tr>
                     <apex:repeat value="{!oppLineItems}" var="item">
                         <tr>
@@ -124,6 +124,7 @@
                             <td>{!item.oppLineItem.UnitPrice}</td>
                             <td>GST 18%</td>
                             <td>{!item.oppLineItem.TotalPrice}</td>
+                            <td>{!item.oppLineItem.Discount_Amount__c}</td>
                         </tr>
                     </apex:repeat>
                 </table>

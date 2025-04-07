@@ -82,6 +82,9 @@ public class LeadEscalationTimer implements Schedulable {
             mail.setSubject('Lead Escalation');
             mail.setPlainTextBody(emailBody);
             Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+            if (manager != null) {
+            sendCustomNotification(lead.OwnerId, lead.Id);
+        }
         } else {
             System.debug('Owner does not have a manager assigned.');
         }
@@ -118,5 +121,20 @@ public class LeadEscalationTimer implements Schedulable {
         System.debug('Owner does not have a manager assigned.');
     }
 }
+   private void sendCustomNotification(Id ownerId, Id relatedRecordId) {
+    try {
+        CustomNotificationType cnType = [SELECT Id FROM CustomNotificationType WHERE DeveloperName = 'Lead_Escalation_Notification'];
+        Messaging.CustomNotification notification = new Messaging.CustomNotification();
 
+        notification.setNotificationTypeId(cnType.Id);  // Make sure this matches the API name of the notification type
+
+        notification.setTitle('Lead Got Escalated');  // Title of the notification
+        notification.setBody('Please check the Lead details');  // Body of the notification
+        notification.setTargetId(relatedRecordId);  // This will link the notification to the specific Lead record
+        notification.send(new Set<String>{ownerId});
+        System.debug('Custom Notification sent to user: ' + ownerId);
+    } catch (Exception e) {
+        System.debug('Error sending Custom Notification: ' + e.getMessage());
+    }
+}
 }

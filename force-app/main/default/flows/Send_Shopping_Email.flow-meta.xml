@@ -4,7 +4,7 @@
         <name>Send_Email</name>
         <label>Send Email</label>
         <locationX>176</locationX>
-        <locationY>674</locationY>
+        <locationY>782</locationY>
         <actionName>DemoEmailUtility</actionName>
         <actionType>apex</actionType>
         <connector>
@@ -20,7 +20,7 @@
         <inputParameters>
             <name>Body</name>
             <value>
-                <elementReference>bodyTemplate.value</elementReference>
+                <elementReference>FinalEmailBody.value</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -38,7 +38,7 @@
         <inputParameters>
             <name>Subject</name>
             <value>
-                <elementReference>$Label.Send_Shopping_Email_Subject</elementReference>
+                <elementReference>Get_Lead_Record_Details.Case__r.Subject</elementReference>
             </value>
         </inputParameters>
         <inputParameters>
@@ -49,6 +49,33 @@
         </inputParameters>
         <nameSegment>DemoEmailUtility</nameSegment>
         <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <name>Shopping_Email_Template_Renderer</name>
+        <label>Shopping Email Template Renderer</label>
+        <locationX>176</locationX>
+        <locationY>458</locationY>
+        <actionName>ShoppingEmailTemplateRenderer</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Send_Shopping_Email</targetReference>
+        </connector>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>leadId</name>
+            <value>
+                <elementReference>Get_Lead_Record_Details.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>templateId</name>
+            <value>
+                <elementReference>Get_EmailTemplates.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>ShoppingEmailTemplateRenderer</nameSegment>
+        <offset>0</offset>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
     </actionCalls>
     <apiVersion>63.0</apiVersion>
     <description>Update by Prateek _19 March</description>
@@ -112,14 +139,14 @@
         <locationY>350</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Send_Shopping_Email</targetReference>
+            <targetReference>Shopping_Email_Template_Renderer</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Name</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>Shopping Email on Lead Creation</stringValue>
+                <stringValue>Shopping Email on Lead</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -158,7 +185,7 @@
         <name>Status_Change</name>
         <label>Status Change</label>
         <locationX>176</locationX>
-        <locationY>782</locationY>
+        <locationY>890</locationY>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Id</field>
@@ -176,10 +203,10 @@
         <object>Lead</object>
     </recordUpdates>
     <screens>
-        <name>Send_Email_Preview</name>
-        <label>Send Email Preview</label>
+        <name>Final_Email_Preview</name>
+        <label>Final Email Preview</label>
         <locationX>176</locationX>
-        <locationY>566</locationY>
+        <locationY>674</locationY>
         <allowBack>true</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>true</allowPause>
@@ -188,7 +215,7 @@
         </connector>
         <fields>
             <name>tempp</name>
-            <fieldText>&lt;p&gt;{!bodyTemplate.value}&lt;/p&gt;</fieldText>
+            <fieldText>&lt;p&gt;{!FinalEmailBody.value}&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
         </fields>
         <nextOrFinishButtonLabel>Send Email</nextOrFinishButtonLabel>
@@ -199,12 +226,12 @@
         <name>Send_Shopping_Email</name>
         <label>Send Shopping Email</label>
         <locationX>176</locationX>
-        <locationY>458</locationY>
+        <locationY>566</locationY>
         <allowBack>true</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>false</allowPause>
         <connector>
-            <targetReference>Send_Email_Preview</targetReference>
+            <targetReference>Final_Email_Preview</targetReference>
         </connector>
         <fields>
             <name>ToEmailAddress</name>
@@ -320,33 +347,13 @@
             </visibilityRule>
         </fields>
         <fields>
-            <name>Template_Preview</name>
-            <defaultValue>
-                <stringValue>{!ShoppingEmail}</stringValue>
-            </defaultValue>
-            <fieldText>Template Preview</fieldText>
-            <fieldType>LargeTextArea</fieldType>
-            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
-            <isRequired>false</isRequired>
-            <visibilityRule>
-                <conditionLogic>1</conditionLogic>
-                <conditions>
-                    <leftValueReference>htmltest</leftValueReference>
-                    <operator>EqualTo</operator>
-                    <rightValue>
-                        <stringValue>{$GlobalConstant.EmptyString}</stringValue>
-                    </rightValue>
-                </conditions>
-            </visibilityRule>
-        </fields>
-        <fields>
-            <name>bodyTemplate</name>
+            <name>FinalEmailBody</name>
             <extensionName>c:inputRichTextFSC</extensionName>
             <fieldType>ComponentInstance</fieldType>
             <inputParameters>
                 <name>value</name>
                 <value>
-                    <elementReference>ShoppingEmail</elementReference>
+                    <elementReference>Shopping_Email_Template_Renderer.body</elementReference>
                 </value>
             </inputParameters>
             <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>

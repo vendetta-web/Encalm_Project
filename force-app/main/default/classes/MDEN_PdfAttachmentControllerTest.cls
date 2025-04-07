@@ -77,14 +77,21 @@ public  class MDEN_PdfAttachmentControllerTest {
         );
         insert fd;
         
-        Flight_Schedule__c fsch = new Flight_Schedule__c(
+        Flight_Schedule__c fsch1 = new Flight_Schedule__c(
             Flight_Detail__c = fd.Id,
             Flight_Date__c = System.today()
         );
-        insert fsch;
+        insert fsch1;
         
-      //  opp.Departure_Flight_Schedule__c, 
-        opp.Arriving_Flight_Schedule__c = fsch.id;
+        Flight_Schedule__c fsch2 = new Flight_Schedule__c(
+            Flight_Detail__c = fd.Id,
+            Flight_Date__c = System.today() + 1
+        );
+        insert fsch2;
+        
+        opp.Arriving_Flight_Schedule__c = fsch1.id;
+        opp.Departure_Flight_Schedule__c = fsch2.id;
+        opp.Service_Type__c = 'Transit';
         update opp;
         
     }

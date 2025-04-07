@@ -226,15 +226,19 @@ public with sharing class PackageSelectionController {
                        Service_Airport__c,
                        Flight_Number_Arrival__c,
                        Service_Type__c,
+                       Flight_Type__c,
+                       StageName,
                        Flight_Number_Departure__c,(SELECT Id FROM OpportunityLineItems)
                 FROM Opportunity 
                 WHERE Id = :opportunityId 
                 LIMIT 1];
         passengerWrapper pasWrp = new passengerWrapper();
+        pasWrp.flightType = opp.Flight_Type__c;
         pasWrp.NoOfAdult = opp.Number_of_Adults__c;
         pasWrp.NoOfChild = opp.Number_of_Children__c;
         pasWrp.NoOfInfant = opp.Number_of_Infants__c;
         pasWrp.serviceAirport = opp.Service_Airport__c;
+        pasWrp.bookingStage = opp.StageName;
         pasWrp.flightNumber = opp.Service_Type__c =='Transit' ? opp.Flight_Number_Arrival__c + ' / '+ opp.Flight_Number_Departure__c : opp.Flight_Number_Arrival__c != null ? 
                                 opp.Flight_Number_Arrival__c : 
                                 opp.Flight_Number_Departure__c != null ?
@@ -412,6 +416,7 @@ public with sharing class PackageSelectionController {
             Id pricebookEntry = (Id) productDetail.get('pricebookEntryId');
             Decimal quantity = (Boolean) productDetail.get('isChild') ? (Decimal) productDetail.get('childCount') : (Decimal) productDetail.get('count');
             Decimal unitPrice = (Decimal) productDetail.get('unitPrice');
+            Decimal discountAmount = (Decimal) productDetail.get('discountValue');
 
             // Safely extract pickup and drop terminals
             List<String> pickupTerminals = new List<String>();
@@ -451,6 +456,7 @@ public with sharing class PackageSelectionController {
                         oli.Quantity = 1;
                         oli.UnitPrice = unitPrice;
                         oli.PricebookEntryId = pricebookEntry; // Link PricebookEntry to OLI
+                        oli.Discount_Amount__c = discountAmount;
                         oli.Status__c = 'Active';
 
                         totalListPrice += unitPrice;    
@@ -513,8 +519,9 @@ public with sharing class PackageSelectionController {
                     transactionRec.Booking_Id__c = opportunityId;
                     transactionRec.List_Price__c = oli.UnitPrice;
                     transactionRec.Name = opp.Name;
-                    transactionRec.Transaction_Type__c = 'Credit';
+                    transactionRec.Transaction_Type__c = 'Credit'; //credit when amount is received by Encalm
                     transactionRec.Order_Id__c = oli.Id; // link oli with transaction
+                    transactionRec.Discount_Amount__c = oli.Discount_Amount__c; // set discount amount
                     transactionList.add(transactionRec);
                 }
             }
@@ -620,5 +627,9 @@ public with sharing class PackageSelectionController {
         public String flightNumber;
         @AuraEnabled
         public String flightDate;
+        @AuraEnabled
+        public String flightType;
+        @AuraEnabled
+        public String bookingStage;
     }
 }

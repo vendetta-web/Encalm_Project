@@ -10,13 +10,8 @@ global class MDEN_SaveBookingCancelRequest {
         //Initialize the response wrapper with blank status and blank message
         MDEN_GetResponseWrapper mden_responseWrapper = new MDEN_GetResponseWrapper('', '');
         try{
-            //MDEN_SaveBookingCancelRequest.saveBookingCancelRequest();
-            
-            //Uncomment below code to test in Postman
-            
-            //Uncomment below code to test in Postman
             RestRequest request = RestContext.request;
-            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper) JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
+            MDEN_GetRequestWrapper requestMap = (MDEN_GetRequestWrapper)JSON.deserialize(request.requestBody.toString(), MDEN_GetRequestWrapper.class);
             
             
             //Uncomment below to call via Developer console using : MDEN_GetAirportTerminalByAirport.getAiportTerminals();

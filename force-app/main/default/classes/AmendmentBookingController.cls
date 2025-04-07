@@ -15,7 +15,7 @@ public class AmendmentBookingController {
             ];
 
             for (opportunitylineitem oli: opp.opportunitylineitems) {
-                if (oli.Product2.Family != 'Add Ons') {
+                if (oli.Product2.Family != 'Add Ons' && oli.Product2.Family != 'Surcharge') {
                     packageName = oli.Product2.Family;
                     bookingAmount += oli.UnitPrice;
                 }

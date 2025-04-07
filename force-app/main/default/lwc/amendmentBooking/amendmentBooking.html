@@ -144,7 +144,12 @@
                             </lightning-layout-item>
                             <!-- Travel Nationality field -->
                             <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
-                                <label class="slds-form-element__label slds-no-flex"><span class="slds-required" style="color: #BA0517;">*</span>Nationality</label>
+                                <label class="slds-form-element__label slds-no-flex">
+                                    <template if:true={isNationalityRequired}>
+                                        <span class="slds-required" style="color: #BA0517;">*</span>
+                                    </template>
+                                    Nationality
+                                </label>
                                 <lightning-input 
                                     onblur={handleDropDownClose}
                                     variant="label-hidden"
@@ -153,7 +158,7 @@
                                     onfocus={handleNationalityDropdownOpen} 
                                     label="Nationality"
                                     data-index={index}
-                                    required>
+                                    required={isNationalityRequired}>
                                 </lightning-input>
                                 <!-- Display filtered options in a dropdown-style list -->
                                 <template if:true={guest.showDropdown}>

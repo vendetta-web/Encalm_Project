@@ -95,7 +95,7 @@
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Date of Arrival</label>
                             <lightning-input required type="date" name="Date_of_Arrival__c" variant="label-hidden" value={arrivalDate}
-                            onblur={handleFieldChange} onchange={handleArrivalDateChange}></lightning-input>
+                            onblur={handleFieldChange} min={todayDate} onchange={handleArrivalDateChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout multiple-rows="true">
@@ -111,6 +111,9 @@
                                 onfocus={handleFlightDropdownOpen} 
                                 required>
                             </lightning-input>
+                            <template if:true={errorMessage}>
+                                <div class="error-message">{errorMessage}</div>
+                            </template>
                             <!-- Display filtered options in a dropdown-style list -->
                             <template if:true={showFlightNumber}>
                                 <div class="dropdownFlight">
@@ -224,7 +227,7 @@
                         <lightning-layout-item size="6" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Date of Departure</label>
                             <lightning-input  required type="date" name="Date_of_Departure__c" variant="label-hidden" value={departureDate}
-                            onblur={handleFieldChange} onchange={handleDepartureDateChange}></lightning-input>
+                            onblur={handleFieldChange} min={todayDate} onchange={handleDepartureDateChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout multiple-rows="true">
@@ -240,6 +243,9 @@
                                 onfocus={handleFlightDropdownOpen} 
                                 required>
                             </lightning-input>
+                            <template if:true={errorMessage}>
+                                <div class="error-message">{errorMessage}</div>
+                            </template>
                             <!-- Display filtered options in a dropdown-style list -->
                             <template if:true={showFlightNumber}>
                                 <div class="dropdownFlight">
@@ -376,7 +382,7 @@
                     <lightning-layout-item size="4" class="slds-p-around_small">
                         <label class="custom-label slds-form-element__label">Date of Arrival</label>
                         <lightning-input  required name="Date_of_Arrival__c" type="date" variant="label-hidden" value={arrivalDate}
-                            onblur={handleFieldChange} onchange={handleTransitArrivalDateChange}></lightning-input>
+                            onblur={handleFieldChange} min={todayDate} onchange={handleTransitArrivalDateChange}></lightning-input>
                     </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Flight Number</label>
@@ -390,6 +396,9 @@
                                 onfocus={handleArrivalFlightDropdownOpen} 
                                 required>
                             </lightning-input>
+                            <template if:true={errorMessageArr}>
+                                <div class="error-message">{errorMessageArr}</div>
+                            </template>
                             <!-- Display filtered options in a dropdown-style list -->
                             <template if:true={showFlightNumberArrival}>
                                 <div class="dropdownFlight">
@@ -409,7 +418,7 @@
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Date of Departure</label>
                             <lightning-input  required name="Date_of_Departure__c" type="date" variant="label-hidden" value={departureDate}
-                            onblur={handleFieldChange} onchange={handleTransitDepartureDateChange}></lightning-input>
+                            onblur={handleFieldChange} min={todayDate} onchange={handleTransitDepartureDateChange}></lightning-input>
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Flight Number</label>
@@ -423,6 +432,9 @@
                                 onfocus={handleDepartureFlightDropdownOpen} 
                                 required>
                             </lightning-input>
+                            <template if:true={errorMessageDep}>
+                                <div class="error-message">{errorMessageDep}</div>
+                            </template>
                             <!-- Display filtered options in a dropdown-style list -->
                             <template if:true={showFlightNumberDepart}>
                                 <div class="dropdownFlight">

@@ -19,10 +19,10 @@
                 </rightValue>
             </conditions>
             <conditions>
-                <leftValueReference>Case.Inquiry_Type__c</leftValueReference>
-                <operator>IsNull</operator>
+                <leftValueReference>Case.Status</leftValueReference>
+                <operator>EqualTo</operator>
                 <rightValue>
-                    <booleanValue>false</booleanValue>
+                    <stringValue>Closed</stringValue>
                 </rightValue>
             </conditions>
             <connector>
@@ -31,6 +31,7 @@
             <label>Complete CaseMilestone</label>
         </rules>
     </decisions>
+    <description>Update by Saurabh_01 April 25</description>
     <environments>Default</environments>
     <formulas>
         <description>CaseMilestone completion date.</description>
@@ -125,6 +126,13 @@
         <dataType>String</dataType>
         <isCollection>false</isCollection>
         <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>LeadId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
         <isOutput>false</isOutput>
     </variables>
 </Flow>

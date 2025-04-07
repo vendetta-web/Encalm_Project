@@ -13,21 +13,16 @@ global class MDEN_ForgotPassword {
         
  		try{
             //Uncomment below code to test in Postman
-            /*RestRequest request = RestContext.request;
+           RestRequest request = RestContext.request;
             Map<String, Object> requestMap = (Map<String, Object>) JSON.deserializeUntyped(request.requestbody.toString());
-            */
-            
             //Uncomment below to call via Developer console using : MDEN_ForgotPassword.getForgotPassword();
-            String reqBody =' { ' +
+            /*String reqBody =' { ' +
 				' "email": "vijay.garg@maxify.digital" '+
-            ' } ';
-            
-            Map<String, Object> requestMap = (Map<String, Object>) JSON.deserializeUntyped(reqBody);
-            
+            ' } ';*/
             system.debug('requestMap==>'+requestMap.get('email'));
 			//Parsing data from requestMap
             String email = (String)requestMap.get('email');
-            
+            System.debug('=======email=========='+email);
             //Fetch Account detail based on filter of input parameters
             List<Account> accounts = [select id,
                                            PersonTitle,

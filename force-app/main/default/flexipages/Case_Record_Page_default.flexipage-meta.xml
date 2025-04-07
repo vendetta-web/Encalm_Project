@@ -28,6 +28,16 @@
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
+                            <value>Case.Follow_up</value>
+                            <visibilityRule>
+                                <criteria>
+                                    <leftValue>{!Record.Status}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>Awaiting Customer Response</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
                             <value>ChangeOwnerOne</value>
                         </valueListItems>
                         <valueListItems>
@@ -739,24 +749,14 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Follow_Up_Required__c</fieldItem>
-                <identifier>RecordFollow_Up_Required_cField</identifier>
+                <fieldItem>Record.Follow_up_Date_and_Time__c</fieldItem>
+                <identifier>RecordFollow_up_Date_and_Time__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-7b8b3c15-0a0e-4d46-962d-2a70202b5bfe</name>
         <type>Facet</type>
     </flexiPageRegions>
     <flexiPageRegions>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.TAT_Start__c</fieldItem>
-                <identifier>RecordTAT_Start_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
         <name>Facet-406aa0de-2043-4674-a464-65c15a119db7</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -955,7 +955,7 @@
                 </componentInstanceProperties>
                 <componentInstanceProperties>
                     <name>label</name>
-                    <value>Set Follow Up Required</value>
+                    <value>Follow up Details</value>
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection2</identifier>

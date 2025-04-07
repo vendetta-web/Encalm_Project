@@ -29,7 +29,7 @@
             </div>
         </lightning-card>
     </template>
-
+    <template if:false={isQuotationSent}>
     <!-- previous button click show first page details in disabled mode -->
     <template if:true={showChild}>
     <c-flight-booking-preview onbuttonclick={loadDetailsAfterUpdate} opp={recordId}></c-flight-booking-preview>
@@ -162,9 +162,10 @@
                             </div>
                         </template>
                         <template if:true={showDiscount}>
-                            <strong>Total Discount Amount : &#8377; {totalAmountAfterDiscount}</strong>
+                            <strong>Total Amount : &#8377; {totalAmount}</strong>
+                            <strong>Total Discount Amount : &#8377; {totalDiscountAmount}</strong>
                         </template>
-                        <strong>{amountMessage} : &#8377; {totalAmount}</strong> <!-- Show the amount or amount after discount --> 
+                        <strong>{amountMessage} : &#8377; {totalAmountAfterDiscount}</strong> <!-- Show the amount or amount after discount --> 
                     </div>
                 </div>
             </template>
@@ -233,7 +234,12 @@
                                 </lightning-layout-item>
                                 <!-- Travel Nationality field -->
                                 <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
-                                    <label class="slds-form-element__label slds-no-flex"><span class="slds-required" style="color: #BA0517;">*</span>Nationality</label>
+                                    <label class="slds-form-element__label slds-no-flex">
+                                        <template if:true={isNationalityRequired}>
+                                            <span class="slds-required" style="color: #BA0517;">*</span>
+                                        </template>
+                                        Nationality
+                                    </label>
                                     <lightning-input 
                                         onblur={handleDropDownClose}
                                         variant="label-hidden"
@@ -242,7 +248,7 @@
                                         onfocus={handleNationalityDropdownOpen} 
                                         label="Nationality"
                                         data-index={index}
-                                        required>
+                                        required={isNationalityRequired}>
                                     </lightning-input>
                                     <!-- Display filtered options in a dropdown-style list -->
                                     <template if:true={guest.showDropdown}>
@@ -361,7 +367,11 @@
                                         </div>
                                     </template>
                                     
-                                    <strong>Final Amount : &#8377; {totalAmount}</strong> <!-- Show the param2 of the selected row --> 
+                                    <template if:true={showDiscount}>
+                                        <strong>Total Amount : &#8377; {totalAmount}</strong>
+                                        <strong>Total Discount Amount : &#8377; {totalDiscountAmount}</strong>
+                                    </template>
+                                    <strong>{amountMessage} : &#8377; {totalAmountAfterDiscount}</strong> <!-- Show the amount or amount after discount -->
                                 </div>
                             </div>
                         </template>
@@ -456,11 +466,20 @@
                     <footer class="slds-modal__footer">
                         <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
                         <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button>
-                        <lightning-button label="Confirm Booking" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
+                        <template if:false={isQuotationSent}>
+                            <lightning-button label="Confirm Booking" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
+                        </template>
                     </footer>
                 
             </template>
-            <!-- Conditionally display the spinner -->
+    </template>
+    <!-- Conditionally display the spinner -->
+    <template if:true={isQuotationSent}>
+        <div class="message-box">
+            <span class="message-text">This Quotation is sent for this Booking!</span>
+        </div>
+    </template>
+    <!-- Conditionally display the spinner -->
     <template if:true={isLoading}>
         <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
     </template>

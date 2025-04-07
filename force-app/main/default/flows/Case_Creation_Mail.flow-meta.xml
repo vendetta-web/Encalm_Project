@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Acknowledgement_Mail</name>
         <label>Acknowledgement Mail</label>
-        <locationX>584</locationX>
-        <locationY>371</locationY>
+        <locationX>50</locationX>
+        <locationY>431</locationY>
         <actionName>EmailUtility</actionName>
         <actionType>apex</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -36,12 +36,64 @@
         <offset>0</offset>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
+    <decisions>
+        <name>Check_Field_Updates</name>
+        <label>Check Field Updates</label>
+        <locationX>446</locationX>
+        <locationY>431</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Followup_Date_Time_Updated</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Follow_up_Date_and_Time__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Create_Follow_up_Task</targetReference>
+            </connector>
+            <label>Followup Date Time Updated</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Insert_Update</name>
+        <label>Insert/ Update</label>
+        <locationX>248</locationX>
+        <locationY>323</locationY>
+        <defaultConnector>
+            <targetReference>Check_Field_Updates</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Update</defaultConnectorLabel>
+        <rules>
+            <name>Insert</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>isNew</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Acknowledgement_Mail</targetReference>
+            </connector>
+            <label>Insert</label>
+        </rules>
+    </decisions>
     <description>Updated by Saurabh- Remove Schedule path(Escalation)</description>
     <environments>Default</environments>
     <formulas>
         <name>isNew</name>
         <dataType>Boolean</dataType>
         <expression>ISNEW()</expression>
+    </formulas>
+    <formulas>
+        <name>SetReminderTime</name>
+        <dataType>DateTime</dataType>
+        <expression>DATETIMEVALUE({!$Record.Follow_up_Date_and_Time__c} - (15 / 1440))</expression>
     </formulas>
     <interviewLabel>Case Creation Mail {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Case Creation Mail</label>
@@ -54,7 +106,7 @@
     <processMetadataValues>
         <name>CanvasMode</name>
         <value>
-            <stringValue>FREE_FORM_CANVAS</stringValue>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
         </value>
     </processMetadataValues>
     <processMetadataValues>
@@ -64,17 +116,67 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
+    <recordCreates>
+        <name>Create_Follow_up_Task</name>
+        <label>Create Follow up Task</label>
+        <locationX>314</locationX>
+        <locationY>539</locationY>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>$Record.Follow_up_Date_and_Time__c</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <stringValue>Task</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>IsReminderSet</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ReminderDateTime</field>
+            <value>
+                <elementReference>SetReminderTime</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <stringValue>Follow up</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
     <start>
-        <locationX>458</locationX>
-        <locationY>48</locationY>
+        <locationX>122</locationX>
+        <locationY>0</locationY>
         <connector>
-            <targetReference>Acknowledgement_Mail</targetReference>
+            <targetReference>Insert_Update</targetReference>
         </connector>
         <object>Case</object>
-        <recordTriggerType>Create</recordTriggerType>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>InvalidDraft</status>
+    <status>Active</status>
     <variables>
         <name>PriorOwner</name>
         <dataType>String</dataType>

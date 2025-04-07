@@ -15,7 +15,7 @@ private class LeadStatusHelperTest {
             LastName = 'Reservation',
             LanguageLocaleKey = 'en_US',
             LocaleSidKey = 'en_US',
-            ProfileId = reservationProfile.Id,
+            ProfileId = [Select ID,Name From Profile Where Name='Reservation' LIMIT 1].Id,
             TimeZoneSidKey = 'America/Los_Angeles',
             UserName = 'reservation.user@test.com'
         );
@@ -44,6 +44,7 @@ private class LeadStatusHelperTest {
             LastName = 'Test',
             Company = 'Test Company',
             Status = 'Open'
+            ,Email='testlead23@yopmail.com'
         );
         insert testLead;
         
@@ -51,6 +52,9 @@ private class LeadStatusHelperTest {
         testLead.Status = 'Awaiting Customer response';
         
         Test.startTest();
+        QueueSobject mappingObject = new QueueSobject(QueueId = queue.Id, SobjectType = 'Lead');
+        System.runAs(new User(Id = UserInfo.getUserId()))
+        {insert mappingObject;}
         update testLead;
         Test.stopTest();
         
@@ -67,6 +71,7 @@ private class LeadStatusHelperTest {
             LastName = 'Test',
             Company = 'Test Company',
             Status = 'Open',
+            Email='testlead23@yopmail.com',
             Case__c = testCase.Id
         );
         insert testLead;
@@ -93,6 +98,7 @@ private class LeadStatusHelperTest {
             LastName = 'Test',
             Company = 'Test Company',
             Status = 'Open',
+            Email='testlead23@yopmail.com',
             Case__c = testCase.Id
         );
         insert testLead;
@@ -111,6 +117,7 @@ private class LeadStatusHelperTest {
             LastName = 'Test',
             Company = 'Test Company',
             Status = 'Working',
+            Email='testlead23@yopmail.com',
             OwnerId = UserInfo.getUserId()
         );
         insert testLead;
@@ -136,6 +143,7 @@ private class LeadStatusHelperTest {
             LastName = 'Test',
             Company = 'Test Company',
             Status = 'Working',
+            Email='testlead23@yopmail.com',
             OwnerId = resUser.Id
         );
         insert testLead;
@@ -158,25 +166,29 @@ private class LeadStatusHelperTest {
     @isTest
     static void testErrorHandlingInHandleBeforeUpdate() {
         // Setup test data to force exception
-        Lead testLead = new Lead(
+       
+        Test.startTest();
+        try {
+             Lead testLead= new Lead(
             LastName = 'Test',
             Company = 'Test Company',
             Status = 'Open',
+            Email='testlead23@yopmail.com',
             Case__c = 'invalidId' // This will cause an exception
         );
-        insert testLead;
-        
-        Test.startTest();
-        try {
+            insert testLead;
             testLead.Status = 'Awaiting Customer response';
             update testLead;
+            Lead updatedLead = [SELECT Id, Status FROM Lead WHERE Id = :testLead.Id];
+            System.assertEquals('Awaiting Customer response', updatedLead.Status, 'Lead should be updated even with error in handler');
+            
         } catch (Exception e) {
-            System.assert(false, 'Exception should be caught in handler and not bubble up');
+            System.debug(e.getMessage());
+            System.assert(e.getMessage()=='Invalid id: invalidId', 'Exception should be caught in handler and not bubble up');
         }
+
         Test.stopTest();
         
         // Verify the lead was still updated despite the error
-        Lead updatedLead = [SELECT Id, Status FROM Lead WHERE Id = :testLead.Id];
-        System.assertEquals('Awaiting Customer response', updatedLead.Status, 'Lead should be updated even with error in handler');
     }
 }

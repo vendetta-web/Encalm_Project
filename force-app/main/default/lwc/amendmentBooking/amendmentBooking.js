@@ -72,6 +72,7 @@ export default class AmendmentBooking extends LightningElement {
     selectedRowIndex = -1;
     selectedPackage = '';
     selectedAmount ='';
+    flightType ='Domestic';
 
     genderOptions = [
         { label: 'Male', value: 'Male' },
@@ -131,6 +132,7 @@ export default class AmendmentBooking extends LightningElement {
     loadOpportunityData() {
         getOpportunityDetails({opportunityId: this.recordId})
         .then((result) => {
+            this.flightType = result.flightType;
             this.numberOfAdults = result.NoOfAdult; 
             this.numberOfChildren = result.NoOfChild;
             this.numberOfInfants = result.NoOfInfant;
@@ -421,6 +423,30 @@ export default class AmendmentBooking extends LightningElement {
         }    
     }
 
+    //check for nationality only if international
+    get isNationalityRequired() {
+        return this.flightType?.toLowerCase().includes("international");
+    }
+    //check for domestic and international
+    handleNationalityCheck(event){
+        const field = event.target.label.toLowerCase().replace(/ /g, '');
+        const value = event.target.value;
+        const index = event.target.dataset.index;
+
+        if (this.guestRows[index]) {
+            this.guestRows[index][field] = value;
+        }
+
+        // Perform validation only if Nationality is required
+        if (field === 'nationality' && this.isNationalityRequired && !value) {
+            event.target.setCustomValidity("Nationality is required for international flights.");
+        } else {
+            event.target.setCustomValidity("");
+        }
+
+        event.target.reportValidity();
+    }
+
     handleNationalityChange(event) {
         const index = event.target.dataset.index;    
         // Logic for searching the key in the picklist for Nationality
@@ -506,6 +532,7 @@ export default class AmendmentBooking extends LightningElement {
             });
             // Reassign updatedGuestRows back to guestRows (this triggers reactivity)
             this.guestRows = updatedGuestRows;
+            this.handleNationalityCheck(event);
         }
     }
 
@@ -769,6 +796,7 @@ export default class AmendmentBooking extends LightningElement {
 
     //Method to show the order summary on adding passengers
     handlePackageSummary() {
+        console.log('getPackage',JSON.stringify(this.getPackage));
         this.orderSummaryPackage = this.getPackage
         .filter(wrapper => wrapper.packageFamily == this.selectedPackage && wrapper.priceTag != undefined) // Filter the existing Package
         .map(wrapper => {

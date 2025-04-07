@@ -129,6 +129,13 @@
                 <elementReference>$Record.From__c</elementReference>
             </value>
         </filters>
+        <filters>
+            <field>Id</field>
+            <operator>NotEqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
         <getFirstRecordOnly>false</getFirstRecordOnly>
         <object>Discount__c</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>

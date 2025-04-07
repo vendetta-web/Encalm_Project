@@ -44,6 +44,7 @@ public with sharing class LeadConversionController {
                     }
                     combineCode = EncalmCode + airportCode + getServiceCode(serviceTypeCode) + generateNewBookingNumber();
                     opp.Name = combineCode;
+                    opp.StageName = 'Quotation';
                     update opp; // Save the updates
                 } else {
                     throw new AuraHandledException('Lead conversion failed.');
