@@ -12,7 +12,7 @@ const fields = [STAGE_NAME, RECORD_TYPE_ID, FOLLOWUP_FIELD, LEAD_OWNER, REASON_F
 
 export default class EncalmLeadProcess extends NavigationMixin(LightningElement) {
     @track reservationStages = ['Open', 'Awaiting Customer response','Customer Responded','Escalated', 'Closed/Converted'];
-    //@track salesStages = ['Open', 'Awaiting Customer response','Closed/Converted'];
+    @track salesStages = ['Open', 'Awaiting Customer response','Customer Responded','Discount Requested','Discount Approved','Pending Contract Signing','Escalated', 'Closed/Converted'];
     pathType = 'path';
     @api recordId;
     @track showcustompath = false;
@@ -64,9 +64,9 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         if (this.RecordType === 'Reservation') {
             this.setPathValues(this.reservationStages);
         } 
-        // else if (this.RecordType === 'Sales') {
-        //     this.setPathValues(this.salesStages);
-        // }
+         else if (this.RecordType === 'Sales') {
+             this.setPathValues(this.salesStages);
+         }
     }
 
     // Set path values based on stages

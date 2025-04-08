@@ -107,7 +107,8 @@ export default class CaseToLead extends NavigationMixin(LightningElement) {
                 actionName: 'new'
             },
             state: {
-                defaultFieldValues: this.getDefaultFieldValues(leadDefaultValues)
+                defaultFieldValues: this.getDefaultFieldValues(leadDefaultValues),
+                useRecordTypeCheck: 1
             }
         });
     }

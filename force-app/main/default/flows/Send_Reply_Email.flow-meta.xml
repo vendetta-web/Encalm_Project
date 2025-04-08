@@ -247,7 +247,7 @@
             <inputParameters>
                 <name>value</name>
                 <value>
-                    <elementReference>replyBodyTemplate</elementReference>
+                    <elementReference>Current_Task_Data.Description</elementReference>
                 </value>
             </inputParameters>
             <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>

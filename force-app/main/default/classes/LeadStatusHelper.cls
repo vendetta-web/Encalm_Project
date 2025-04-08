@@ -67,7 +67,13 @@ public class LeadStatusHelper {
     }
     
     
-    private static void startTimer(Id leadId, Integer minutes, Integer level) {        
+    private static void startTimer(Id leadId, Integer minutes, Integer level) {  
+        Lead ldList = [SELECT Id, Name, TAT_deadline__c, Escalation_Level__c FROM Lead Where Id = : leadId];
+        
+      ldList.TAT_deadline__c = System.now().addMinutes(30);
+      ldList.Escalation_Level__c = 'Level 1';
+        update ldList;
+                
         Datetime futureTime = System.now().addMinutes(2);
         
         // Extract the components for the cron expression
