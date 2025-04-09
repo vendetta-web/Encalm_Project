@@ -6,6 +6,7 @@ import RECORD_TYPE_ID from "@salesforce/schema/Lead.RecordTypeId";
 import FOLLOWUP_FIELD from "@salesforce/schema/Lead.Set_Follow_up_Date_and_Time__c"; 
 import LEAD_OWNER from "@salesforce/schema/Lead.OwnerId"; 
 import REASON_FOR_CLOSE from "@salesforce/schema/Lead.Reason_For_Close__c"; 
+import convertLead from '@salesforce/apex/LeadConversionController.convertLead';
 import { NavigationMixin } from 'lightning/navigation'; 
 
 const fields = [STAGE_NAME, RECORD_TYPE_ID, FOLLOWUP_FIELD, LEAD_OWNER, REASON_FOR_CLOSE]; 
@@ -30,6 +31,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     @track selectedValue = ''; 
     @track finalStageOptions = [{ label: 'Close', value: 'Close' }, { label: 'Convert', value: 'Convert' }];
     @track showMarkStatusButton = false;
+    @track isMarkStatusDisabled = false;
 
     @wire(getRecord, { recordId: '$recordId', fields })
     getfieldValue({ error, data }) {
@@ -197,14 +199,42 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         }
     }
 
+    convertCurrentLead() {
+        convertLead({ leadId: this.recordId })
+            .then(result => {
+                let recordIdToNavigate = this.recordId;
+                if (result && result.accountId) {
+                    recordIdToNavigate = result.accountId;
+                }
+                this.showToast('success', 'Lead converted successfully!');
+    
+                if (result && result.accountId) {
+                    this[NavigationMixin.Navigate]({
+                        type: 'standard__recordPage',
+                        attributes: {
+                            recordId: recordIdToNavigate,
+                            objectApiName: 'Account',
+                            actionName: 'view'
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                this.showToast('error', error.body ? error.body.message : error.message);
+            });
+    }
+    
     handleCloseOrConvert() {
         if (this.selectedValue) {
             if (this.selectedValue === 'Close') {
                 this.closeLead();
-            } else if (this.selectedValue === 'Convert') {
+            } else if (this.selectedValue === 'Convert' && this.RecordType === 'Reservation') {
                 this.isBookingOpen = true;
                 this.isModalOpen = false;
-            } else {
+            } else if (this.selectedValue === 'Convert' && this.RecordType === 'Sales') {
+                this.convertCurrentLead();
+            }
+            else {
                 alert('Please select an option before submitting.');
             }
         }

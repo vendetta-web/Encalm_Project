@@ -8,6 +8,7 @@ import getOpportunityDetails from '@salesforce/apex/PackageSelectionController.g
 import createOpportunityLineItems from '@salesforce/apex/PackageSelectionController.createOpportunityLineItems';
 import savePassengerDetails from '@salesforce/apex/PackageSelectionController.savePassengerDetails';
 import savePlacardDetails from '@salesforce/apex/PackageSelectionController.savePlacardDetails';
+import sendEmailWithAttachment from '@salesforce/apex/BookingEmailHandler.sendEmailWithAttachment';
 //import createContentVersion from '@salesforce/apex/MDEN_PdfAttachmentController.createContentVersion';
 import getTerminalInfo from '@salesforce/apex/PackageSelectionController.getTerminalInfo';
 import getFlightTerminalInfo from '@salesforce/apex/PackageSelectionController.getFlightTerminalInfo';
@@ -1005,6 +1006,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 }
                 this.showToast('Success', 'Booking Voucher created successfully', 'success');
                 this.dispatchEvent(new RefreshEvent());
+                this.handleSendEmail();
             })
             .catch((error) => {
                 this.showToast('Error', 'Error while generating Voucher', 'error');
@@ -1031,5 +1033,15 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 actionName: 'list'
             }
         });
+    }
+
+    handleSendEmail() {
+        sendEmailWithAttachment({ opportunityId: this.recordId })
+            .then(() => {
+                this.showToast('Success', 'Email sent successfully!', 'success');
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+            });
     }
 }

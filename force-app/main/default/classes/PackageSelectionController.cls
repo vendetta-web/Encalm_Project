@@ -555,6 +555,21 @@ public with sharing class PackageSelectionController {
         }
     }
 
+    // Method to update the process state
+    @AuraEnabled
+    public static void updateProcessState(Id opportunityId, String processState) {
+        Opportunity opp = [SELECT Id, Saved_State__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        opp.Saved_State__c = processState;
+        update opp;
+    }
+
+    // Method to retrieve the current state
+    @AuraEnabled(cacheable=true)
+    public static String getProcessState(Id opportunityId) {
+        Opportunity opp = [SELECT Saved_State__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        return opp.Saved_State__c;
+    }
+
 
 
 

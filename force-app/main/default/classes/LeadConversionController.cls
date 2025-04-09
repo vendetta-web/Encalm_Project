@@ -130,4 +130,28 @@ public with sharing class LeadConversionController {
             return false;
         }
     }
+    
+    @AuraEnabled
+    public static Map<String, Id> convertLead(Id leadId) {
+        if (leadId == null) {
+            throw new AuraHandledException('Lead Id is required.');
+        }
+        
+        Database.LeadConvert lc = new Database.LeadConvert();
+        lc.setLeadId(leadId);
+        lc.setDoNotCreateOpportunity(true);
+        lc.setConvertedStatus('Lead Won');
+        
+        Database.LeadConvertResult lcr = Database.convertLead(lc);
+        
+        if (!lcr.isSuccess()) {
+            throw new AuraHandledException('Lead conversion failed: ' + lcr.getErrors()[0].getMessage());
+        }
+        
+        return new Map<String, Id>{
+            'accountId' => lcr.getAccountId(),
+            'contactId' => lcr.getContactId()
+        };
+    }
+
 }

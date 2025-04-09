@@ -29,7 +29,6 @@
             </div>
         </lightning-card>
     </template>
-    <template if:false={isQuotationSent}>
     <!-- previous button click show first page details in disabled mode -->
     <template if:true={showChild}>
     <c-flight-booking-preview onbuttonclick={loadDetailsAfterUpdate} opp={recordId}></c-flight-booking-preview>
@@ -472,13 +471,7 @@
                     </footer>
                 
             </template>
-    </template>
-    <!-- Conditionally display the spinner -->
-    <template if:true={isQuotationSent}>
-        <div class="message-box">
-            <span class="message-text">The Quotation is sent for this Booking!</span>
-        </div>
-    </template>
+    
     <!-- Conditionally display the spinner -->
     <template if:true={isLoading}>
         <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
