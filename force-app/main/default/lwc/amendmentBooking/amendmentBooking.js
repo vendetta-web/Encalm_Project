@@ -4,7 +4,7 @@ import getPackageDetails from '@salesforce/apex/PackageSelectionController.getPa
 import getCurrentPackageDetails from '@salesforce/apex/AmendmentBookingController.getExistingPackage';
 import upgradePackage from '@salesforce/apex/AmendmentBookingController.upgradePackage';
 import getPicklistValues from '@salesforce/apex/CustomPicklistController.getNationalityPicklistValues';
-import createOpportunityLineItems from '@salesforce/apex/PackageSelectionController.createOpportunityLineItems';
+import createOpportunityLineItems from '@salesforce/apex/AmendmentBookingController.createOpportunityLineItems';
 import savePassengerDetails from '@salesforce/apex/PackageSelectionController.savePassengerDetails';
 import getTerminalInfo from '@salesforce/apex/PackageSelectionController.getTerminalInfo';
 import getAddOnDetails from '@salesforce/apex/PackageSelectionController.getAddons';
@@ -796,7 +796,6 @@ export default class AmendmentBooking extends LightningElement {
 
     //Method to show the order summary on adding passengers
     handlePackageSummary() {
-        console.log('getPackage',JSON.stringify(this.getPackage));
         this.orderSummaryPackage = this.getPackage
         .filter(wrapper => wrapper.packageFamily == this.selectedPackage && wrapper.priceTag != undefined) // Filter the existing Package
         .map(wrapper => {

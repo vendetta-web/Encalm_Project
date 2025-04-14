@@ -1,56 +1,62 @@
 global class MDEN_SWIFT_API_Call {
 
-    global static void getOpportunity (String oppId){
+    global static PayloadWrapper getOpportunity (String oppId){
         
-        List<Opportunity> oppList = [SELECT Id, Service_Type__c, createddate, Jouney_Date__c, Sector__c,  Service_Airport__c, Service_Airport_Id__r.Airport_Code__c, Arriving_Airport__c, Arriving_Airport_Id__r.Airport_Code__c
-                                              , Arrival_Airline__c, Departure_Airline__c , Number_of_Adults__c,Number_of_Children__c, Number_of_Infants__c,Payment_Ref_No__c,AccountId, 
+        List<Opportunity> oppList = [SELECT Id,Departure_Airport_Id__r.Airport_Code__c,Service_Type__c, createddate, Jouney_Date__c, Sector__c,  Service_Airport__c, Service_Airport_Id__r.Airport_Code__c, Arriving_Airport__c, Arriving_Airport_Id__r.Airport_Code__c
+                                              , Arrival_Airline__c, Departure_Airline__c , Number_of_Adults__c,Number_of_Children__c, Number_of_Infants__c,Payment_Ref_No__c,AccountId,Departure_Airport__c, 
                                      
                                      
-                                   (SELECT Id, First_Name__c, Last_Name__c,Name,Email_Id__c,Mobile__c, Country_code__c FROM Passenger_Details__r)   
+                                   (SELECT Id, First_Name__c, Last_Name__c,Name,Email_Id__c,Mobile__c, Country_code__c,Title__c FROM Passenger_Details__r), (SELECT ID, OpportunityId, Quantity, Name FROM OpportunityLineItems)  
                                      FROM Opportunity Where Id =: oppId];
+        PayloadWrapper wrapper = new PayloadWrapper();
         Payload request = new Payload();
+        List<SaleOrderGuestPayload> SaleOrderGuestPayloadList = new List<SaleOrderGuestPayload>();
+        List<SaleOrderAvaanBookingPayload> SaleOrderAvaanBookingPayloadList = new List<SaleOrderAvaanBookingPayload>();
         if(!oppList.isEmpty()){
             
             for(Opportunity opp : oppList){
                 //Payload.SaveSaleOrderPost saveSaleOrderPost  = new Payload.SaveSaleOrderPost();
                  SaveSaleOrderPost saveSaleOrderPost = new SaveSaleOrderPost();
+               // saveSaleOrderPost.action_type =  'Cancel';//'Partially Cancelled';//'Modified/Rescheduled';
+                 //saveSaleOrderPost.action_type =  'Partially Cancelled';
+                saveSaleOrderPost.action_type =  'Modified/Rescheduled';
                 saveSaleOrderPost.sfa_booking_id = opp.Id ;
-               // saveSaleOrderPost.sfa_booking_no = opp. ;
-               // saveSaleOrderPost.itinerary_no = opp. ;
-               // saveSaleOrderPost.service_type = opp. ;
+               saveSaleOrderPost.sfa_booking_no = 'D24083477';//opp. ;
+                saveSaleOrderPost.itinerary_no = 'V61477720';//opp. ;
+                saveSaleOrderPost.service_type = 'Departure';//opp. ;
                 saveSaleOrderPost.booking_date = String.valueOf(opp.createddate) ;
-              //  saveSaleOrderPost.service_date = opp. ;
+                saveSaleOrderPost.service_date = '2025-03-31 11:45:00';//opp. ;
                 saveSaleOrderPost.travel_date = String.valueOf(opp.Jouney_Date__c) ;
                  saveSaleOrderPost.travel_sector = opp.Sector__c ;
-                saveSaleOrderPost.service_airport = opp.Service_Airport__c;
-                saveSaleOrderPost.service_airport_code = opp.Service_Airport_Id__r.Airport_Code__c ;
+                saveSaleOrderPost.service_airport = 'Indira Gandhi International Airport'; //opp.Service_Airport__c;
+                saveSaleOrderPost.service_airport_code = 'DEL';///opp.Service_Airport_Id__r.Airport_Code__c ;
                 saveSaleOrderPost.from_airport = opp.Departure_Airport__c ;
-                saveSaleOrderPost.from_airport_code = opp.Departure_Airport_Id__r.Airport_Code__c ;
+                saveSaleOrderPost.from_airport_code = 'DEL';//opp.Departure_Airport_Id__r.Airport_Code__c ;
                 saveSaleOrderPost.to_airport = opp.Arriving_Airport__c ;
-                saveSaleOrderPost.to_airport_code = opp.Arriving_Airport_Id__r.Airport_Code__c ;
-                /* saveSaleOrderPost.arrival_airline = opp.Arrival_Airline__c ;
-                saveSaleOrderPost.arrival_flight = opp. ;
-                saveSaleOrderPost.arrival_time = opp. ;
-                saveSaleOrderPost.arrival_term = opp. ;
-                saveSaleOrderPost.departure_airline = opp.Departure_Airline__c ;
-                saveSaleOrderPost.departure_flight = opp. ;
-                saveSaleOrderPost.departure_time = opp. ;
-                 saveSaleOrderPost.departure_term = opp. ;
-                saveSaleOrderPost.no_of_adult = opp.Number_of_Adults__c ;
-                saveSaleOrderPost.no_of_children = opp.Number_of_Children__c ;
-                saveSaleOrderPost.no_of_infants = opp.Number_of_Infants__c ;
-                saveSaleOrderPost.primary_product = opp. ;
-                saveSaleOrderPost.customer_sfa_id = opp. ;
-                saveSaleOrderPost.customer_name = opp.AccountId.Name ;
-                 saveSaleOrderPost.customer_mobile = opp.AccountId. ;
-                saveSaleOrderPost.customer_email = opp.AccountId. ;
-                saveSaleOrderPost.customer_tag = opp. ;
-                saveSaleOrderPost.booker_name = opp. ;
-                saveSaleOrderPost.booker_mobile = opp. ;
-                saveSaleOrderPost.booker_email = opp. ;
-                saveSaleOrderPost.salesperson_name = opp. ;
-                 saveSaleOrderPost.salesperson_mobile = opp. ;
-                saveSaleOrderPost.salesperson_email = opp. ;*/
+                saveSaleOrderPost.to_airport_code = 'BBI';//opp.Arriving_Airport_Id__r.Airport_Code__c ;
+                 saveSaleOrderPost.arrival_airline = opp.Arrival_Airline__c ;
+               // saveSaleOrderPost.arrival_flight = opp. ;
+                //saveSaleOrderPost.arrival_time = opp. ;
+               // saveSaleOrderPost.arrival_term = opp. ;
+                saveSaleOrderPost.departure_airline = 'Air India';//opp.Departure_Airline__c ;
+               saveSaleOrderPost.departure_flight = 'AI 473';//opp. ;
+                saveSaleOrderPost.departure_time = '07:00';//opp. ;
+                 saveSaleOrderPost.departure_term = 'T3';//opp. ;
+                saveSaleOrderPost.no_of_adult = Integer.valueOf(opp.Number_of_Adults__c) ;
+                saveSaleOrderPost.no_of_children = Integer.valueOf(opp.Number_of_Children__c) ;
+                saveSaleOrderPost.no_of_infants = Integer.valueOf(opp.Number_of_Infants__c) ;
+                saveSaleOrderPost.primary_product = 'GOLD (DOM-DEP)';//opp. ;
+                saveSaleOrderPost.customer_sfa_id = '12';//opp. ;
+               saveSaleOrderPost.customer_name = '[40083761] Petronet LNG Limited'; //opp.AccountId.Name ;
+                 saveSaleOrderPost.customer_mobile = opp.AccountId ;
+                saveSaleOrderPost.customer_email = opp.AccountId ;
+                saveSaleOrderPost.customer_tag = 'VIP1';//opp. ;
+                saveSaleOrderPost.booker_name = 'HIMANSHU MEHTA';//opp. ;
+                saveSaleOrderPost.booker_mobile = '+919811799331';// opp. ;
+                saveSaleOrderPost.booker_email = 'himanshumehta@petronetlng.in';//opp. ;
+                saveSaleOrderPost.salesperson_name = 'Smita Rajput';//opp. ;
+                 saveSaleOrderPost.salesperson_mobile = '+919811799331';//opp. ;
+                saveSaleOrderPost.salesperson_email = 'himanshumehta@petronetlng.in';//opp. ;
                 for(Passenger_Details__c ps : opp.Passenger_Details__r){ 
                   saveSaleOrderPost.placard_name = ps.Name ;
                 saveSaleOrderPost.placard_title = ps.Title__c ;
@@ -60,21 +66,72 @@ global class MDEN_SWIFT_API_Call {
                  saveSaleOrderPost.placard_mobile = ps.Mobile__c ;
                 saveSaleOrderPost.placard_email = ps.Email_Id__c ;
                    }
-               
-                /*saveSaleOrderPost.instructions = opp. ;
-                saveSaleOrderPost.payment_method = opp. ;
+                List<saleorderitempayload> saleorderitempayloadList = new  List<saleorderitempayload>();
+                for(OpportunityLineItem OlItem : opp.OpportunityLineItems){
+                    SaleOrderItemPayload saleorderitempayload = new SaleOrderItemPayload();
+                    //SaleOrderItemPayload saleorderitempayload = SaleOrderItemPayload();
+                      saleorderitempayload.product_name =  OlItem.Name;
+               saleorderitempayload.product_qty=      Integer.valueOf(OlItem.Quantity);
+                   saleorderitempayload.product_sfa_id = 10617;//Integer.valueOf(OlItem.Id);
+                    saleorderitempayloadList.add(saleorderitempayload);
+                    
+                }
+                //saveSaleOrderPost.instructions = opp. ;
+                saveSaleOrderPost.payment_method = 'Cash on account';//opp. ;
                 saveSaleOrderPost.payment_ref_no = opp.Payment_Ref_No__c ;
-                saveSaleOrderPost.API_KEY = opp. ;*/
+                saveSaleOrderPost.API_KEY = 'sfa879z16Ff7XIEtyu67Sii'; //opp. ;
+                //
+                //saveSaleOrderPost.sale_order_item_payload  = saleorderitempayloadList;
+                request.save_sale_order_post = saveSaleOrderPost;
+                request.sale_order_item_payload = saleorderitempayloadList;
+               SaleOrderGuestPayload SaleOrderGuestPayload = new SaleOrderGuestPayload();
+                SaleOrderGuestPayload.guest_sfa_id = 12;
+                SaleOrderGuestPayload.guest_name = 'Mr. Alice Smith';
+                 SaleOrderGuestPayload.guest_age = 33;
+                 SaleOrderGuestPayload.travel_class = 'Economy';
+                 SaleOrderGuestPayload.pnr_no = 'PNR123';
+                 SaleOrderGuestPayload.passport_no = 'P12345';
+                 SaleOrderGuestPayload.designation = 'Director';
+                 SaleOrderGuestPayload.preferences = 'Want Manish to attend';
+                 SaleOrderGuestPayload.country_code = '+91';
+                  SaleOrderGuestPayload.mobile = '9876543210';
+                SaleOrderGuestPayloadList.add(SaleOrderGuestPayload);
+                system.debug('SaleOrderGuestPayloadList=============>'+SaleOrderGuestPayloadList);
+                request.sale_order_guest_payload = SaleOrderGuestPayloadList;
+                
+                
+                SaleOrderAvaanBookingPayload SaleOrderAvaanBookingPayloadRec = new SaleOrderAvaanBookingPayload();
+                SaleOrderAvaanBookingPayloadRec.avaan_sfa_id = 1012;
+                 SaleOrderAvaanBookingPayloadRec.avaan_booking_no = 'AVB00987';
+                 SaleOrderAvaanBookingPayloadRec.avaan_bags = '1';
+                 SaleOrderAvaanBookingPayloadRec.avaan_weight = '30 Kg';
+                 SaleOrderAvaanBookingPayloadRec.avaan_amount = '3000';
+                SaleOrderAvaanBookingPayloadRec.avaan_booking_date = '2025-03-31 11:45'; 
+                SaleOrderAvaanBookingPayloadList.add(SaleOrderAvaanBookingPayloadRec);
+                request.sale_order_avaan_booking_payload = SaleOrderAvaanBookingPayloadList;
+                wrapper.payload  = request ;
+                request.sfa_booking_id='12';
+                 request.API_KEY = 'sfa879z16Ff7XIEtyu67Sii';
+ 
+                String requestBody = JSON.serialize(wrapper);
+                System.debug('requestBody===========>'+requestBody);
+                return wrapper;
               
             }
         }
+        return null;
         
     }    
     
-    
+    global class PayloadWrapper {
+    global Payload payload;
+   
+}
     
     
     global class Payload {
+         global String API_KEY ;
+    global String sfa_booking_id;
         global SaveSaleOrderPost save_sale_order_post;
         global List<SaleOrderItemPayload> sale_order_item_payload;
         global List<SaleOrderGuestPayload> sale_order_guest_payload;
@@ -82,6 +139,7 @@ global class MDEN_SWIFT_API_Call {
     }
 
     global class SaveSaleOrderPost {
+        global String action_type;
         global String sfa_booking_id;
         global String sfa_booking_no;
         global String itinerary_no;

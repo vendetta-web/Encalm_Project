@@ -105,5 +105,181 @@ public class AmendmentBookingController {
             System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
             throw new AuraHandledException('Error in creating order summary, please show this message to admin');
         }
+
+    }
+
+    
+    // Method to create Opportunity Line Items
+    @AuraEnabled
+    public static void createOpportunityLineItems(Id opportunityId, List<Map<String, Object>> productDetails, Decimal amount) {
+
+        // Create a list to store OpportunityLineItems
+        List<OpportunityLineItem> opportunityLineItemsToInsert = new List<OpportunityLineItem>();
+        List<Transaction_History__c> transactionList = new List<Transaction_History__c>();
+        List<PricebookEntry> pbEntry = new List<PricebookEntry>();
+        Decimal totalListPrice = 0;
+        DateTime serviceDateTime;
+        String dateText;
+        String timeText;
+        String combinedDateTimeStr;
+
+        // Query Opportunity based on OpportunityId
+        Opportunity opp = [
+            SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c
+            FROM Opportunity
+            WHERE Id = :opportunityId
+            LIMIT 1
+        ];
+
+        if (opp.STA_Time__c != null) {
+            dateText=opp.Date_of_Arrival__c;
+            timeText=opp.STA_Time__c;
+            // Ensure timeText includes seconds
+            if (timeText.length() == 5) {  // "HH:mm" format
+                timeText += ':00';  // Append ":00" for seconds
+            }
+            combinedDateTimeStr=dateText + ' ' + timeText;
+            serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
+        } else if (opp.STD_Time__c != null) {
+            dateText=opp.Date_of_Departure__c;
+            timeText=opp.STD_Time__c;// Ensure timeText includes seconds
+            if (timeText.length() == 5) {  // "HH:mm" format
+                timeText += ':00';  // Append ":00" for seconds
+            }
+            combinedDateTimeStr=dateText + ' ' + timeText;
+            serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
+        }
+
+        pbEntry = [
+            SELECT Id, Product2Id, Product2.Name, Product2.Family, UnitPrice, Pricebook2Id, List_Price_In_Percentage__c
+            FROM PricebookEntry
+            WHERE Pricebook2.IsActive = true
+            AND Pricebook2.IsStandard = true
+            AND Product2.Family ='Surcharge'
+            LIMIT 1
+        ];
+
+        for (Map<String, Object> productDetail : productDetails) {
+            // Extract the values from the map
+            Id productId = (Id) productDetail.get('productId');
+            Id pricebookEntry = (Id) productDetail.get('pricebookEntryId');
+            Decimal quantity = (Boolean) productDetail.get('isChild') ? (Decimal) productDetail.get('childCount') : (Decimal) productDetail.get('count');
+            Decimal unitPrice = (Decimal) productDetail.get('unitPrice');
+            Decimal discountAmount = (Decimal) productDetail.get('discountValue');
+
+            // Safely extract pickup and drop terminals
+            List<String> pickupTerminals = new List<String>();
+            List<String> dropTerminals = new List<String>();
+
+            // Safely extract and cast pickupTerminals
+            if (productDetail.containsKey('pickupTerminals') && productDetail.get('pickupTerminals') != null) {
+                List<Object> tempPickupTerminals = (List<Object>) productDetail.get('pickupTerminals');
+                for (Object obj : tempPickupTerminals) {
+                    pickupTerminals.add((String) obj); // Explicitly cast each item to String
+                }
+            }
+
+            // Safely extract and cast dropTerminals
+            if (productDetail.containsKey('dropTerminals') && productDetail.get('dropTerminals') != null) {
+                List<Object> tempDropTerminals = (List<Object>) productDetail.get('dropTerminals');
+                for (Object obj : tempDropTerminals) {
+                    dropTerminals.add((String) obj); // Explicitly cast each item to String
+                }
+            }
+            // Handle null pickupTerminals and dropTerminals by initializing as empty lists
+            if (pickupTerminals == null) {
+                pickupTerminals = new List<String>();
+            }
+            if (dropTerminals == null) {
+                dropTerminals = new List<String>();
+            }
+
+            // Loop through quantity to handle multiple OLI for each product detail
+                if (Math.max(pickupTerminals.size(), dropTerminals.size()) < 1) {
+                    // Loop through quantity to handle multiple OLI for each product detail
+                    for (Integer i = 0; i < quantity; i++) {
+                        // Create a new Opportunity Line Item for packages
+                        OpportunityLineItem oli = new OpportunityLineItem();
+                        oli.OpportunityId = opportunityId;
+                        oli.Product2Id = productId;
+                        oli.Quantity = 1;
+                        oli.UnitPrice = unitPrice;
+                        oli.PricebookEntryId = pricebookEntry; // Link PricebookEntry to OLI
+                        oli.Discount_Amount__c = discountAmount/quantity;
+                        oli.Status__c = 'Active';
+
+                        totalListPrice += unitPrice;    
+
+                        // Add the OLI to the list
+                        opportunityLineItemsToInsert.add(oli);    
+                    }                
+                }
+                String pickupTerminal ='';
+                String dropTerminal='';
+                for (Integer j = 0; j < Math.max(pickupTerminals.size(), dropTerminals.size()); j++) {
+                    // Ensure we don't access out of bounds in case the arrays are of different lengths
+                    pickupTerminal = (j < pickupTerminals.size()) ? pickupTerminals.get(j) : pickupTerminal;
+                    dropTerminal = (j < dropTerminals.size()) ? dropTerminals.get(j) : dropTerminal;
+
+                    // Create a new Opportunity Line Item for 
+                    OpportunityLineItem oli = new OpportunityLineItem();
+                    oli.OpportunityId = opportunityId;
+                    oli.Product2Id = productId;
+                    oli.Quantity = 1;
+                    oli.UnitPrice = unitPrice;
+                    oli.PricebookEntryId = pricebookEntry; // Link PricebookEntry to OLI
+                    oli.Pickup_Terminal__c = pickupTerminal;
+                    oli.Drop_Terminal__c = dropTerminal;
+                    oli.Status__c = 'Active';
+                    if(!pbEntry.isEmpty() && pbEntry[0].UnitPrice !=null && pbEntry[0].List_Price_In_Percentage__c && !opp.Account.Surcharge_waived_off__c) {
+                        oli.Surcharge_Amount_Applied__c = PackageSelectionController.getSurchargeAmount(serviceDateTime, DateTime.now(),pbEntry[0].UnitPrice, unitPrice,  true);
+                    }
+
+                    totalListPrice += unitPrice;  
+                    // Add the OLI to the list
+                    opportunityLineItemsToInsert.add(oli);
+                }
+
+        }
+
+        // Insert the Opportunity Line Items and Transaction History
+        try {
+            
+            //logic to create oli for surcharge if not in percentage
+            if (!pbEntry.isEmpty() && pbEntry[0].UnitPrice !=null && !pbEntry[0].List_Price_In_Percentage__c  && !opp.Account.Surcharge_waived_off__c) {
+                if (PackageSelectionController.getSurchargeAmount(serviceDateTime, DateTime.now(),pbEntry[0].UnitPrice, 0,  false) > 0) {
+                    OpportunityLineItem oli = new OpportunityLineItem();
+                    oli.OpportunityId = opportunityId;
+                    oli.Product2Id = pbEntry[0].Product2Id;
+                    oli.Quantity = 1;
+                    oli.UnitPrice = pbEntry[0].UnitPrice;
+                    oli.PricebookEntryId = pbEntry[0].Id; // Link PricebookEntry to OLI
+                    oli.Status__c = 'Active';
+                    opportunityLineItemsToInsert.add(oli);
+                }
+            }
+
+            insert opportunityLineItemsToInsert;
+            // Now that the records are inserted, their Ids are populated
+            for (OpportunityLineItem oli : opportunityLineItemsToInsert) {
+                if (oli.UnitPrice != 0) {
+                    // Create the transaction record for booking
+                    Transaction_History__c transactionRec = new Transaction_History__c();
+                    transactionRec.Booking_Id__c = opportunityId;
+                    transactionRec.List_Price__c = oli.UnitPrice;
+                    transactionRec.Name = opp.Name;
+                    transactionRec.Transaction_Type__c = 'Credit'; //credit when amount is received by Encalm
+                    transactionRec.Order_Id__c = oli.Id; // link oli with transaction
+                    transactionRec.Discount_Amount__c = oli.Discount_Amount__c; // set discount amount
+                    transactionList.add(transactionRec);
+                }
+            }
+
+            // Finally, insert the transaction history records
+            insert transactionList;
+        } catch (Exception e) {
+            System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
+            throw new AuraHandledException('Error in creating order summary, please show this message to admin');
+        }
     }
 }

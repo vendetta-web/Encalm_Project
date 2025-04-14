@@ -1,121 +1,84 @@
 import { LightningElement, api, wire } from 'lwc';
-import { getRecord, updateRecord } from 'lightning/uiRecordApi';
 import { NavigationMixin } from 'lightning/navigation';
-import CASE_ID from '@salesforce/schema/Case.Id';
-import CASE_STATUS from '@salesforce/schema/Case.Status';
-import CASE_DESCRIPTION from '@salesforce/schema/Case.Description';
-import CASE_SUBJECT from '@salesforce/schema/Case.Subject';
-import CASE_SUPPLIED_EMAIL from '@salesforce/schema/Case.SuppliedEmail';
-import CASE_SUPPLIED_NAME from '@salesforce/schema/Case.SuppliedName';
-import CASE_SUPPLIED_PHONE from '@salesforce/schema/Case.SuppliedPhone';
-import CASE_NUMBER from '@salesforce/schema/Case.CaseNumber';
-import CASE_ORIGIN from '@salesforce/schema/Case.Origin';
-import CASE_INQUIRY_TYPE from '@salesforce/schema/Case.Inquiry_Type__c';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { encodeDefaultFieldValues } from 'lightning/pageReferenceUtils';
 
-import { CloseActionScreenEvent } from 'lightning/actions';
-
-const FIELDS = [
-    CASE_ID,
-    CASE_NUMBER,
-    CASE_STATUS,
-    CASE_DESCRIPTION,
-    CASE_SUBJECT,
-    CASE_SUPPLIED_EMAIL,
-    CASE_SUPPLIED_NAME,
-    CASE_SUPPLIED_PHONE,
-    CASE_ORIGIN,
-    CASE_INQUIRY_TYPE
-
-];
+import getCaseFields from '@salesforce/apex/CaseTriggerHandler.getCaseFields';
 
 export default class CaseToLead extends NavigationMixin(LightningElement) {
     @api recordId;
-     resolutionNotes = 'Converted to Lead';
-    caseData;
-    actionMessage = '';
-    isSuccess = true;
-    isNavigatingToLead = false;
-    openCaseClosedScreen = false;
+    isLoading = true;
+    hasNavigated = false;
+    isRecordIdReady = false;
 
-    @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
-    wiredCase({ error, data }) {
-        if (data) {
-            this.caseData = data.fields;
-            if (this.caseData?.CASE_INQUIRY_TYPE?.value !== 'Booking') {
-
-                this.updateCaseAndNavigate();
-            } else {
-                this.navigateToLeadWithPrefill();
-            }
-            // // Directly navigate to lead creation
-        } else if (error) {
-            this.actionMessage = 'Error fetching Case data.';
-            this.isSuccess = false;
+    // Step 1: Wire to detect when recordId is ready
+    @wire(getCaseFields, { caseId: '$recordId' })
+    handleWire(response) {
+        if (this.recordId && !this.isRecordIdReady) {
+            console.log('RecordId received via wire:', this.recordId);
+            this.isRecordIdReady = true;
+            this.callNavigationLogic();
         }
     }
 
-    updateCaseAndNavigate() {
-        const fields = {};
-        fields.Id = this.recordId;
-        //fields.Status = 'Closed';
-        fields.Resolution_Notes__c = this.resolutionNotes;
+    connectedCallback() {
+        // Check if recordId is available and no navigation has been made
+        if (this.recordId && !this.hasNavigated) {
+            console.log('Connected Callback Loaded');
+            this.callNavigationLogic();
+        }
+    }
 
-        updateRecord({ fields })
-            .then(() => {
-                this.navigateToLeadWithPrefill();
+    callNavigationLogic() {
+        // Fetch case data using Apex call
+        getCaseFields({ caseId: this.recordId })
+            .then(data => {
+                console.log('Case Data:', JSON.stringify(data));
+
+                // Encode default field values for Lead creation
+                const defaultFieldValues = encodeDefaultFieldValues({
+                    Subject__c: data.Subject,
+                    Description__c: data.Description,
+                    Phone: data.SuppliedPhone,
+                    Email: data.SuppliedEmail,
+                    FirstName: data.SuppliedName?.trim().split(' ')[0] || 'Unknown',
+                    LastName: data.SuppliedName?.trim().split(' ').slice(1).join(' ') || 'Unknown',
+                    Case__c: data.Id,
+                    Case_Number__c: data.CaseNumber,
+                    LeadSource: data.Origin?.trim() || 'Other', // Handle null or undefined Origin
+                });
+
+                // Ensure navigation happens only once
+                this.hasNavigated = true;
+
+                // Navigate to the new Lead creation page with default field values
+                this[NavigationMixin.Navigate]({
+                    type: 'standard__objectPage',
+                    attributes: {
+                        objectApiName: 'Lead',
+                        actionName: 'new'
+                    },
+                    state: {
+                        defaultFieldValues,   // Passing the encoded field values
+                        useRecordTypeCheck: 1 // Use the record type selection screen
+                    }
+                });
+
+                // Hide loading spinner once navigation starts
+                this.isLoading = false;
             })
             .catch(error => {
-                console.error('Error updating case:', error);
+                console.error('Error fetching Case fields:', error);
+                this.isLoading = false;
+
+                // Display an error message to the user if something goes wrong
+                this.dispatchEvent(
+                    new ShowToastEvent({
+                        title: 'Error',
+                        message: 'There was an issue fetching the case details.',
+                        variant: 'error',
+                    })
+                );
             });
-    }
-
-
-    navigateToLeadWithPrefill() {
-        const description = this.caseData?.Description?.value || '';
-        const subject = this.caseData?.Subject?.value || '';
-        const name = this.caseData?.SuppliedName?.value || '';
-        const email = this.caseData?.SuppliedEmail?.value || '';
-        const phone = this.caseData?.SuppliedPhone?.value || '';
-        const caseId = this.caseData?.Id?.value;
-        const caseNumber = this.caseData?.CaseNumber?.value;
-
-        const [firstName, ...lastNameParts] = name.split(' ');
-        const lastName = lastNameParts.join(' ') || 'Unknown';
-
-        if (!caseId) {
-            this.actionMessage = 'Case ID is missing or invalid.';
-            this.isSuccess = false;
-            return;
-        }
-
-        const leadDefaultValues = {
-            Description__c: description,
-            Subject__c: subject,
-            Phone: phone,
-            Email: email,
-            FirstName: firstName?.trim() || 'Unknown',
-            LastName: lastName?.trim(),
-            Case__c: caseId,
-            Case_Number__c: caseNumber,
-            LeadSource: this.caseData?.Origin?.value
-        };
-        this.isNavigatingToLead = true;
-        this[NavigationMixin.Navigate]({
-            type: 'standard__objectPage',
-            attributes: {
-                objectApiName: 'Lead',
-                actionName: 'new'
-            },
-            state: {
-                defaultFieldValues: this.getDefaultFieldValues(leadDefaultValues),
-                useRecordTypeCheck: 1
-            }
-        });
-    }
-
-    getDefaultFieldValues(defaultValues) {
-        return Object.entries(defaultValues)
-            .map(([field, value]) => `${field}=${encodeURIComponent(value)}`)
-            .join(',');
     }
 }

@@ -53,10 +53,10 @@
                 </rightValue>
             </conditions>
             <conditions>
-                <leftValueReference>$Record.Type__c</leftValueReference>
+                <leftValueReference>$Record.RecordType.Name</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
-                    <stringValue>Individual</stringValue>
+                    <stringValue>Reservation</stringValue>
                 </rightValue>
             </conditions>
             <connector>
@@ -76,10 +76,10 @@
                 </rightValue>
             </conditions>
             <conditions>
-                <leftValueReference>$Record.Type__c</leftValueReference>
+                <leftValueReference>$Record.RecordType.Name</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
-                    <stringValue>Corporate</stringValue>
+                    <stringValue>Sales</stringValue>
                 </rightValue>
             </conditions>
             <connector>
@@ -166,7 +166,7 @@
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>Type__c</field>
+            <field>RecordTypeId</field>
             <operator>IsNull</operator>
             <value>
                 <booleanValue>false</booleanValue>
@@ -176,5 +176,5 @@
         <recordTriggerType>Create</recordTriggerType>
         <triggerType>RecordBeforeSave</triggerType>
     </start>
-    <status>Obsolete</status>
+    <status>Active</status>
 </Flow>

@@ -301,6 +301,9 @@ public with sharing class PackageSelectionController {
             passenger.Nationalities__c = (String) guest.get('nationality');
             passenger.Passport_Govt_Id__c = (String) guest.get('passportnumber');
             passenger.Mobile__c = (String) guest.get('phone');
+            passenger.Show_as_Placard__c = (Boolean) guest.get('isPlacard');
+            passenger.Unique_Id__c = (String) guest.get('id');
+
             passenger.Passenger_Type__c = (String) guest.get('type');
             if(oliMap.containsKey((String) guest.get('type'))) {
                List<Id> oliIds = oliMap.get((String) guest.get('type'));
@@ -334,6 +337,13 @@ public with sharing class PackageSelectionController {
     @AuraEnabled
     public static void savePlacardDetails(List<Map<String, Object>> placardData, Id opportunityId) {
         List<Placard__c> placardList = new List<Placard__c>();
+        // Query the Placard__c records
+        List<Placard__c> placards = [
+            SELECT Id, Title__c, First_Name__c, Last_Name__c, Mobile_Number__c 
+            FROM Placard__c 
+            WHERE Opportunity_ID__c = :opportunityId
+        ];
+        Delete placards;
         
         for (Map<String, Object> guest : placardData) {
             Placard__c plc = new Placard__c();
@@ -352,6 +362,28 @@ public with sharing class PackageSelectionController {
             System.debug('Error inserting Placard__c records: ' + e.getMessage());
             throw new AuraHandledException('Error in creating Placard data, please show this message to admin');
         }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Map<String, Object> getPlacardDetails(Id opportunityId) {
+        // Query for the single Placard__c record (assuming there's only one per Opportunity)
+        Placard__c placard = [
+            SELECT Id, Title__c, First_Name__c, Last_Name__c, Mobile_Number__c 
+            FROM Placard__c 
+            WHERE Opportunity_ID__c = :opportunityId
+            LIMIT 1
+        ];
+
+        // Convert the record into a Map<String, Object>
+        Map<String, Object> placardData = new Map<String, Object>{
+            'id' => placard.Id,
+            'title' => placard.Title__c,
+            'firstname' => placard.First_Name__c,
+            'lastname' => placard.Last_Name__c,
+            'phone' => placard.Mobile_Number__c
+        };
+
+        return placardData;
     }
 
     // Method to create Opportunity Line Items
@@ -456,7 +488,7 @@ public with sharing class PackageSelectionController {
                         oli.Quantity = 1;
                         oli.UnitPrice = unitPrice;
                         oli.PricebookEntryId = pricebookEntry; // Link PricebookEntry to OLI
-                        oli.Discount_Amount__c = discountAmount;
+                        oli.Discount_Amount__c = discountAmount/quantity;
                         oli.Status__c = 'Active';
 
                         totalListPrice += unitPrice;    
@@ -557,17 +589,69 @@ public with sharing class PackageSelectionController {
 
     // Method to update the process state
     @AuraEnabled
-    public static void updateProcessState(Id opportunityId, String processState) {
-        Opportunity opp = [SELECT Id, Saved_State__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
-        opp.Saved_State__c = processState;
-        update opp;
+    public static void updateBookingState(Id opportunityId, String getProcessState) {
+        Opportunity opp = [SELECT Id, Process_State__c  FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        opp.Process_State__c  = getProcessState;
+        try{
+            update opp;
+        } catch (Exception ex) {
+            System.debug('Error updating state: '+ex.getMessage());
+        }        
+    }
+
+    // Method to update the process state
+    @AuraEnabled
+    public static void updateAddonsOrderSummaryState(Id opportunityId, String processAddons, String processOrderSummary) {
+        Opportunity opp = [SELECT Id, Saved_State_Addons__c,Saved_State_OrderSummary__c  FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        opp.Saved_State_Addons__c  = processAddons;
+        opp.Saved_State_OrderSummary__c  = processOrderSummary;
+        try{
+            update opp;
+        } catch (Exception ex) {
+            System.debug('Error updating state: '+ex.getMessage());
+        }        
     }
 
     // Method to retrieve the current state
     @AuraEnabled(cacheable=true)
-    public static String getProcessState(Id opportunityId) {
-        Opportunity opp = [SELECT Saved_State__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
-        return opp.Saved_State__c;
+    public static Opportunity getProcessState(Id opportunityId) {
+        Opportunity opp = [SELECT Saved_State_Addons__c,Saved_State_OrderSummary__c,Process_State__c  FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        return opp ;
+    }
+
+    //Method to show the saved list of passengers
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, Object>> getSavedPassengerDetails(Id opportunityId) {
+        List<Passenger_Details__c> passengers = [
+            SELECT Id, Title__c, First_Name__c, Last_Name__c, Gender__c, Age__c, Designation__c, 
+                   Travel_Class__c, Travel_PNR_No__c, Nationalities__c, Passport_Govt_Id__c, Mobile__c, 
+                   Passenger_Type__c, Individual_Booking_Details__c,Show_as_Placard__c,Unique_Id__c
+            FROM Passenger_Details__c
+            WHERE Opportunity_ID__c = :opportunityId
+        ];
+
+        // Convert to a List of Maps to return the data in a format suitable for LWC
+        List<Map<String, Object>> passengerData = new List<Map<String, Object>>();
+        for (Passenger_Details__c passenger : passengers) {
+            passengerData.add(new Map<String, Object>{
+                'id' => passenger.Unique_Id__c,
+                'title' => passenger.Title__c,
+                'firstname' => passenger.First_Name__c,
+                'lastname' => passenger.Last_Name__c,
+                'gender' => passenger.Gender__c,
+                'age' => passenger.Age__c != null ? String.valueOf(passenger.Age__c) : null, // Convert to String for LWC
+                'designation' => passenger.Designation__c,
+                'travelclass' => passenger.Travel_Class__c,
+                'travelpnrno' => passenger.Travel_PNR_No__c,
+                'nationality' => passenger.Nationalities__c,
+                'passportnumber' => passenger.Passport_Govt_Id__c,
+                'phone' => passenger.Mobile__c,
+                'type' => passenger.Passenger_Type__c,
+                'isPlacard' => passenger.Show_as_Placard__c 
+            });
+        }
+
+        return passengerData;
     }
 
 

@@ -1,87 +1,151 @@
-@IsTest
+/**
+* @File Name : LeadFromCaseControllerTest.cls
+* @Description : Test Class for LeadFromCaseController.cls
+* @Author : Abhishek
+* @Last Modified By : Abhishek
+* @Last Modified On : April 14, 2025
+* @Modification Log :
+*==============================================================================
+* Ver | Date | Author | Modification
+*==============================================================================
+* 1.0 | April 14, 2025 |  Abhishek | Initial Version
+**/
+@isTest
 public class LeadFromCaseControllerTest {
     
     @testSetup
     static void setupTestData() {
-        // Create a test Case record
         Case testCase = new Case(
-            Subject = 'Test Subject',
+            Subject = 'Test Case',
+            SuppliedEmail = 'test@example.com',
             SuppliedName = 'John Doe',
-            SuppliedEmail = 'john.doe@example.com',
-            SuppliedPhone = '123-456-7890'
+            SuppliedPhone = '1234567890',
+            Status = 'New'
         );
         insert testCase;
         
-        // Create a test Lead record
         Lead testLead = new Lead(
-            FirstName = 'Jane',
+            FirstName = 'John',
             LastName = 'Doe',
-            Email = 'jane.doe@example.com',
-            Company = 'Test Company',
-            Phone = '987-654-3210'
+            Email = 'test@example.com',
+            Phone = '1234567890',
+            Case__c = testCase.Id,
+            Company = 'Test Company'
         );
         insert testLead;
     }
     
-    @IsTest
-    static void testLeadFromCaseController() {
-        // Fetch the test Case record
-        Case testCase = [SELECT Id FROM Case WHERE Subject = 'Test Subject' LIMIT 1];
+    @isTest
+    static void testPopulateLeadFromCaseWithExistingLead() {
+        Case testCase = [SELECT Id FROM Case LIMIT 1];
         
-        // Instantiate the LeadFromCaseController
-        LeadFromCaseController controller = new LeadFromCaseController();
-        
-        // Set the caseId parameter
+        Test.setCurrentPageReference(new PageReference('/apex/DummyPage'));
         ApexPages.currentPage().getParameters().put('caseId', testCase.Id);
         
-        // Call the populateLeadFromCase method
-        controller.populateLeadFromCase();
-        
-        // Verify that the Lead record is populated correctly
-        System.assertEquals('john.doe@example.com', controller.leadRecord.Email);
-        System.assertEquals('Doe', controller.leadRecord.LastName);
-        //System.assertEquals('Test Subject', controller.leadRecord.Company);
-        System.assertEquals('123-456-7890', controller.leadRecord.Phone);
-        
-        // Save the Lead record
-        controller.saveLead();
-        
-        // Verify that the Lead record is saved successfully
-        Lead savedLead = [SELECT Id, Email, LastName, Phone FROM Lead WHERE Email = 'john.doe@example.com' LIMIT 1];
-        System.assertNotEquals(null, savedLead);
-        System.assertEquals('john.doe@example.com', savedLead.Email);
-        System.assertEquals('Doe', savedLead.LastName);
-        System.assertEquals('123-456-7890', savedLead.Phone);
+        LeadFromCaseController controller = new LeadFromCaseController();
+        System.assertEquals(testCase.Id, controller.leadRecord.Case__c);
     }
     
-    @IsTest
-    static void testLeadFromCaseControllerWithLeadId() {
-        // Fetch the test Lead record
-        Lead testLead = [SELECT Id FROM Lead WHERE Email = 'jane.doe@example.com' LIMIT 1];
+    @isTest
+    static void testPopulateLeadFromCaseWithNoExistingLead() {
+        Case newCase = new Case(
+            Subject = 'New Test Case',
+            SuppliedEmail = 'new@example.com',
+            SuppliedName = 'Alice Smith',
+            SuppliedPhone = '9876543210',
+            Status = 'New'
+        );
+        insert newCase;
         
-        // Instantiate the LeadFromCaseController
+        Test.setCurrentPageReference(new PageReference('/apex/DummyPage'));
+        ApexPages.currentPage().getParameters().put('caseId', newCase.Id);
+        
         LeadFromCaseController controller = new LeadFromCaseController();
         
-        // Set the leadId parameter
-        ApexPages.currentPage().getParameters().put('leadId', testLead.Id);
+        System.assertEquals(newCase.SuppliedEmail, controller.leadRecord.Email);
+        System.assertEquals('Smith', controller.leadRecord.LastName);
+    }
+    
+    @isTest
+    static void testSaveLeadInsertAndCloseCase() {
+        Case testCase = new Case(
+            Subject = 'Closing Test',
+            SuppliedEmail = 'close@example.com',
+            SuppliedName = 'Closing Lead',
+            SuppliedPhone = '9999999999',
+            Status = 'New'
+        );
+        insert testCase;
         
-        // Call the populateLeadFromCase method
-        controller.populateLeadFromCase();
+        Test.setCurrentPageReference(new PageReference('/apex/DummyPage'));
+        ApexPages.currentPage().getParameters().put('caseId', testCase.Id);
         
-        // Verify that the Lead record is populated correctly
-        System.assertEquals('jane.doe@example.com', controller.leadRecord.Email);
-        System.assertEquals('Doe', controller.leadRecord.LastName);
-        //System.assertEquals('Test Company', controller.leadRecord.Company);
-        System.assertEquals('987-654-3210', controller.leadRecord.Phone);
-        
-        // Save the Lead record
+        LeadFromCaseController controller = new LeadFromCaseController();
+        controller.leadRecord.Company = 'Test Company'; 
         controller.saveLead();
         
-        // Verify that the Lead record is saved successfully
-        Lead savedLead = [SELECT Id, Email, LastName, Phone FROM Lead WHERE Email = 'jane.doe@example.com' LIMIT 1];
-        System.assertNotEquals(null, savedLead);
-        System.assertEquals('jane.doe@example.com', savedLead.Email);
-        System.assertEquals('Doe', savedLead.LastName);
-        System.assertEquals('987-654-3210', savedLead.Phone);
+        System.assertNotEquals(null, controller.leadRecord.Id);
+        
+        Case updatedCase = [SELECT Status FROM Case WHERE Id = :testCase.Id];
+        System.assertEquals('Closed', updatedCase.Status);
     }
+    
+    @isTest
+    static void testSaveLeadUpdateExistingLead() {
+        Lead existingLead = [SELECT Id FROM Lead LIMIT 1];
+        
+        Test.setCurrentPageReference(new PageReference('/apex/DummyPage'));
+        ApexPages.currentPage().getParameters().put('leadId', existingLead.Id);
+        
+        LeadFromCaseController controller = new LeadFromCaseController();
+        controller.leadRecord.Phone = '0001112222';
+        controller.saveLead();
+        
+        Lead updatedLead = [SELECT Phone FROM Lead WHERE Id = :existingLead.Id];
+        System.assertEquals('0001112222', updatedLead.Phone);
+    }
+    
+    @isTest
+    static void testGetLeadsForCase() {
+        Lead existingLead = [SELECT Case__c FROM Lead LIMIT 1];
+        test.startTest();
+        List<Lead> leads = LeadFromCaseController.getLeadsForCase(existingLead.Case__c);
+        List<Lead> leads2 = LeadFromCaseController.getLeadsForCase(null);
+        test.stoptest();
+        System.assert(!leads.isEmpty(), 'Leads list should not be empty for valid Case ID.');
+        
+    }
+    
+    @isTest
+    static void testSendEmailToLead() {
+        Lead lead = [SELECT Id FROM Lead WHERE Email != null LIMIT 1];
+        Boolean exceptionThrown = false;
+        Test.startTest();
+        try{
+            LeadFromCaseController.sendEmailToLead(lead.Id);
+            LeadFromCaseController.sendEmailToLead(null);
+        }catch (AuraHandledException ex) {
+            exceptionThrown = true;
+            System.debug('Exception Message: ' + ex.getMessage());
+        }
+        System.assertEquals(true, exceptionThrown, 'Expected AuraHandledException to be thrown.');
+        Test.stopTest();
+        
+    } 
+    
+    @isTest
+    static void testSaveLead_CatchBlock() {
+        Test.startTest();
+        LeadFromCaseController controller = new LeadFromCaseController();
+        controller.leadRecord.LastName = 'TestUser';
+        controller.leadRecord.Company = null; 
+        
+        controller.saveLead();
+        Test.stopTest();
+        
+        System.assertEquals(true, controller.isErrorMessage, 'Error message flag should be true.');
+        System.assert(controller.message.startsWith('Error:'), 'Expected an error message.');
+    }
+    
+    
 }

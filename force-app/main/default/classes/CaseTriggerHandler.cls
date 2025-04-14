@@ -64,10 +64,10 @@ public class CaseTriggerHandler {
             
             for (Case c : newCases) {
                 // Case oldCase = oldCasesMap.get(c.Id);
-                if (ownerProfileMap.containsKey(c.OwnerId) && ownerProfileMap.get(c.OwnerId) == 'Reservation') {
+               // if (ownerProfileMap.containsKey(c.OwnerId) && ownerProfileMap.get(c.OwnerId) == 'Reservation') {
                     c.TAT_Start__c = System.now();
                     c.EntitlementId =  System.Label.EntitlementId;
-                }
+               // }
             }
         }
     }
@@ -112,6 +112,18 @@ public class CaseTriggerHandler {
             if (!milestoneToUpdate.isEmpty()) {
                 update milestoneToUpdate;
             }
+        }
+    }
+    @AuraEnabled(cacheable=true) // Added by Sidhant to show pre populate the fields while creating Lead(Booking)
+    public static Case getCaseFields(Id caseId) {
+        System.debug('CaseId '+ caseId);
+        try {
+            Case caseRecord = [SELECT Subject, Description, SuppliedPhone, SuppliedEmail, SuppliedName, caseNumber, origin FROM Case WHERE Id = :caseId LIMIT 1];
+           System.debug('--------------------origin--------->'+caseRecord.origin);
+            return caseRecord;
+        } catch (Exception e) {
+            System.debug('Error fetching case fields: ' + e.getMessage());
+            return null;
         }
     }
     

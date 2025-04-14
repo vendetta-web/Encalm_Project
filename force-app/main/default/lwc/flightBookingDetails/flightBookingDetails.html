@@ -379,12 +379,12 @@
                     <lightning-card title="Guest Details">
                         <template for:each={guestRows} for:item="guest">
                             <div key={guest.id} class="guest-rows" data-index={index}>
-                                <lightning-layout multiple-rows="true">
-                                    <lightning-layout-item size="1" class="slds-p-around_small">
+                                <lightning-layout horizontal-align="start">
+                                    <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
                                         <lightning-input class="input-field" label="Passenger" value={guest.pass} disabled></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Title field (disabled for display purpose) -->
-                                    <lightning-layout-item size="1" class="slds-p-around_small">
+                                    <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
                                     <lightning-combobox class="input-field" 
                                         label="Title" 
                                         value={guest.title} 
@@ -395,43 +395,43 @@
                                     </lightning-layout-item>
                                     
                                     <!-- First Name field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
                                     <lightning-input disabled class="input-field" label="First Name" value={guest.firstname} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Last Name field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                     <lightning-input disabled class="input-field" label="Last Name" value={guest.lastname} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Gender field (Picklist) -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                     <lightning-combobox disabled class="input-field" label="Gender" value={guest.gender} options={genderOptions} onchange={handleChange}></lightning-combobox>
                                     </lightning-layout-item>
                                     <!-- Age field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                     <lightning-input disabled class="input-field" label="Age" value={guest.age} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Designation field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                     <lightning-input disabled class="input-field" label="Designation" value={guest.designation} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Travel Class field (Picklist) -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                     <lightning-combobox disabled class="input-field" label="Travel Class" value={guest.travelclass} options={travelClassOptions} onchange={handleChange}></lightning-combobox>
                                     </lightning-layout-item>
                                     <!-- Travel PNR No field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                     <lightning-input disabled class="input-field" label="Travel PNR No" value={guest.travelpnrno} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Travel Nationality field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                         <lightning-input class="input-field" disabled data-index={index} label="Nationality" value={guest.nationality} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Travel Passport Number field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                         <lightning-input class="input-field" disabled data-index={index} label="Passport Number" value={guest.passportnumber} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                                     <!-- Travel Mobile field -->
-                                    <lightning-layout-item padding="around-small" size="auto">
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
                                         <lightning-input class="input-field" disabled data-index={index} label="Phone" value={guest.phone} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                             </lightning-layout>
@@ -440,6 +440,7 @@
                     </lightning-card>
 
                     <lightning-card title="Placard Details">
+                        <template if:true={selectedPassenger}>
                         <div class="guest-rows">
                                 <!-- Title field (disabled for display purpose) -->
                                 <lightning-combobox class="input-field" 
@@ -460,15 +461,21 @@
                                 <!-- Mobile field -->
                                 <lightning-input disabled class="input-field" name="Mobile__c" label="Mobile" value={selectedPassenger.phone} onchange={handleFieldChange}></lightning-input>
                                 
-                            </div>           
+                            </div>  
+                        </template>         
                     </lightning-card>
-                    <footer class="slds-modal__footer">
-                        <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
-                        <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button>
-                        <template if:false={isQuotationSent}>
+                    <template if:false={isQuotationSent}>
+                        <footer class="slds-modal__footer">
+                            <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
+                            <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button>
                             <lightning-button label="Confirm Booking" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
-                        </template>
-                    </footer>
+                        </footer>
+                    </template>
+                    <template if:true={isQuotationSent}>
+                        <footer class="slds-modal__footer">
+                            <lightning-button label="Edit" class="encalmbg" variant="brand" onclick={editBooking} style="margin-right: 10px;"></lightning-button>
+                        </footer>
+                    </template>
                 
             </template>
     

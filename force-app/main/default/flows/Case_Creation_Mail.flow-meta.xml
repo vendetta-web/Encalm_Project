@@ -1,49 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <actionCalls>
-        <name>Acknowledgement_Mail</name>
-        <label>Acknowledgement Mail</label>
-        <locationX>50</locationX>
-        <locationY>431</locationY>
-        <actionName>EmailUtility</actionName>
-        <actionType>apex</actionType>
+        <name>Query_Feedback_Case_Assignment_Notification</name>
+        <label>Query/ Feedback Case Assignment Notification</label>
+        <locationX>440</locationX>
+        <locationY>647</locationY>
+        <actionName>Case.Email_Alert_Query_Feedback_Case_Assignment_Notification</actionName>
+        <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
-            <name>fromAddress</name>
-            <value>
-                <stringValue>encalmreservation@gmail.com</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>recordId</name>
+            <name>SObjectRowId</name>
             <value>
                 <elementReference>$Record.Id</elementReference>
             </value>
         </inputParameters>
-        <inputParameters>
-            <name>templateName</name>
-            <value>
-                <stringValue>Case Creation Response</stringValue>
-            </value>
-        </inputParameters>
-        <inputParameters>
-            <name>toAddresses</name>
-            <value>
-                <elementReference>$Record.SuppliedEmail</elementReference>
-            </value>
-        </inputParameters>
-        <nameSegment>EmailUtility</nameSegment>
+        <nameSegment>Case.Email_Alert_Query_Feedback_Case_Assignment_Notification</nameSegment>
         <offset>0</offset>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <decisions>
         <name>Check_Field_Updates</name>
         <label>Check Field Updates</label>
-        <locationX>446</locationX>
-        <locationY>431</locationY>
+        <locationX>440</locationX>
+        <locationY>539</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>Followup_Date_Time_Updated</name>
+            <name>Folloup_Date_Time_Updated</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>$Record.Follow_up_Date_and_Time__c</leftValueReference>
@@ -55,14 +37,57 @@
             <connector>
                 <targetReference>Create_Follow_up_Task</targetReference>
             </connector>
-            <label>Followup Date Time Updated</label>
+            <label>Folloup Date Time Updated</label>
+        </rules>
+        <rules>
+            <name>Outcome_2_of_Check_Field_Updates</name>
+            <conditionLogic>(1 OR 2) AND 3 AND 4 AND 5</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Query</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Feedback</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Sub_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Operations</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Customer Responded</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.OwnerId</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Query_Feedback_Case_Assignment_Notification</targetReference>
+            </connector>
+            <label>Owner update on Feedback/Query</label>
         </rules>
     </decisions>
     <decisions>
         <name>Insert_Update</name>
         <label>Insert/ Update</label>
-        <locationX>248</locationX>
-        <locationY>323</locationY>
+        <locationX>176</locationX>
+        <locationY>431</locationY>
         <defaultConnector>
             <targetReference>Check_Field_Updates</targetReference>
         </defaultConnector>
@@ -77,13 +102,10 @@
                     <booleanValue>true</booleanValue>
                 </rightValue>
             </conditions>
-            <connector>
-                <targetReference>Acknowledgement_Mail</targetReference>
-            </connector>
             <label>Insert</label>
         </rules>
     </decisions>
-    <description>Updated by Saurabh- Remove Schedule path(Escalation)</description>
+    <description>Updated by Saurabh- 1 Mar</description>
     <environments>Default</environments>
     <formulas>
         <name>isNew</name>
@@ -119,8 +141,8 @@
     <recordCreates>
         <name>Create_Follow_up_Task</name>
         <label>Create Follow up Task</label>
-        <locationX>314</locationX>
-        <locationY>539</locationY>
+        <locationX>176</locationX>
+        <locationY>647</locationY>
         <inputAssignments>
             <field>ActivityDate</field>
             <value>
@@ -166,11 +188,35 @@
         <object>Task</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
-    <start>
-        <locationX>122</locationX>
-        <locationY>0</locationY>
+    <recordUpdates>
+        <name>Update_Owner_s_Manager_Email_field</name>
+        <label>Update Owner&apos;s Manager Email field</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
         <connector>
             <targetReference>Insert_Update</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>OwnerId</field>
+            <operator>StartsWith</operator>
+            <value>
+                <stringValue>005</stringValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Owner_s_Manager_Email__c</field>
+            <value>
+                <elementReference>$Record.Owner:User.Manager.Email</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Update_Owner_s_Manager_Email_field</targetReference>
         </connector>
         <object>Case</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>

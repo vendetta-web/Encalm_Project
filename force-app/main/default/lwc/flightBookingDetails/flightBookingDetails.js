@@ -7,7 +7,13 @@ import getAddOnDetails from '@salesforce/apex/PackageSelectionController.getAddo
 import getOpportunityDetails from '@salesforce/apex/PackageSelectionController.getOpportunityDetails';
 import createOpportunityLineItems from '@salesforce/apex/PackageSelectionController.createOpportunityLineItems';
 import savePassengerDetails from '@salesforce/apex/PackageSelectionController.savePassengerDetails';
+import getSavedPassengerDetails  from '@salesforce/apex/PackageSelectionController.getSavedPassengerDetails';
 import savePlacardDetails from '@salesforce/apex/PackageSelectionController.savePlacardDetails';
+import getSavedPlacardDetails from '@salesforce/apex/PackageSelectionController.getPlacardDetails';
+import getProcessState from '@salesforce/apex/PackageSelectionController.getProcessState';
+import updateBookingState from '@salesforce/apex/PackageSelectionController.updateBookingState';
+import updateAddonsOrderSummaryState from '@salesforce/apex/PackageSelectionController.updateAddonsOrderSummaryState';
+import getCurrentPackageDetails from '@salesforce/apex/AmendmentBookingController.getExistingPackage';
 import sendEmailWithAttachment from '@salesforce/apex/BookingEmailHandler.sendEmailWithAttachment';
 //import createContentVersion from '@salesforce/apex/MDEN_PdfAttachmentController.createContentVersion';
 import getTerminalInfo from '@salesforce/apex/PackageSelectionController.getTerminalInfo';
@@ -20,7 +26,7 @@ import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.ge
 
 export default class FlightBookingDetails extends NavigationMixin(LightningElement) {
     @api recordId; // Opportunity record ID
-    showModal = true;
+    showModal = false;
     showHeader = true;
     showChild = false;
     showPreview = false;
@@ -31,6 +37,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     getPackage;
     isQuotationSent=false;
     bookingStage='';
+    processState = '';
     showPayment
     @track getAddonDetail;
     selectedRowIndex = -1;
@@ -106,24 +113,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     @track opportunityFieldValues = {};
 
 
-    connectedCallback() {
-        this.showModal = true;
-        this.showHeader = true;
-        this.showChild = false;
+    connectedCallback() {        
         this.loadPackageData();
         this.loadAddonData();
         this.loadPassengerData();
-    }
-    //for generating PDF
-    renderedCallback(){
-        if(!this.jsPDFInitialized){
-            this.jsPDFInitialized = true;
-            loadScript(this, jsPDFLibrary).then(() => {
-                console.log('jsPDF library loaded successfully');
-            }).catch((error) => {
-                console.log('Error loading jsPDF library', error);
-            });
-        }
+        //this.fetchProcessState();
     }
 
     @wire(getPicklistValues)
@@ -136,6 +130,66 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             }));
         } else if (error) {
             console.error('Error fetching picklist values: ', error);
+        }
+    }
+
+    fetchProcessState() {
+        getProcessState({ opportunityId: this.recordId })
+            .then((result) => {
+                this.processState = result.Process_State__c !=null ? result.Process_State__c : '';
+                this.getAddonDetail = result.Saved_State_Addons__c != null ? JSON.parse(result.Saved_State_Addons__c) : this.getAddonDetail;
+                this.orderSummary = result.Saved_State_OrderSummary__c !=null ? JSON.parse(result.Saved_State_OrderSummary__c) : this.orderSummary;
+                this.showSelectedAddons();
+                this.handleUIBasedOnState();
+            })
+            .catch((error) => {
+                console.error('Error fetching process state:', error);
+            });
+    }
+
+    // Update the process state when the user moves to the next screen
+    updateProcesses() {
+        updateAddonsOrderSummaryState({ opportunityId: this.recordId, 
+            processAddons: JSON.stringify(this.getAddonDetail), 
+            processOrderSummary: JSON.stringify(this.orderSummary)})
+            .then(() => {
+            })
+            .catch((error) => {
+                console.error('Error updating process state:', error);
+            });
+    }
+
+    // Handle the UI elements based on the current state
+    handleUIBasedOnState() {
+        if (this.processState === '') {            
+            this.showModal = true;
+            this.showHeader = true;
+            this.showChild = false;
+        } else if (this.processState === 'Package Selection') {
+            // package selection was completed
+            this.showPackageSelection(); 
+            this.calculateTotalPackage();
+            this.showModal=false;
+            this.passengerDetailPage = true;
+        } else if (this.processState === 'Passenger Details') {
+            // Passenget details were filled
+            this.showPackageSelection();   
+            this.calculateTotalPackage();
+            this.getSavedPassengerData();
+            this.getSavedPlacardData();
+            this.showPreview = true;
+            this.showModal=false;
+            this.passengerDetailPage = false;
+        } else if (this.processState === 'Preview') {
+            // Preview screen was viewed
+            this.showPackageSelection();  
+            this.calculateTotalPackage(); 
+            this.getSavedPassengerData();
+            this.getSavedPlacardData();
+            this.showPreview = true;
+            this.showModal=false;
+            this.passengerDetailPage = false;
+            this.isQuotationSent = true;
         }
     }
 
@@ -305,8 +359,9 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         });
     }
     // Handle row selection
-    handleSelect(event) {
-        const index = event.target.dataset.index;  // Get the index of the clicked row
+    handleSelect(eventOrIndex) {
+        const index = typeof eventOrIndex === 'number' ? eventOrIndex : eventOrIndex.target.dataset.index;  
+        this.selectedRowIndex = index;
         //this.handleUnselect(event);
         this.selectedRowIndex = index;  // Update selected row
         this.selectedPackage = this.getPackage[index].packageName;
@@ -538,19 +593,28 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.createOLIs();
             this.showModal=false;
             this.passengerDetailPage = true;
-            window.scrollTo({top: 0, behavior:'smooth'});
+            this.updateBookingCurrentState('Package Selection');
+            window.scrollTo({top: 0, behavior:'smooth'});            
+            this.updateProcesses();
         } else {
             this.showToast('Error', 'Please select a package: !', 'error');
         }
     }
+    //Method to update the Booking current state
+    updateBookingCurrentState(processState) {
+        updateBookingState({ opportunityId: this.recordId, getProcessState: processState})
+            .then(result => {
+            })
+            .catch(error => {
+                console.error('Error creating Opportunity Line Items: ', error);
+                this.showToast('Error', error, 'error');
+            });
+    }
 
     // Method to call Apex and create Opportunity Line Items
     createOLIs() {
-        console.log('order->> ', JSON.stringify(this.orderSummary));
         createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount })
             .then(result => {
-                //this.showToast('Success', 'Opportunity Line Items created successfully: !', 'success');
-                console.log('Opportunity Line Items created successfully: ', result);
             })
             .catch(error => {
                 console.error('Error creating Opportunity Line Items: ', error);
@@ -570,14 +634,12 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.numberOfChildren = result.NoOfChild;
             this.numberOfInfants = result.NoOfInfant;
             this.bookingStage = result.bookingStage;
-            if (this.bookingStage !='' && this.bookingStage == 'Quotation Sent') {
-                this.isQuotationSent = true;
-            }
-
+            
             this.guestRows = []; 
             this.addGuestRows('Adult', this.numberOfAdults);
             this.addGuestRows('Child', this.numberOfChildren);
             this.addGuestRows('Infant', this.numberOfInfants);
+            this.fetchProcessState();
             this.isLoading = false;
         })
         .catch((error) => {
@@ -746,7 +808,6 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 item.dropTerminal = value;
             }
         }
-        console.log('ter-->> ',JSON.stringify(this.getAddonDetail));
     }
     
     
@@ -791,7 +852,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             .then(() => {
                 this.showPreview = true;
                 this.passengerDetailPage = false;
-                this.savePlacardDetails();// save placard details
+                this.updateBookingCurrentState('Passenger Details');
+                this.handlePlacardDetails();// save placard details
             })
             .catch(error => {
                 // Handle error
@@ -870,15 +932,22 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         event.target.reportValidity();
     }
 
-    savePlacardDetails() {
-        savePlacardDetails({ placardData: this.selectedPassenger, opportunityId: this.recordId })
-            .then(() => {
-            })
-            .catch(error => {
-                // Handle error
-                console.error('Error saving placard details:', error);
-                this.showToast('Error', 'Error saving placard details', 'error');
-            });
+    handlePlacardDetails() {
+        if (this.selectedPassenger) {
+            // Serialize the single passenger object and wrap it into an array
+            const serializedPassenger = JSON.parse(JSON.stringify([this.selectedPassenger])); // Wrap in []
+    
+            savePlacardDetails({ placardData: serializedPassenger, opportunityId: this.recordId })
+                .then(() => {
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error saving placard details:', error);
+                    this.showToast('Error', 'Error saving placard details', 'error');
+                });
+        } else {
+            this.showToast('Error', 'No passenger selected to save', 'error');
+        }
     }
     openDetailPage(){
         this.showModal=true;
@@ -901,101 +970,6 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.passengerDetailPage = true;
         this.showPreview = false;
     }
-    //generate PDF file
-   /* generatePdf() {
-        if (this.jsPDFInitialized) {
-            this.isLoading = true;
-            // Make sure to correctly reference the loaded jsPDF library.
-            const doc = new window.jspdf.jsPDF();
-
-            // Set font size
-            doc.setFontSize(12);
-            // Iterate over the data array and add content to the PDF
-            let y = 40; // starting vertical position
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor('#cda45e');
-            doc.text('EnCalm', 10, 10);
-            doc.setTextColor('black');
-            doc.text('Booking Voucher', 70, 10);
-            doc.text('Booking Id: NH73184373544094', 120, 10);
-            
-            doc.setFont('helvetica', 'normal');
-            doc.text('Service At Airport : ', 10, 20);
-            doc.text(this.serviceAirport, 10, 25);
-
-            doc.text('Number of Adults : ', 70, 20);
-            doc.text(this.numberOfAdults.toString(), 70, 25);
-            
-            if(this.numberOfChildren != undefined && this.numberOfChildren >0) {
-                doc.text('Number of Childs : ', 120, 20);
-                doc.text(this.numberOfChildren.toString(), 120, 25);
-            }
-            if(this.numberOfInfants != undefined && this.numberOfInfants >0) {
-                doc.text('Number of Infants : ', 150, 20);
-                doc.text(this.numberOfInfants.toString(), 120, 25);
-            }
-            doc.setFont('helvetica', 'bold');
-            doc.text('Passenger Details : ', 10, y);
-
-            doc.setFont('helvetica', 'normal');
-            this.guestRows.forEach((item, index) => {
-                doc.text(`Passenger First Name:  ${item.firstname}`, 70, y); // X, Y position
-                doc.text(`Passenger Last Name:  ${item.lastname}`, 70, y + 5); // X, Y position
-                doc.text(`Passenger Age:  ${item.age}`, 70, y + 10); // Y position + 5 for next line
-                y += 20; // increase Y position for the next entry
-            });
-
-            y=y+10;
-            
-            doc.setFont('helvetica', 'bold');
-            doc.text('Package Details : ', 10, y);
-
-            doc.setFont('helvetica', 'normal');
-            this.orderSummary.forEach((item, index) => {
-                doc.text(`Package Name: ${item.name}`, 70, y); // X, Y position
-                doc.text(`Package Amount: ${item.amount}`, 70, y + 5); // Y position + 5 for next line
-               // doc.text(`PNR Number: ${item.pnrNo}`, 10, y + 10); // Y position + 10 for next line
-                y += 10; // increase Y position for the next entry
-            });
-
-            doc.setFont('helvetica', 'bold');
-            doc.text('Total Amount: '+ this.totalAmount, 10, y+15);
-
-            //set border
-            doc.rect(5, 15,180,y+10);
-
-            doc.setDrawColor(0, 0, 0); // black border color
-
-            // Set the border line width
-            doc.setLineWidth(1); // 1 is the line width
-            
-            // Convert the generated PDF to ArrayBuffer
-            const pdfArrayBuffer = doc.output('arraybuffer');
-
-            // Convert the ArrayBuffer to Base64
-            const pdfBase64 = this.arrayBufferToBase64(pdfArrayBuffer);
-
-            // Check if the PDF is correctly generated
-            if (!pdfBase64 || pdfBase64 === "") {
-                console.error('PDF Base64 data is empty!');
-                return;
-            }
-
-            // Call Apex method to create a ContentVersion and associate it with the current record
-            createContentVersion({ recordId: this.recordId, base64Data: pdfBase64 })
-                .then((result) => {
-                    this.showToast('Success', 'Booking Voucher created successfully', 'success');
-                    this.dispatchEvent(new RefreshEvent());
-                })
-                .catch((error) => {
-                    this.showToast('Error', 'Error while generating Voucher', 'error');
-                    console.error(error);
-                });
-        } else {
-            console.error('jsPDF library not initialised');
-        }
-        this.isLoading = false;
-    }*/
 
     generatePdf() {
         // Call Apex method to generate and save PDF with the current record
@@ -1006,7 +980,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 }
                 this.showToast('Success', 'Booking Voucher created successfully', 'success');
                 this.dispatchEvent(new RefreshEvent());
-                this.handleSendEmail();
+				this.handleSendEmail();
+                this.updateBookingCurrentState('Preview');
             })
             .catch((error) => {
                 this.showToast('Error', 'Error while generating Voucher', 'error');
@@ -1029,13 +1004,13 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this[NavigationMixin.Navigate]({
             type: 'standard__objectPage',
             attributes: {
-                objectApiName: 'Opportunity',  // Replace with the object you are using
+                objectApiName: 'Opportunity',  
                 actionName: 'list'
             }
         });
     }
-
-    handleSendEmail() {
+	
+	handleSendEmail() {
         sendEmailWithAttachment({ opportunityId: this.recordId })
             .then(() => {
                 this.showToast('Success', 'Email sent successfully!', 'success');
@@ -1044,4 +1019,125 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 this.showToast('Error', error.body.message, 'error');
             });
     }
+    
+    // logic to maintain the state of the selected packages
+    showPackageSelection() {
+        getCurrentPackageDetails({opportunityId: this.recordId})
+        .then((result) => {
+            this.selectedPackage = result.packageName; 
+            this.currentTotalPackageAmount = result.totalBookingAmount;
+            const index = this.updateButtonLabels();
+            
+            if (index !== -1) {
+                this.handleSelect(index); // Use it with your existing methods
+            } else {
+                console.log('No matching package found');
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    }
+
+    updateButtonLabels() {
+        let matchingIndex = -1; // Initialize a variable to store the index
+    
+        // Ensure the `index` parameter is explicitly provided in the `forEach` callback
+        this.getPackage.forEach((wrapper, index) => {
+            // Check if showPackage is true and the packageFamily matches condition
+            if (wrapper.showPackage === true && wrapper.packageFamily === 'Gold') {
+                wrapper.buttonLabel = 'Selected'; // Update the button label
+                matchingIndex = index; // Store the index of the matching package
+            } else {
+                wrapper.buttonLabel = 'Select';
+            }
+        });
+        this.getPackage = [...this.getPackage];
+        return matchingIndex; // Return the index
+    }
+
+    showSelectedAddons() {
+        this.orderSummaryAddon = this.getAddonDetail
+        .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
+        .map(wrapper => {
+            return {
+                name: wrapper.addOnName + ' ' + wrapper.adddOnCount + ' Qty',
+                amount: wrapper.addOnTag * wrapper.adddOnCount,
+                totalAmount: wrapper.addOnTag * wrapper.adddOnCount,
+                button: true,
+                productId: wrapper.productId,
+                pricebookEntryId: wrapper.pricebookEntryId,
+                unitPrice: wrapper.addOnTag,
+                count: wrapper.adddOnCount,
+                pickupTerminals: wrapper.pickupTerminals.map(terminal => terminal.value),
+                dropTerminals: wrapper.dropTerminals.map(terminal => terminal.value),
+                discountValue: 0,
+                isChild: false,
+                isInfant: false
+            };
+        });
+    }
+
+    // logic to maintain the state of the selected packages
+    getSavedPassengerData() {
+        getSavedPassengerDetails({opportunityId: this.recordId})
+        .then((result) => {
+            try {
+                // Populate guestRows with the retrieved data
+                this.guestRows = result.map((guest, index) => {
+                    return {
+                        id: guest.id,
+                        pass: guest.type,
+                        type: guest.type,
+                        title: guest.title,
+                        firstname: guest.firstname,
+                        lastname: guest.lastname,
+                        gender: guest.gender,
+                        age: guest.age,
+                        designation: guest.designation,
+                        travelclass: guest.travelclass,
+                        travelpnrno: guest.travelpnrno,
+                        nationality: guest.nationality,
+                        passportnumber: guest.passportnumber,
+                        phone: guest.phone,
+                        showDropdown: false,
+                        isPlacard: guest.isPlacard
+                    };
+                });
+                console.log('Retrieved guestRows:', this.guestRows);
+            } catch (e) {
+                console.error('Error processing retrieved data:', e);
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    }
+
+    // logic to maintain the state of the selected packages
+    getSavedPlacardData() {
+        getSavedPlacardDetails({opportunityId: this.recordId})
+        .then((result) => {
+            try {
+                // Process and populate placardRows
+                this.selectedPassenger = result;
+            } catch (e) {
+                console.error('Error processing retrieved data:', e);
+            }
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    }
+    //edit booking 
+    editBooking() {
+        this.showModal = true;
+        this.showHeader = true;
+        this.showChild = false;
+        this.showPreview = false;
+        this.passengerDetailPage = false;
+        this.isQuotationSent = false;
+        window.scrollTo({top: 0, behavior:'smooth'});
+    }
+    
 }

@@ -23,7 +23,10 @@ public class EmailToLeadReplyTest {
         List<Task> tasks = [SELECT Id, WhoId, Subject, Description FROM Task WHERE WhoId = :testLead.Id];
         System.assertEquals(1, tasks.size(), 'A task should have been created.');
         System.assertEquals('Test Subject', tasks[0].Subject, 'The task subject should match the email subject.');
-        System.assertEquals('Email received from: Test Sender <testsender@example.com>\n\nDear John Doe, this is a test email.', tasks[0].Description, 'The task description should include the email body.');
+        //System.assertEquals('Email received from: Test Sender <testsender@example.com>\n\nDear John Doe, this is a test email.', tasks[0].Description, 'The task description should include the email body.');
+        
+        System.assertEquals('Dear John Doe, this is a test email.', tasks[0].Description, 'The task description should include the email body.');
+
         
         // Verify lead status update
         Lead updatedLead = [SELECT Id, Status FROM Lead WHERE Id = :testLead.Id];

@@ -395,13 +395,19 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Query_del__c</fieldItem>
-                <identifier>RecordQuery_del_cField</identifier>
+                <fieldItem>Record.Inquiry_Sub_Type__c</fieldItem>
+                <identifier>RecordInquiry_Sub_Type_cField</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 OR 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.Inquiry_Type__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Query</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Feedback</rightValue>
                     </criteria>
                 </visibilityRule>
             </fieldInstance>
@@ -415,10 +421,16 @@
                 <fieldItem>Record.Reservations_Query__c</fieldItem>
                 <identifier>RecordReservations_Query_cField</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
-                        <leftValue>{!Record.Query_del__c}</leftValue>
+                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>Reservations Query</rightValue>
+                        <rightValue>Query</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!Record.Inquiry_Sub_Type__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Reservations</rightValue>
                     </criteria>
                 </visibilityRule>
             </fieldInstance>
@@ -432,43 +444,21 @@
                 <fieldItem>Record.Operations_Query__c</fieldItem>
                 <identifier>RecordOperations_Query_cField</identifier>
                 <visibilityRule>
+                    <booleanFilter>(1 OR 2)  AND 3</booleanFilter>
                     <criteria>
-                        <leftValue>{!Record.Query_del__c}</leftValue>
+                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>Operations Query</rightValue>
-                    </criteria>
-                </visibilityRule>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>readonly</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.OwnerId</fieldItem>
-                <identifier>RecordOwnerIdField2</identifier>
-                <visibilityRule>
-                    <booleanFilter>1 AND 2 AND 3 AND 4</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.Operations_Query__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Athithya</rightValue>
+                        <rightValue>Query</rightValue>
                     </criteria>
                     <criteria>
-                        <leftValue>{!Record.Operations_Query__c}</leftValue>
+                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>Lounge</rightValue>
+                        <rightValue>Feedback</rightValue>
                     </criteria>
                     <criteria>
-                        <leftValue>{!Record.Operations_Query__c}</leftValue>
+                        <leftValue>{!Record.Inquiry_Sub_Type__c}</leftValue>
                         <operator>EQUAL</operator>
-                        <rightValue>SPA</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.Operations_Query__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Nap &amp; Shower</rightValue>
+                        <rightValue>Operations</rightValue>
                     </criteria>
                 </visibilityRule>
             </fieldInstance>
@@ -959,13 +949,6 @@
                 </componentInstanceProperties>
                 <componentName>flexipage:fieldSection</componentName>
                 <identifier>flexipage_fieldSection2</identifier>
-                <visibilityRule>
-                    <criteria>
-                        <leftValue>{!Record.Status}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Follow up required</rightValue>
-                    </criteria>
-                </visibilityRule>
             </componentInstance>
         </itemInstances>
         <itemInstances>

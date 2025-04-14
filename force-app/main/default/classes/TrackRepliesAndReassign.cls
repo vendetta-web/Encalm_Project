@@ -56,8 +56,13 @@ public class TrackRepliesAndReassign implements Schedulable {
                     update lead;
                     System.debug('Lead updated successfully.');
                    
-                    System.abortJob([SELECT Id FROM CronTrigger WHERE CronjobDetail.Name=:'Track Replies Job '+lead.Id].Id);
-                   
+                    //System.abortJob([SELECT Id FROM CronTrigger WHERE CronjobDetail.Name=:'Track Replies Job '+lead.Id].Id);
+                    List<CronTrigger> cronTriggerList = [SELECT Id FROM CronTrigger WHERE CronjobDetail.Name=:'Track Replies Job '+lead.Id];
+                    if(!cronTriggerList.IsEmpty()){
+                        for (CronTrigger ct : cronTriggerList) {
+        					System.abortJob(ct.Id);
+                        }
+                    }                   
                 } else {
                     System.debug('Reply found. No changes needed.');
                 }

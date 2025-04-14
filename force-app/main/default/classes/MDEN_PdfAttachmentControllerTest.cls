@@ -116,11 +116,17 @@ public  class MDEN_PdfAttachmentControllerTest {
         Test.startTest();
         String contentVersionId = MDEN_PdfAttachmentController.generateAndSavePDF(testOpp.Id);
         Test.stopTest();
+        //Added by Abhishek on 09-04-2025
+        Opportunity updatedOpp = [SELECT Id, StageName FROM Opportunity WHERE Id = :testOpp.Id];
+        System.assertEquals('Quotation Sent', updatedOpp.StageName, 'StageName should be updated to Quotation Sent');
+
+        List<ContentVersion> versions = [SELECT Id, Title FROM ContentVersion WHERE Title = 'Proforma_Invoice.pdf'];
+        System.assertEquals(1, versions.size(), 'A ContentVersion should be created');
         
-        System.assertNotEquals(null, contentVersionId, 'ContentVersion ID should be returned.');
+        //System.assertNotEquals(null, contentVersionId, 'ContentVersion ID should be returned.');
         
-        ContentVersion cv = [SELECT Id FROM ContentVersion WHERE Id = :contentVersionId LIMIT 1];
-        System.assertNotEquals(null, cv, 'Generated PDF ContentVersion should exist.');
+        //ContentVersion cv = [SELECT Id FROM ContentVersion WHERE Id = :contentVersionId LIMIT 1];
+        //System.assertNotEquals(null, cv, 'Generated PDF ContentVersion should exist.');
     }
     
     @isTest

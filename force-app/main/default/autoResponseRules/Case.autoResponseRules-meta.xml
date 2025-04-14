@@ -6,6 +6,21 @@
     </autoResponseRule>
     <autoResponseRule>
         <fullName>Case_Email</fullName>
+        <active>false</active>
+    </autoResponseRule>
+    <autoResponseRule>
+        <fullName>Customer Success Team</fullName>
         <active>true</active>
+        <ruleEntry>
+            <criteriaItems>
+                <field>Case.Origin</field>
+                <operation>equals</operation>
+                <value>Email</value>
+            </criteriaItems>
+            <notifyCcRecipients>false</notifyCcRecipients>
+            <senderEmail>siri.sarabu@maxify.digital</senderEmail>
+            <senderName>Encalm Support</senderName>
+            <template>unfiled$public/Case_Creation_Response</template>
+        </ruleEntry>
     </autoResponseRule>
 </AutoResponseRules>

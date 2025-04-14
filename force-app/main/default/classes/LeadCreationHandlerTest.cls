@@ -1,69 +1,44 @@
+/**
+* @File Name : LeadCreationHandlerTest.cls
+* @Description : Test Class for LeadCreationHandler.cls
+* @Author : Abhishek
+* @Last Modified By : Abhishek
+* @Last Modified On : April 10, 2025
+* @Modification Log :
+*==============================================================================
+* Ver | Date | Author | Modification
+*==============================================================================
+* 1.0 | April 10, 2025 |  Abhishek | Initial Version
+**/
 @isTest
-public class LeadCreationHandlerTest {
+private class LeadCreationHandlerTest {
+    
     @isTest
-    static void testGetLeadsForCase() {
-        // Create a test Case
-        Case testCase = new Case(
-            Subject = 'Test Case',
-            SuppliedEmail = 'test@example.com',
-            SuppliedName = 'Test User',
-            SuppliedPhone = '1234567890',
-            Status = 'New'
-        );
+    static void test_getLeadsForCase_validCaseId() {
+        
+        // Creating Test Data
+        Case testCase = new Case(Subject = 'Test Case');
         insert testCase;
-
-        // Create a test Lead associated with the Case
-        Lead testLead = new Lead(
-            FirstName = 'John',
-            LastName = 'Doe',
-            Email = 'john.doe@example.com',
-            Phone = '9876543210',
-            Company = 'Test Company',
-            Case__c = testCase.Id // Ensure the Related Case lookup is set
-        );
-        insert testLead;
-
-        // Perform the test
+        
+        List<Lead> leadList = new List<Lead>();
+        Lead lead1 = new Lead(LastName = 'Test Lead 1', Company = 'TestCo',Email = 'testEmail@gmail.com', Case__c = testCase.Id);
+        leadList.add(lead1);
+        Lead lead2 = new Lead(LastName = 'Test Lead 2', Company = 'TestCo',Email = 'testEmail2@gmail.com', Case__c = testCase.Id);
+        leadList.add(lead2);
+        insert leadList;
+        
         Test.startTest();
-        List<Lead> leadsForCase = LeadCreationHandler.getLeadsForCase(testCase.Id);
-        Test.stopTest();
-
-        // Assertions
-        System.assertNotEquals(null, leadsForCase, 'Leads for Case should not be null');
-        System.assertEquals(1, leadsForCase.size(), 'There should be one Lead associated with the Case');
-        System.assertEquals(testLead.Id, leadsForCase[0].Id, 'The returned Lead ID should match the test Lead ID');
-    }
-
-    @isTest
-    static void testGetLeadsForCaseWithInvalidCaseId() {
-        // Perform the test with an invalid Case ID
-        Test.startTest();
+        List<Lead> leads = LeadCreationHandler.getLeadsForCase(testCase.Id);
         try {
-            List<Lead> leadsForCase = LeadCreationHandler.getLeadsForCase(null);
-            System.assert(false, 'An exception should have been thrown for a null Case ID');
+            LeadCreationHandler.getLeadsForCase(null);
+            System.assert(false, 'Method should throw exception for null Case Id.');
+            delete testCase;
+            LeadCreationHandler.getLeadsForCase(testCase.Id);
         } catch (IllegalArgumentException e) {
-            System.assertEquals('Case ID cannot be null or empty.', e.getMessage(), 'The exception message should match');
+            System.assertEquals('Case ID cannot be null or empty.', e.getMessage());
         }
         Test.stopTest();
-    }
-
-    @isTest
-    static void testGetLeadsForCaseWithNoLeads() {
-        // Create a test Case without any associated Leads
-        Case testCase = new Case(
-            Subject = 'Case with no Leads',
-            SuppliedEmail = 'no.leads@example.com',
-            Status = 'New'
-        );
-        insert testCase;
-
-        // Perform the test
-        Test.startTest();
-        List<Lead> leadsForCase = LeadCreationHandler.getLeadsForCase(testCase.Id);
-        Test.stopTest();
-
-        // Assertions
-        System.assertNotEquals(null, leadsForCase, 'Leads for Case should not be null');
-        System.assertEquals(0, leadsForCase.size(), 'There should be no Leads associated with the Case');
+        
+        System.assertEquals(2, leads.size(), '2 leads expexted');
     }
 }

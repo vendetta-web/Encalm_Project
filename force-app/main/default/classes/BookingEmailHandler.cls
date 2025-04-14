@@ -3,7 +3,7 @@ public with sharing class BookingEmailHandler {
     @AuraEnabled
     public static void sendEmailWithAttachment(String opportunityId) {
         // Fetch Opportunity, Account, and Contact
-        Opportunity opp = [SELECT Id, AccountId,Service_Airport_Id__r.Name,Service_Airport__c,CreatedDate FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        Opportunity opp = [SELECT Id, AccountId,Service_Airport_Id__r.Name,Service_Airport__c,Date_of_Arrival__c,Date_of_Departure__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
         if (opp == null || opp.AccountId == null) {
             throw new AuraHandledException('Opportunity or Account not found.');
         }
@@ -13,6 +13,13 @@ public with sharing class BookingEmailHandler {
         } else {
             AirportName = opp.Service_Airport__c;
         }
+        String journeyDate = '';
+        if (opp.Date_of_Arrival__c !=null) {
+            journeyDate = opp.Date_of_Arrival__c;
+        } else if (opp.Date_of_Departure__c !=null) {
+             journeyDate = opp.Date_of_Departure__c;
+        }
+        
 
         Account acc = [SELECT Id, (SELECT Email,Name,Salutation FROM Contacts LIMIT 1) FROM Account WHERE Id = :opp.AccountId LIMIT 1];
         if (acc == null || acc.Contacts.isEmpty()) {
@@ -30,7 +37,7 @@ public with sharing class BookingEmailHandler {
         }
 
         ContentVersion cv = [SELECT VersionData, Title FROM ContentVersion WHERE ContentDocumentId = :cdl.ContentDocumentId LIMIT 1];
-        String subject = 'Booking Reserved: Atithya Services at ' + AirportName + ' for ' + salutation + contactName + ' on ' + opp.CreatedDate.format('yyyy-MM-dd');
+        String subject = 'Booking Reserved: Atithya Services at ' + AirportName + ' for ' + salutation + contactName + ' on ' + journeyDate;
         // Create dynamic HTML email body using Opportunity fields
         String htmlBody = '<!DOCTYPE html>'
             + '<html>'

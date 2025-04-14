@@ -96,12 +96,14 @@ public with sharing class MDEN_PdfAttachmentController {
     public List<PassengerWrapper> passengers { get; set; }
     public List<FlightDetailsWrapper> flightDetails { get; set; }
     public ServiceDetailsWrapper serviceDetails { get; set; }
-    
-    
+    public Boolean hasDiscount { get; set; }
+
     
     public MDEN_PdfAttachmentController() {
         String recordId = ApexPages.currentPage().getParameters().get('recordId');
         System.debug(' DEBUG: Received recordId in VF Controller: ' + recordId);
+        hasDiscount = false;
+        
         
         Date todayDate = System.today();
         formattedTodayDate = DateTime.newInstance(todayDate.year(), todayDate.month(), todayDate.day()).format('dd-MMM-yyyy');
@@ -128,6 +130,14 @@ public with sharing class MDEN_PdfAttachmentController {
                 
                 System.debug('Successfully fetched Opportunity record.');
                 
+
+                for (OpportunityLineItem oli : opp.OpportunityLineItems) {
+                    if (oli.Discount_Amount__c != null && oli.Discount_Amount__c != 0) {
+                        hasDiscount = true;
+                        break;
+                    }
+                }
+                System.debug('hasDiscount-->'+hasDiscount);	
                 //Process totalAmount
                 AggregateResult[] totalResult = [SELECT SUM(TotalPrice) totalAmount FROM OpportunityLineItem WHERE OpportunityId = :recordId];
                 totalAmount = (totalResult.isEmpty() || totalResult[0].get('totalAmount') == null) ? 0 : (Decimal) totalResult[0].get('totalAmount');
@@ -193,6 +203,10 @@ public with sharing class MDEN_PdfAttachmentController {
         } else {
             System.debug('ERROR: No recordId found.');
         }
+    }
+    
+    public String getDiscountColumnStyle() {
+        return hasDiscount ? '' : 'display:none;';
     }
     
     // Passenger Details Wrapper class to add Sr. No.

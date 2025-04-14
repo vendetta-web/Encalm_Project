@@ -33,6 +33,7 @@ public class MDEN_SaveSaleOrderParentTest {
         
         // Set up Airport Location and Airport
         Country__c conRecord = new Country__c(Country_Name__c = 'India' );
+        insert conRecord;
         
         Location__c loc = new Location__c(Location_Code__c = 'DEL',City__c = 'Delhi',Country_Id__c = conRecord.Id);
         insert loc;
