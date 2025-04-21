@@ -29,6 +29,10 @@ export default class AmendmentBooking extends LightningElement {
     totalAmount=0;
     totalAddonAmount=0;
     totalAmountAll = 0;
+    totalNetAmount=0;
+    totalCgstAmount=0;
+    totalSgstAmount=0;
+    totalIgstAmount=0;
     adddOnCount = 1;
     selectedOption = '';
     selectedPackage = '';
@@ -40,6 +44,9 @@ export default class AmendmentBooking extends LightningElement {
     passengerDetailPage = false;
     confirmAmendment = false;
     openPassengerPage = false;
+    showGst = false;
+    showCgst =false;
+    showIgst =false;
     confirmMessage ='';
     upgradeMessage = '';
     //Individual Passenger Details
@@ -670,17 +677,50 @@ export default class AmendmentBooking extends LightningElement {
         });
     }
 
+    loadAddonData() {
+        getAddOnDetails({ oppId: this.recordId })
+        .then((result) => {
+            this.getAddonDetail = result.map((item) => ({
+                ...item, // Spread the existing properties
+                buttonLabel: 'Select', // Button label for the add-ons
+                adddOnCount: 1, // Default count
+                class: 'btns select', // Default class
+                disablePickup: item.pickupTerminal ? true : false, // Disable pickup if it has a value
+                disableDrop: item.dropTerminal ? true : false, // Disable drop if it has a value
+                pickupTerminals: [
+                    { id: 'Pickup Terminal 1', value: item.pickupTerminal || '' } // Initialize Pickup Terminal
+                ],
+                dropTerminals: [
+                    { id: 'Drop Terminal 1', value: item.dropTerminal || '' } // Initialize Drop Terminal
+                ],
+            }));
+            this.getTerminals();
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    }
+
     getTerminals() {
         getTerminalInfo({oppId: this.recordId})
+        /*
+          .then(result => {
+                this.terminalOptions = result.map(each => ({
+                label: each.Code__c,
+                value: each.Code__c
+            }));
+            })*/
             .then(result => {
                 // Create a list of all terminals as options
                 const allTerminals = result.map(each => ({
                     label: each.Code__c,
                     value: each.Code__c
-                }));        
+                }));
+        
                 // Initialize the options for pickup and drop terminals
                 this.pickupTerminalOptions = [...allTerminals];
-                this.dropTerminalOptions = [...allTerminals];        
+                this.dropTerminalOptions = [...allTerminals];
+        
                 // For each addon, remove the pickupTerminal from dropTerminalOptions and dropTerminal from pickupTerminalOptions
                 this.getAddonDetail.forEach(item => {
                     if (item.pickupTerminal) {
@@ -691,68 +731,104 @@ export default class AmendmentBooking extends LightningElement {
                         // Remove dropTerminal value from pickupTerminalOptions
                         this.pickupTerminalOptions = this.pickupTerminalOptions.filter(option => option.value !== item.dropTerminal);
                     }
-                });        
+                });
+        
             })
             .catch(error => {
-                console.error('Error fetching terminals:', error);                
+                console.error('Error fetching terminals:', error);
+                
             });
-    }
+        }
 
     handleTerminalChange(event) {
         const id = event.target.dataset.id.split('-')[0];  // Extract the unique id from the data-id
         const value = event.target.value;    // Get the selected value
         const field = event.target.name;     // Get the picklist name (drop or pickup)
-
-        // Find the item in the array and update the corresponding field (drop or pickup)
+        const index = event.target.dataset.index; // Get the index for the terminal (if applicable)
+    
+        // Find the item in the array by matching the addOnName (unique ID)
         const item = this.getAddonDetail.find(item => item.addOnName == id);
+    
         if (item) {
-            item[field] = value;
-        }
-        // Update the value for pack.dropTerminal or pack.pickupTerminal
-        if (field === 'drop') {
-            item.dropTerminal = value; // Update the dropTerminal in the pack
-        } else if (field === 'pickup') {
-            item.pickupTerminal = value; // Update the pickupTerminal in the pack
+            // Determine which terminal we are updating (pickup or drop)
+            if (field === 'pickup') {
+                // Update the corresponding pickup terminal at the correct index
+                item.pickupTerminals[index].value = value;
+                // Also update the record field (pickupTerminal) if necessary
+                item.pickupTerminal = value;
+            } else if (field === 'drop') {
+                // Update the corresponding drop terminal at the correct index
+                item.dropTerminals[index].value = value;
+                // Also update the record field (dropTerminal) if necessary
+                item.dropTerminal = value;
+            }
         }
     }
 
     incrementAddOn(event) {
-        const ind = event.target.dataset.index;  // Get the index of the clicked row
+        const ind = event.target.dataset.index; // Get the index of the clicked row
         this.getAddonDetail = this.getAddonDetail.map((wrapper, index) => {
-            return {
-                ...wrapper, 
-                adddOnCount: ind == index ? wrapper.adddOnCount += 1 :  wrapper.adddOnCount
-            };
+            if (ind == index) {
+                // Check if the adddOnCount is less than 5 before incrementing
+                if (wrapper.adddOnCount < 5) {
+                    // Increment count
+                    wrapper.adddOnCount += 1;
+                }
+    
+                // Ensure arrays are initialized
+                wrapper.pickupTerminals = wrapper.pickupTerminals || [];
+                wrapper.dropTerminals = wrapper.dropTerminals || [];
+    
+                // Check if Pickup Terminal has a value
+                if (wrapper.pickupTerminals.some(terminal => terminal.value !== '')) {
+                    // Only add to Drop Terminals if it doesn't exceed max limit (5)
+                    if (wrapper.dropTerminals.length < 5) {
+                        wrapper.dropTerminals.push({
+                            id: `Drop Terminal ${wrapper.dropTerminals.length + 1}`,
+                            value: '' // Default to empty value
+                        });
+                    }
+                } else {
+                    // Only add to Pickup Terminals if it doesn't exceed max limit (5)
+                    if (wrapper.pickupTerminals.length < 5) {
+                        wrapper.pickupTerminals.push({
+                            id: `Pickup Terminal ${wrapper.pickupTerminals.length + 1}`,
+                            value: '' // Default to empty value
+                        });
+                    }
+                }
+            }
+            return wrapper;
         });
     }
 
     decrementAddOn(event) {
-        const ind = event.target.dataset.index;  // Get the index of the clicked row
+        const ind = event.target.dataset.index; // Get the index of the clicked row
         this.getAddonDetail = this.getAddonDetail.map((wrapper, index) => {
-            return {
-                ...wrapper, 
-                adddOnCount: ind == index ? wrapper.adddOnCount >1 ? wrapper.adddOnCount -= 1 :  1 : wrapper.adddOnCount
-            };
+        if (ind == index && wrapper.adddOnCount > 1) {
+            // Decrement count
+            wrapper.adddOnCount -= 1;
+
+            // Remove the last Drop Terminal if more than one exists
+            if (wrapper.dropTerminals.length > 1) {
+                wrapper.dropTerminals.pop();
+            }
+
+            // Remove the last Pickup Terminal if more than one exists
+            if (wrapper.pickupTerminals.length > 1) {
+                wrapper.pickupTerminals.pop();
+            }
+        }
+        return wrapper;
         });
     }
 
     handleAddOnSelect(event){
-        const index = event.target.dataset.index;  // Get the index of the clicked row
-        // Get the data-id values for pickup and drop terminals based on the selected index
-        const pickupDataId = this.getAddonDetail[index].pickupDataId;
-        const dropDataId = this.getAddonDetail[index].dropDataId;
+        const index = event.target.dataset.index;  // Get the index of the clicked row        
 
-        // Target the comboboxes for the selected index using the data-id attributes
-        const pickupCombobox = this.template.querySelector(`[data-id="${pickupDataId}"]`);
-        const dropCombobox = this.template.querySelector(`[data-id="${dropDataId}"]`);
+        const isValid = this.validatePicklistSelections(index);
 
-        // Validate pickup and drop terminals for the selected index
-        const All_Compobox_Valid = [pickupCombobox, dropCombobox].reduce((validSoFar, input_Field_Reference) => {
-            input_Field_Reference.reportValidity();
-            return validSoFar && input_Field_Reference.checkValidity();
-        }, true);
-
-        if (All_Compobox_Valid) {
+        if (isValid) {
             this.updateButtonAddonLabels(index);        
             this.orderSummaryAddon = this.getAddonDetail
             .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
@@ -761,13 +837,17 @@ export default class AmendmentBooking extends LightningElement {
                     name: wrapper.addOnName+' ' +wrapper.adddOnCount+' Qty',        // Copy the 'name' value
                     amount: wrapper.addOnTag*wrapper.adddOnCount,  // Copy the 'amount' value
                     totalAmount: wrapper.addOnTag*wrapper.adddOnCount,
+                    netAmount: wrapper.priceTagBeforeTax * wrapper.adddOnCount,
+                    cgstAmount: wrapper.cgst * wrapper.adddOnCount,
+                    sgstAmount: wrapper.sgst * wrapper.adddOnCount,
+                    igstAmount: wrapper.igst * wrapper.adddOnCount,
                     button: true,
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.addOnTag,
                     count: wrapper.adddOnCount,
-                    pickup: wrapper.pickup,
-                    drop: wrapper.drop,
+                    pickupTerminals: wrapper.pickupTerminals.map(terminal => terminal.value),
+                    dropTerminals: wrapper.dropTerminals.map(terminal => terminal.value),
                     isChild: false,
                     isInfant: false
                 };
@@ -781,6 +861,43 @@ export default class AmendmentBooking extends LightningElement {
         } else {
             this.showToast('Error', 'Please select terminals', 'error');
         }        
+    }
+
+    // Method to handle validation of terminals
+    validatePicklistSelections(index) {
+        let isValid = true;
+        const item = this.getAddonDetail[index]; // Get the specific item based on the passed index
+    
+        // If buttonLabel is 'Remove', skip validation for this item
+        if (item.buttonLabel === 'Remove' || item.hideDropTerminal) {
+            return true; // Skip validation for this item
+        }
+    
+        // Initialize error classes for the specific item
+        let pickupErrorClass = ''; 
+        let dropErrorClass = '';
+    
+        // Validate Pickup Terminals
+        item.pickupTerminals.forEach((terminal) => {
+            if (!terminal.value) {
+                isValid = false;
+                pickupErrorClass = 'slds-has-error'; // Apply error class for pickup terminal
+            }
+        });
+    
+        // Validate Drop Terminals
+        item.dropTerminals.forEach((terminal) => {
+            if (!terminal.value) {
+                isValid = false;
+                dropErrorClass = 'slds-has-error'; // Apply error class for drop terminal
+            }
+        });
+    
+        // Update the error classes for the item
+        item.pickupErrorClass = pickupErrorClass;
+        item.dropErrorClass = dropErrorClass;
+    
+        return isValid;
     }
 
     updateButtonAddonLabels(ind) {
@@ -806,6 +923,10 @@ export default class AmendmentBooking extends LightningElement {
                         name: wrapper.packageName + ' (' + (this.adultCount - this.numberOfAdults)  + ' Adult)', // Copy the 'name' value for adult
                         amount: wrapper.priceTag * (this.adultCount - this.numberOfAdults), // Calculate the amount 
                         totalAmount: wrapper.priceTag * (this.adultCount - this.numberOfAdults),
+                        netAmount: wrapper.priceTagBeforeTax * (this.adultCount - this.numberOfAdults),
+                        cgstAmount: wrapper.cgst * (this.adultCount - this.numberOfAdults),
+                        sgstAmount: wrapper.sgst * (this.adultCount - this.numberOfAdults),
+                        igstAmount: wrapper.igst * (this.adultCount - this.numberOfAdults),
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.pricebookEntryId,
                         unitPrice: wrapper.priceTag,
@@ -819,6 +940,10 @@ export default class AmendmentBooking extends LightningElement {
                         name: wrapper.packageName + ' (' + (this.childCount - this.numberOfChildren) + ' child)', // Copy the 'name' value for child
                         amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (this.childCount - this.numberOfChildren), // Calculate the amount
                         totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (this.childCount - this.numberOfChildren),
+                        netAmount: wrapper.priceTagBeforeTax * (this.childCount - this.numberOfChildren),
+                        cgstAmount: wrapper.cgst * (this.childCount - this.numberOfChildren),
+                        sgstAmount: wrapper.sgst * (this.childCount - this.numberOfChildren),
+                        igstAmount: wrapper.igst * (this.childCount - this.numberOfChildren),
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
@@ -832,6 +957,10 @@ export default class AmendmentBooking extends LightningElement {
                         name: wrapper.packageName + ' (' + (this.infantCount - this.numberOfInfants) + ' Infant)', // Copy the 'name' value for infant
                         amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (this.infantCount - this.numberOfInfants), // Calculate the amount
                         totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (this.infantCount - this.numberOfInfants),
+                        netAmount: 0,
+                        cgstAmount: 0,
+                        sgstAmount: 0,
+                        igstAmount: 0,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
@@ -854,12 +983,38 @@ export default class AmendmentBooking extends LightningElement {
         this.totalAmount = this.orderSummary.reduce((sum, currentItem) => {
             return sum + currentItem.totalAmount;
         }, 0);
+        this.calculateGst(this.orderSummary);
     }
 
     calculateTotalAddonAmount() {
         this.totalAddonAmount = this.orderSummaryAddon.reduce((sum, currentItem) => {
             return sum + currentItem.totalAmount;
         }, 0);
+        this.calculateGst(this.orderSummaryAddon);
+    }
+
+    calculateGst(orderSummary) {
+        let totalNetAmount = 0;
+        let totalCgstAmount = 0;
+        let totalSgstAmount = 0;
+        let totalIgstAmount = 0;
+        orderSummary.forEach(item => {
+            totalNetAmount += item.netAmount || 0;
+            totalCgstAmount += item.cgstAmount || 0;
+            totalSgstAmount += item.sgstAmount || 0;
+            totalIgstAmount += item.igstAmount || 0;
+        });
+        this.totalNetAmount = totalNetAmount;
+        this.totalCgstAmount = totalCgstAmount;
+        this.totalSgstAmount = totalSgstAmount;
+        this.totalIgstAmount = totalIgstAmount;
+        if (this.totalCgstAmount !=0 && this.totalSgstAmount!=0) {
+            this.showGst = true;
+            this.showCgst =true;
+        } else if (this.totalIgstAmount !=0) {
+            this.showGst = true;
+            this.showIgst = true;
+        }
     }
 
     // Handle row selection for package upgrade
@@ -880,6 +1035,10 @@ export default class AmendmentBooking extends LightningElement {
                     name: wrapper.packageName + ' (' + this.numberOfAdults + ' Adult)', // Copy the 'name' value for adult
                     amount: wrapper.priceTag * this.numberOfAdults, // Calculate the amount 
                     totalAmount: wrapper.priceTag * this.numberOfAdults,
+                    netAmount: wrapper.priceTagBeforeTax * this.numberOfAdults,
+                    cgstAmount: wrapper.cgst * this.numberOfAdults,
+                    sgstAmount: wrapper.sgst * this.numberOfAdults,
+                    igstAmount: wrapper.igst * this.numberOfAdults,
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.priceTag,
@@ -893,6 +1052,10 @@ export default class AmendmentBooking extends LightningElement {
                         name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
                         amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, // Calculate the amount
                         totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren,
+                        netAmount: wrapper.priceTagBeforeTax * this.numberOfChildren,
+                        cgstAmount: wrapper.cgst * this.numberOfChildren,
+                        sgstAmount: wrapper.sgst * this.numberOfChildren,
+                        igstAmount: wrapper.igst * this.numberOfChildren,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
@@ -907,6 +1070,10 @@ export default class AmendmentBooking extends LightningElement {
                         name: wrapper.packageName + ' (' + this.numberOfInfants + ' Infant)', // Copy the 'name' value for infant
                         amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfants, // Calculate the amount
                         totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfants,
+                        netAmount: 0,
+                        cgstAmount: 0,
+                        sgstAmount: 0,
+                        igstAmount: 0,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
@@ -940,6 +1107,7 @@ export default class AmendmentBooking extends LightningElement {
         this.totalAmount = this.orderSummaryPackageUpgrade.reduce((sum, currentItem) => {
             return sum + currentItem.totalAmount;
         }, 0);
+        this.calculateGst(this.orderSummaryPackageUpgrade);
         this.totalPackageUpgradeAmount = this.totalAmount - this.currentTotalPackageAmount;
     }
 
@@ -963,6 +1131,10 @@ export default class AmendmentBooking extends LightningElement {
                     name: wrapper.packageName + ' (' + this.numberOfAdultsAll + ' Adult)', // Copy the 'name' value for adult
                     amount: wrapper.priceTag * this.numberOfAdultsAll, // Calculate the amount 
                     totalAmount: wrapper.priceTag * this.numberOfAdultsAll,
+                    netAmount: wrapper.priceTagBeforeTax * this.numberOfAdultsAll,
+                    cgstAmount: wrapper.cgst * this.numberOfAdultsAll,
+                    sgstAmount: wrapper.sgst * this.numberOfAdultsAll,
+                    igstAmount: wrapper.igst * this.numberOfAdultsAll,
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.priceTag,
@@ -975,6 +1147,10 @@ export default class AmendmentBooking extends LightningElement {
                         name: wrapper.packageName + ' (' + this.numberOfChildrenAll + ' child)', // Copy the 'name' value for child
                         amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildrenAll, // Calculate the amount
                         totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildrenAll,
+                        netAmount: wrapper.priceTagBeforeTax * this.numberOfChildrenAll,
+                        cgstAmount: wrapper.cgst * this.numberOfChildrenAll,
+                        sgstAmount: wrapper.sgst * this.numberOfChildrenAll,
+                        igstAmount: wrapper.igst * this.numberOfChildrenAll,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
@@ -988,6 +1164,10 @@ export default class AmendmentBooking extends LightningElement {
                         name: wrapper.packageName + ' (' + this.numberOfInfantsAll + ' Infant)', // Copy the 'name' value for infant
                         amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfantsAll, // Calculate the amount
                         totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfantsAll,
+                        netAmount: 0,
+                        cgstAmount: 0,
+                        sgstAmount: 0,
+                        igstAmount: 0,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
@@ -1052,6 +1232,7 @@ export default class AmendmentBooking extends LightningElement {
         this.totalAmountAll = this.orderSummaryPackageUpgradeAll.reduce((sum, currentItem) => {
             return sum + currentItem.totalAmount;
         }, 0);
+        this.calculateGst(this.orderSummaryPackageUpgradeAll);
         this.totalExtraAmountAll = this.totalAmountAll - this.currentTotalPackageAmount;
     }
 
@@ -1063,6 +1244,13 @@ export default class AmendmentBooking extends LightningElement {
         this.totalExtraAmountAll = 0;
         this.totalAmount = 0;
         this.guestRowsAll = [];
+        this.showGst = false;
+        this.showCgst =false;
+        this.showIgst =false;
+        this.totalNetAmount = 0;
+        this.totalCgstAmount = 0;
+        this.totalSgstAmount = 0;
+        this.totalIgstAmount = 0;
     }
     handlePassengerInformation() {
         if(this.guestRowsAll.length < 1) {

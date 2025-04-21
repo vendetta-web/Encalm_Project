@@ -47,19 +47,20 @@ public class LeadStatusHelper {
         }
     }
     public static void beforeUpdateLeadEscalation(List<Lead> newLeads, Map<Id, Lead> oldLeadsMap) { // Added by Sidhant
+    System.debug('beforeUpdateLeadEscalation');
         for (Lead newLead : newLeads) {
             Lead oldLead = oldLeadsMap != null ? oldLeadsMap.get(newLead.Id) : null;
             if (oldLead == null) {
                 if (isReservationProfile(newLead.OwnerId) && newLead.Status == 'Open') {
-                    startTimer(newLead.Id, 2, 1);
+                    startTimer(newLead, 2, 1);
                 }
             } else {
                 if (newLead.OwnerId != oldLead.OwnerId && isReservationProfile(newLead.OwnerId) && newLead.Status == 'Open') {
-                    startTimer(newLead.Id, 2, 1); // First timer after 30 minutes
+                    startTimer(newLead, 2, 1); // First timer after 30 minutes
                 }
                 if ((oldLead.Status != 'Open' && newLead.Status == 'Open') && isReservationProfile(newLead.OwnerId)) {
                     System.debug('In beforeUpdate: Lead Status changed to Open and assigned to Reservation profile.');
-                    startTimer(newLead.Id, 2, 1); // First timer after 30 minutes
+                    startTimer(newLead, 2, 1); // First timer after 30 minutes
                 }
                 
             }
@@ -67,21 +68,22 @@ public class LeadStatusHelper {
     }
     
     
-    private static void startTimer(Id leadId, Integer minutes, Integer level) {  
-        Lead ldList = [SELECT Id, Name, TAT_deadline__c, Escalation_Level__c FROM Lead Where Id = : leadId];
-        
-      ldList.TAT_deadline__c = System.now().addMinutes(30);
-      ldList.Escalation_Level__c = 'Level 1';
-        update ldList;
-                
+    private static void startTimer(Lead lead, Integer minutes, Integer level) {  
+        // Lead ldList = [SELECT Id, Name, TAT_deadline__c, Escalation_Level__c FROM Lead Where Id = : leadId];
+        System.debug('Start timeer');
+      lead.TAT_deadline__c = System.now().addMinutes(30);
+      lead.Escalation_Level__c = 'Level 1';
+     //   update ldList;
+        System.debug('TAT_deadline__c'+ lead.TAT_deadline__c);
+        System.debug('Escalation_Level__c'+ lead.Escalation_Level__c);
         Datetime futureTime = System.now().addMinutes(2);
         
         // Extract the components for the cron expression
         String cronExp = '0 ' + futureTime.minute() + ' ' + futureTime.hour() + ' ' + futureTime.day() + ' ' + (futureTime.month()) + ' ? ' + futureTime.year();
         System.debug('Scheduled time: ' + futureTime + ' with cron expression: ' + cronExp);
-        LeadEscalationTimer scheduler = new LeadEscalationTimer(leadId, level);
+        LeadEscalationTimer scheduler = new LeadEscalationTimer(lead.Id, level);
         if(!Test.isRunningTest()){
-            System.schedule('Lead Timer First Check' +leadId, cronExp, scheduler);
+            System.schedule('Lead Timer First Check' +lead.Id, cronExp, scheduler);
         }
     }
     

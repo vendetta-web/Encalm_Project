@@ -1,3 +1,5 @@
+// Updated by Abhishek :- Not used anywhere, confirmed from Sidhant. April 15 2025
+
 public class EscalateLeadBatch implements Database.Batchable<SObject>{
     
     public Database.QueryLocator start(Database.BatchableContext BC) {

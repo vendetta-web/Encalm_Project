@@ -1,8 +1,15 @@
+/**
+* @File Name : TrackRepliesAndReassignTest.cls
+* @Description : Test Class for TrackRepliesAndReassign.cls
+* @Author : Maxify Development Team
+* @Created Date : April 10, 2025
+**/
 @isTest
 public class TrackRepliesAndReassignTest {
     
-    @isTest
-    static void testTrackRepliesAndReassign(){
+    @testSetup
+    static void setupData() {
+        
         Lead testLead = new Lead();
         testLead.FirstName = 'Test';
         testLead.LastName = 'Lead';
@@ -22,15 +29,19 @@ public class TrackRepliesAndReassignTest {
         tskRecord.TaskSubtype = 'Email';
         
         insert tskRecord;
-        
+    }
+    @isTest
+    static void testTrackRepliesAndReassign(){
+        Lead testLead = [Select id From Lead where Name = 'Test Lead' LIMIT 1];
         TrackRepliesAndReassign job = new TrackRepliesAndReassign(testLead);
         
         Test.startTest();
         String jobId = System.schedule('Test Reply Exists', '0 0 0 1 1 ? 2050', job); 
         
+        Task tskRecord = [Select id,Subject FROM Task where Subject = 'Re: Send Letter'];
         tskRecord.Subject = 'Send Letter';
         update tskRecord;
-       
+        
         TrackRepliesAndReassign job2 = new TrackRepliesAndReassign(testLead);
         try {
             String jobId2 = System.schedule('Test Reply Exists', '0 0 0 1 1 ? 2050', job2);
@@ -40,21 +51,17 @@ public class TrackRepliesAndReassignTest {
         Test.stopTest();
         
         Lead updatedLead = [SELECT Status FROM Lead WHERE Id = :testLead.Id];
-        //System.assertEquals('Awaiting Customer response', updatedLead.Status, 'Status should remain unchanged if reply is found');      
+        System.assertEquals('Open', updatedLead.Status, 'Status should remain unchanged if reply is found');      
         
     }
     @isTest
     static void testTrackRepliesAndReassign2(){
-        Lead testLead = new Lead();
-        testLead.FirstName = 'Test';
-        testLead.LastName = 'Lead';
-        testLead.Email = 'testEmail@gmail.com';
-        testLead.Company = 'Test Company';
-        testLead.Status = 'Awaiting Customer response';
+        
+        Lead testLead = [Select id From Lead where Name = 'Test Lead' LIMIT 1]; 
         testLead.Set_Follow_up_Date_and_Time__c = null;
         
-        insert testLead;
-           
+        update testLead;
+        
         TrackRepliesAndReassign job = new TrackRepliesAndReassign(testLead);
         
         Test.startTest();

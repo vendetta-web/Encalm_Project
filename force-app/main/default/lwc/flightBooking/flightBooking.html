@@ -132,7 +132,7 @@
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Service Date-Time</label>
-                            <lightning-input style="font-size: 14px;" type="time" disabled variant="label-hidden" value={staTime}
+                            <lightning-input style="font-size: 14px;" type="time" name="Arrival_Service_Time__c" disabled variant="label-hidden" value={staTime}
                                 onchange={handleServiceTimeChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
@@ -264,7 +264,7 @@
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">Service Date-Time</label>
-                            <lightning-input type="time" variant="label-hidden" disabled value={stdTime}
+                            <lightning-input type="time" name="Departure_Service_Time__c" variant="label-hidden" disabled value={depServiceTime}
                                 onchange={handleServiceTimeChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
@@ -448,8 +448,8 @@
                         </lightning-layout-item>
                         <lightning-layout-item size="4" class="slds-p-around_small">
                             <label class="custom-label slds-form-element__label">STD Time</label>
-                            <lightning-input  required type="time" name="STD_Time__c" variant="label-hidden" value={stdTime}
-                            onblur={handleFieldChange} onchange={handleStdTimeChange}></lightning-input>
+                            <lightning-input  required type="time" name="STD_Time__c" variant="label-hidden" value={depServiceTime}
+                            onblur={handleFieldChange} onchange={handledepServiceTimeChange}></lightning-input>
                         </lightning-layout-item>
                     </lightning-layout>
                     <lightning-layout multiple-rows="true">

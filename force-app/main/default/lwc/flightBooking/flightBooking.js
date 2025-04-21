@@ -236,6 +236,7 @@ qtyVal = 0;
     flightNumberDeparture='';
     staTime = '';
     stdTime = '';
+    depServiceTime='';
     serviceTime = '';
     @track sector='';
 
@@ -419,6 +420,29 @@ handleTabChange(event) {
         const hours = String(date.getUTCHours()).padStart(2, '0');
         const minutes = String(date.getUTCMinutes()).padStart(2, '0');
         return `${hours}:${minutes}`; // Format as HH:MM
+    }
+
+    // Subtract Departure time based on sector
+    adjustServiceTime() {
+        const [hours, minutes] = this.stdTime.split(':').map(Number);
+        const originalMillis = (hours * 3600000) + (minutes * 60000);
+        let adjustedMillis;
+
+        if (this.sector === 'Domestic') {
+            // Subtract 1 hour and 30 minutes for Domestic
+            adjustedMillis = originalMillis - (1 * 3600000) - (30 * 60000);
+        } else if (this.sector === 'International') {
+            // Subtract 3 hours for International
+            adjustedMillis = originalMillis - (3 * 3600000);
+        } else {
+            // Default case: No adjustment
+            adjustedMillis = originalMillis;
+        }
+
+        const date = new Date(adjustedMillis);
+        const adjustedHours = String(date.getUTCHours()).padStart(2, '0');
+        const adjustedMinutes = String(date.getUTCMinutes()).padStart(2, '0');
+        return `${adjustedHours}:${adjustedMinutes}`;
     }
     handleSave(){
         const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
@@ -643,8 +667,22 @@ handleTabChange(event) {
     }
  
 
-    handleStaTimeChange(event) { this.staTime = event.target.value;}
-    handleStdTimeChange(event) { this.stdTime = event.target.value; }
+    handleStaTimeChange(event) { 
+        this.staTime = event.target.value;
+        this.staTime = this.staTime.split(':').slice(0, 2).join(':');
+        this.opportunityFieldValues['Arrival_Service_Time__c'] = this.staTime;
+    }
+    handleStdTimeChange(event) { 
+        this.stdTime = event.target.value; 
+        this.depServiceTime = this.adjustServiceTime();
+        this.stdTime = this.stdTime.split(':').slice(0, 2).join(':');
+        this.opportunityFieldValues['STD_Time__c'] = this.stdTime;
+        this.opportunityFieldValues['Departure_Service_Time__c'] = this.depServiceTime;
+    }
+    handledepServiceTimeChange(event){
+        this.depServiceTime = event.target.value; 
+        this.opportunityFieldValues['Departure_Service_Time__c'] = this.depServiceTime;
+    }
     handleServiceTimeChange(event) { this.serviceTime = event.target.value; }
 
     handleFirstNameChange(event) { this.firstName = event.target.value; }
@@ -770,20 +808,25 @@ setStaTime(){
         this.staTime = this.formatTime(this.flightStaMap.get(this.flightNumberArrival),0,0);
     }
     this.opportunityFieldValues['STA_Time__c'] = this.staTime;
+    this.opportunityFieldValues['Arrival_Service_Time__c'] = this.staTime;
 }
 setStdTime(){
     if (this.flightNumber !='' && this.flightDtaMap.has(this.flightNumber)) {
-        this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumber),1,30);
+        this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumber),0,0);
     }
     if (this.flightNumberDeparture !='' && this.flightDtaMap.has(this.flightNumberDeparture)) {
-        this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumberDeparture),1,30);
+        this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumberDeparture),0,0);
     }
     this.opportunityFieldValues['STD_Time__c'] = this.stdTime;
+    // Calculate Service Time dynamically based on sector
+    this.depServiceTime = this.adjustServiceTime();
+    this.opportunityFieldValues['Departure_Service_Time__c'] = this.depServiceTime;
 }
 resetFlightDetails(){
     this.flightNumber='';
     this.staTime ='';
     this.stdTime='';
+    this.depServiceTime='';
 }
 resetOnTabChange() {
     this.errorMessage='';
@@ -801,12 +844,21 @@ resetOnTabChange() {
     this.departureDate=undefined;  
     this.flightNumber = '';
     this.staTime = '';
+    this.depServiceTime='';
     this.stdTime = '';
     this.serviceTime = '';
     this.sector='';
     this.flightNumberOptionsArrival;
     this.flightNumberOptionsDeparture;
     this.flightNumberOptions;
+    this.opportunityFieldValues['Arriving_Flight_Schedule__c']=null;
+    this.opportunityFieldValues['Departure_Flight_Schedule__c']=null;
+    this.opportunityFieldValues['Arriving_Airport_Id__c']=null;
+    this.opportunityFieldValues['Departure_Airport_Id__c']=null;
+    this.opportunityFieldValues['Departure_Service_Time__c'] = null;
+    this.opportunityFieldValues['STD_Time__c'] = null;
+    this.opportunityFieldValues['Arrival_Service_Time__c'] = null;
+    this.opportunityFieldValues['STA_Time__c'] = null;
 }
 handleAccountRecord(event){
     this.accountId = event.detail['Id'];

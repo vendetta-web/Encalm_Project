@@ -1,3 +1,9 @@
+/**
+* @File Name : EmailUtilityTest.cls
+* @Description : Test Class for EmailUtility.cls
+* @Author : Maxify Development Team
+* @Created Date : April 10, 2025
+**/
 @isTest
 public class EmailUtilityTest {
 

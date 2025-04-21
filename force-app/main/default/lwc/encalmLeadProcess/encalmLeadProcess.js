@@ -97,6 +97,25 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         // }
 
         let newStage = this.getActiveStage();
+        let currentStatus = this.currentStage; 
+
+        const statusOrder = this.finalpathvalue.map(stage => stage.label);// getting all Lead Status values in an Array
+
+        let currentIndex = statusOrder.indexOf(currentStatus); // getting index of current Lead status value
+        let newIndex = statusOrder.indexOf(newStage); // getting index of new Lead Status Value
+
+        //  Prevent user from changing Lead Status to previous values
+        if (newIndex < currentIndex) {
+            this.showToast('error', 'Cannot Change Lead Status to Previous Value.');
+            return;
+        }
+
+        // Allow only +1 forward change.
+        if (newIndex - currentIndex !== 1) {
+            this.showToast('error', 'You can only move the Lead Status to the next step.');
+            return;
+        }
+
         if (newStage === 'Closed') {
             this.isStageClosed = true;
             this.isStageFollowup = false;

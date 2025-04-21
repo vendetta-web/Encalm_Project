@@ -76,7 +76,7 @@ public class CaseTriggerHandler {
         Set<Id> caseIds = new Set<Id>(); 
         for (Case c : newCases) {
             Case oldCase = oldCasesMap.get(c.Id); 
-            if (c.Status != oldCase.Status && c.Status == 'New') {
+            if ((c.Status != oldCase.Status && c.Status == 'New' || c.Status != oldCase.Status && c.Status == 'Customer Responded')) {
                 ownerIds.add(c.OwnerId);
                 caseIds.add(c.Id); // Add case ID for milestone query
             }

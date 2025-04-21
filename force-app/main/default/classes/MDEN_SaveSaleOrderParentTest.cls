@@ -1,14 +1,8 @@
 /**
 * @File Name : MDEN_SaveSaleOrderParentTest.cls
 * @Description : Test Class for MDEN_SaveSaleOrderParent.cls
-* @Author : Abhishek
-* @Last Modified By : Abhishek
-* @Last Modified On : April 08, 2025
-* @Modification Log :
-*==============================================================================
-* Ver | Date | Author | Modification
-*==============================================================================
-* 1.0 | April 08, 2025 |  Abhishek | Initial Version
+* @Author : Maxify Development Team
+* @Created Date : April 8, 2025
 **/
 
 @isTest

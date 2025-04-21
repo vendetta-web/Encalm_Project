@@ -1,5 +1,5 @@
 // tatTimer.js
-import { LightningElement, api, wire } from 'lwc';
+import { LightningElement, api, wire, track } from 'lwc';
 import { getRecord } from 'lightning/uiRecordApi';
 import TAT_DEADLINE_FIELD from '@salesforce/schema/Lead.TAT_deadline__c';
 import CREATED_DATE_FIELD from '@salesforce/schema/Lead.CreatedDate';
@@ -12,13 +12,14 @@ export default class GenericTATTimer extends LightningElement {
     //tatDeadline;
     deadline;
     status = '';
-    escalationLevel = '';  
-    remaining = '0';
+    @track escalationLevel = '';  
+    @track remaining = '0';
 
     @wire(getRecord, { recordId: '$recordId', fields: [TAT_DEADLINE_FIELD,ESCALATION_LEVEL_FIELD,CREATED_DATE_FIELD,STATUS_FIELD] })
     loadLead({ data,error }) {
 
         if (data) {
+            clearInterval(this.intervalId);
             const rawDate = data.fields?.TAT_deadline__c?.value;
             const status = data.fields.Status?.value;
             this.deadline = new Date(rawDate);
@@ -28,13 +29,23 @@ export default class GenericTATTimer extends LightningElement {
                 const escalationLevel = data.fields.Escalation_Level__c?.value;
                 if(escalationLevel == "Level 1"){
                     this.escalationLevel = "Agent Escalation - Escalated to manager due to no action taken"; 
+                    if(status == 'Open')
+                        this.startCountdown();
                 }
                 else if(escalationLevel == "Level 2"){
                     this.escalationLevel = "Executive Escalation - Escalated to manager due to no action taken";
+                    if(status == 'Escalated')
+                    this.startCountdown();
                 }
-                this.startCountdown();
-            } else {
+
+                
+            }
+            else {
                 this.remaining = 'No TAT deadline set';
+            }
+
+            if(status != 'Open' && this.escalationLevel == 'Level 1'){
+                this.remaining = 'TAT Completed';
             }
         } else if (error) {
             console.error('Error loading lead:', error);

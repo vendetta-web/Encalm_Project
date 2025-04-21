@@ -339,6 +339,12 @@
                 <identifier>RecordPayment_Ref_No__cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.Service_Date_Time__c</fieldItem>
+                <identifier>RecordService_Date_Time__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-bda0868e-f60d-43d1-bc15-da4b2cf8d682</name>
         <type>Facet</type>
     </flexiPageRegions>

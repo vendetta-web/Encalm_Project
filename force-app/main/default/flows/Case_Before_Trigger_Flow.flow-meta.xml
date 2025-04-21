@@ -1,38 +1,183 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>63.0</apiVersion>
+    <customErrors>
+        <name>Show_Error</name>
+        <label>Show Error</label>
+        <locationX>220</locationX>
+        <locationY>827</locationY>
+        <customErrorMessages>
+            <errorMessage>Cannot close the case until all child cases are closed.</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <customErrors>
+        <name>Show_Reservation_Operation_Query_error</name>
+        <label>Show Reservation/Operation Query error</label>
+        <locationX>396</locationX>
+        <locationY>503</locationY>
+        <customErrorMessages>
+            <errorMessage>As status is &apos;Resolved by Department&apos; you cannot update Reservations Query/ Operations Query/Feedback fields</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
     <decisions>
-        <name>Case_assigned</name>
-        <label>Case assigned</label>
-        <locationX>182</locationX>
-        <locationY>287</locationY>
+        <name>Check_child_case_status</name>
+        <label>Check child case status</label>
+        <locationX>352</locationX>
+        <locationY>719</locationY>
+        <defaultConnector>
+            <targetReference>loop_through_child_cases</targetReference>
+        </defaultConnector>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>Update_Records2</name>
+            <name>Not_closed</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>$Record.OwnerId</leftValueReference>
+                <leftValueReference>loop_through_child_cases.Status</leftValueReference>
                 <operator>NotEqualTo</operator>
                 <rightValue>
-                    <elementReference>$Record__Prior.OwnerId</elementReference>
+                    <stringValue>Closed</stringValue>
                 </rightValue>
             </conditions>
+            <connector>
+                <targetReference>Show_Error</targetReference>
+            </connector>
+            <label>Not closed</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_field_updates</name>
+        <label>Check field updates</label>
+        <locationX>396</locationX>
+        <locationY>395</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Case_is_closed</name>
+            <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>$Record.Status</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
-                    <stringValue>New</stringValue>
+                    <stringValue>Closed</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record__Prior.Status</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Closed</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.ParentId</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Update_Records</targetReference>
+                <targetReference>Get_Child_Cases</targetReference>
             </connector>
-            <label>Update Records</label>
+            <label>Case is closed</label>
+        </rules>
+        <rules>
+            <name>Updated_Reservation_Operation_query</name>
+            <conditionLogic>1 AND ((2 AND 3) OR (4 AND 5))</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Resolved by Department</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Reservations_Query__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record__Prior.Reservations_Query__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <elementReference>$Record.Reservations_Query__c</elementReference>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Operations_Query__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record__Prior.Operations_Query__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <elementReference>$Record.Operations_Query__c</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Show_Reservation_Operation_Query_error</targetReference>
+            </connector>
+            <label>Updated Reservation/Operation query?</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Is_New_Record</name>
+        <label>Is New Record ?</label>
+        <locationX>176</locationX>
+        <locationY>287</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Yes</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>IsNewCase</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <label>Yes</label>
+        </rules>
+        <rules>
+            <name>No</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>IsNewCase</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Check_field_updates</targetReference>
+            </connector>
+            <label>No</label>
         </rules>
     </decisions>
     <environments>Default</environments>
-    <interviewLabel>Case Before Trigger Flow {!$Flow.CurrentDateTime}</interviewLabel>
-    <label>Case Before Trigger Flow</label>
+    <formulas>
+        <name>IsNewCase</name>
+        <dataType>Boolean</dataType>
+        <expression>ISNEW()</expression>
+    </formulas>
+    <interviewLabel>Case - Before Trigger Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Case - Before Trigger Flow</label>
+    <loops>
+        <name>loop_through_child_cases</name>
+        <label>loop through child cases</label>
+        <locationX>132</locationX>
+        <locationY>611</locationY>
+        <collectionReference>Get_Child_Cases</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>Check_child_case_status</targetReference>
+        </nextValueConnector>
+    </loops>
     <processMetadataValues>
         <name>BuilderType</name>
         <value>
@@ -52,24 +197,32 @@
         </value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
-    <recordUpdates>
-        <name>Update_Records</name>
-        <label>Update Records</label>
-        <locationX>50</locationX>
-        <locationY>395</locationY>
-        <inputAssignments>
-            <field>Assigned_To_Associate__c</field>
+    <recordLookups>
+        <name>Get_Child_Cases</name>
+        <label>Get Child Cases</label>
+        <locationX>132</locationX>
+        <locationY>503</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>loop_through_child_cases</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>ParentId</field>
+            <operator>EqualTo</operator>
             <value>
-                <elementReference>$Flow.CurrentDateTime</elementReference>
+                <elementReference>$Record.Id</elementReference>
             </value>
-        </inputAssignments>
-        <inputReference>$Record</inputReference>
-    </recordUpdates>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Case</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <start>
-        <locationX>56</locationX>
+        <locationX>50</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Case_assigned</targetReference>
+            <targetReference>Is_New_Record</targetReference>
         </connector>
         <object>Case</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>

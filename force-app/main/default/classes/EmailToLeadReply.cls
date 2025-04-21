@@ -2,6 +2,7 @@ global class EmailToLeadReply implements Messaging.InboundEmailHandler {
 
     global Messaging.InboundEmailResult handleInboundEmail(Messaging.InboundEmail email, Messaging.InboundEnvelope envelope) {
         Messaging.InboundEmailResult result = new Messaging.InboundEmailResult();
+        list<Attachment> attachList = new list<Attachment>();
         
         try {
             // Debug the email body
@@ -31,6 +32,23 @@ global class EmailToLeadReply implements Messaging.InboundEmailHandler {
 
                     // Insert the new task
                     insert newTask;
+                    
+                    if (email.textAttachments != null && email.textAttachments.size() > 0) {
+                    for (integer i = 0 ; i < email.textAttachments.size() ; i++) {
+                        Attachment attachment = new Attachment();
+                        // attach to the newly created contact record
+                        attachment.ParentId = newTask.Id;
+                        attachment.Name = email.textAttachments[i].filename;
+                        attachment.Body = blob.valueOf(email.textAttachments[i].body);
+                        attachment.OwnerID = leads[0].CreatedById;
+                        attachList.add(attachment);
+                        }
+                    }
+        
+                    if(!attachList.isEmpty()){
+                        insert attachList;
+                        }
+                    
                     leads[0].Status='Customer Responded';
                     leads[0].OwnerId=leads[0].CreatedById;
                     update leads;

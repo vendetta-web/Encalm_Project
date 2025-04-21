@@ -42,6 +42,13 @@
                         </valueListItems>
                         <valueListItems>
                             <value>Lead.Encalm_Booking</value>
+                            <visibilityRule>
+                                <criteria>
+                                    <leftValue>{!Record.IsOwnerUser__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                            </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Lead.Follow_up</value>
@@ -130,6 +137,16 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.TAT_Start__c</fieldItem>
                 <identifier>RecordTAT_Start_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.IsOwnerUser__c</fieldItem>
+                <identifier>RecordIsOwnerUser__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-397cc27e-ff6c-4786-833e-81b601b21484</name>

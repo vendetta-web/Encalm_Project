@@ -30,6 +30,9 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     showHeader = true;
     showChild = false;
     showPreview = false;
+    showGst = false;
+    showCgst = false;
+    showIgst = false;
     passengerDetailPage=false;
     isModalOpen = false;
     jsPDFInitialized = false;
@@ -54,6 +57,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     pickupTerminalOptions = [];
     dropTerminalOptions = [];
     totalAmount=0;
+    totalNetAmount=0;
+    totalCgstAmount=0;
+    totalSgstAmount=0;
+    totalIgstAmount=0;
     totalDiscountAmount=0;
     totalAmountAfterDiscount=0;
     @track oliFieldValues = {};
@@ -171,6 +178,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.calculateTotalPackage();
             this.showModal=false;
             this.passengerDetailPage = true;
+            this.showSavedDiscountAndGst();
         } else if (this.processState === 'Passenger Details') {
             // Passenget details were filled
             this.showPackageSelection();   
@@ -180,6 +188,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showPreview = true;
             this.showModal=false;
             this.passengerDetailPage = false;
+            this.showSavedDiscountAndGst();
         } else if (this.processState === 'Preview') {
             // Preview screen was viewed
             this.showPackageSelection();  
@@ -190,19 +199,45 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showModal=false;
             this.passengerDetailPage = false;
             this.isQuotationSent = true;
+            this.showSavedDiscountAndGst();
         }
+    }
+
+    showSavedDiscountAndGst() {
+        if (this.orderSummary) {
+            this.orderSummary.forEach(item => {
+                if (item.cgstAmount > 0) {
+                    this.showGst = true;
+                    this.showCgst = true;
+                }
+                if (item.igstAmount > 0) {
+                    this.showGst = true;
+                    this.showIgst = true;
+                }
+                if (item.discountValue > 0) {
+                    this.showDiscount = true;
+                }
+            });
+        }            
     }
 
     loadDetailsAfterUpdate() {
         this.showModal = true;
         this.showHeader = true;
         this.showChild = false;
+        this.showGst = false;
+        this.showCgst =false;
+        this.showIgst =false;
         this.orderSummaryPackage=[];
         this.orderSummaryAddon=[];
         this.orderSummary=[];
         this.totalAmount=0;
         this.totalDiscountAmount = 0;
         this.totalAmountAfterDiscount = 0;
+        this.totalNetAmount = 0;
+        this.totalCgstAmount = 0;
+        this.totalSgstAmount = 0;
+        this.totalIgstAmount = 0;
         this.loadPackageData();
         this.loadAddonData();
         this.loadPassengerData();
@@ -376,7 +411,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 records.push({
                     name: wrapper.packageName + ' (' + this.numberOfAdults + ' Adult)', // Copy the 'name' value for adult
                     amount: wrapper.priceTag * this.numberOfAdults, // Calculate the amount 
-                    totalAmount: wrapper.priceTag * this.numberOfAdults,
+                    totalAmount: wrapper.priceTag * this.numberOfAdults, // Calculate the amount 
+                    netAmount: wrapper.priceTagBeforeTax * this.numberOfAdults,
+                    cgstAmount: wrapper.cgst * this.numberOfAdults,
+                    sgstAmount: wrapper.sgst * this.numberOfAdults,
+                    igstAmount: wrapper.igst * this.numberOfAdults,
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
                     unitPrice: wrapper.priceTag,
@@ -390,6 +429,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
                         amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, // Calculate the amount
                         totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren,
+                        netAmount: wrapper.priceTagBeforeTax * this.numberOfChildren,
+                        cgstAmount: wrapper.cgst * this.numberOfChildren,
+                        sgstAmount: wrapper.sgst * this.numberOfChildren,
+                        igstAmount: wrapper.igst * this.numberOfChildren,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
@@ -404,6 +447,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         name: wrapper.packageName + ' (' + this.numberOfInfants + ' Infant)', // Copy the 'name' value for infant
                         amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfants, // Calculate the amount
                         totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * this.numberOfInfants,
+                        netAmount: 0,
+                        cgstAmount: 0,
+                        sgstAmount: 0,
+                        igstAmount: 0,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
@@ -511,6 +558,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         name: wrapper.addOnName + ' ' + wrapper.adddOnCount + ' Qty',
                         amount: wrapper.addOnTag * wrapper.adddOnCount,
                         totalAmount: wrapper.addOnTag * wrapper.adddOnCount,
+                        netAmount: wrapper.priceTagBeforeTax * wrapper.adddOnCount,
+                        cgstAmount: wrapper.cgst * wrapper.adddOnCount,
+                        sgstAmount: wrapper.sgst * wrapper.adddOnCount,
+                        igstAmount: wrapper.igst * wrapper.adddOnCount,
                         button: true,
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.pricebookEntryId,
@@ -563,6 +614,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.totalAmount = this.orderSummary.reduce((sum, currentItem) => {
             return sum + currentItem.totalAmount;
         }, 0);
+        this.calculateTotalGst();
         this.calculateTotalPackageDiscount();
         this.totalAmountAfterDiscount = this.totalAmount - this.totalDiscountAmount;
     }
@@ -578,6 +630,29 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showDiscount = false;
             this.amountMessage = 'Final Amount';
         }  
+    }
+    calculateTotalGst() {
+        let totalNetAmount = 0;
+        let totalCgstAmount = 0;
+        let totalSgstAmount = 0;
+        let totalIgstAmount = 0;
+        this.orderSummary.forEach(item => {
+            totalNetAmount += item.netAmount || 0;
+            totalCgstAmount += item.cgstAmount || 0;
+            totalSgstAmount += item.sgstAmount || 0;
+            totalIgstAmount += item.igstAmount || 0;
+        });
+        this.totalNetAmount = totalNetAmount;
+        this.totalCgstAmount = totalCgstAmount;
+        this.totalSgstAmount = totalSgstAmount;
+        this.totalIgstAmount = totalIgstAmount;
+        if (this.totalCgstAmount !=0 && this.totalSgstAmount!=0) {
+            this.showGst = true;
+            this.showCgst =true;
+        } else if (this.totalIgstAmount !=0) {
+            this.showGst = true;
+            this.showIgst = true;
+        }
     }
     openPassengerPage() {
         let matchFound = false;

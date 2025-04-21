@@ -160,6 +160,16 @@
                                 </lightning-layout>  
                             </div>
                         </template>
+                        <template if:true={showGst}>
+                            <strong>Net Amount : &#8377; {totalNetAmount}</strong>
+                                <template if:true={showCgst}>
+                                    <strong>CGST Amount (9%) : &#8377; {totalCgstAmount}</strong>
+                                    <strong>SGST Amount (9%): &#8377; {totalSgstAmount}</strong>                                    
+                                </template>
+                                <template if:true={showIgst}>
+                                    <strong>IGST Amount (18%): &#8377; {totalIgstAmount}</strong>                                    
+                                </template>
+                        </template>
                         <template if:true={showDiscount}>
                             <strong>Total Amount : &#8377; {totalAmount}</strong>
                             <strong>Total Discount Amount : &#8377; {totalDiscountAmount}</strong>
@@ -365,7 +375,16 @@
                                             </lightning-layout>  
                                         </div>
                                     </template>
-                                    
+                                    <template if:true={showGst}>
+                                        <strong>Net Amount : &#8377; {totalNetAmount}</strong>
+                                            <template if:true={showCgst}>
+                                                <strong>CGST Amount (9%) : &#8377; {totalCgstAmount}</strong>
+                                                <strong>SGST Amount (9%): &#8377; {totalSgstAmount}</strong>                                    
+                                            </template>
+                                            <template if:true={showIgst}>
+                                                <strong>IGST Amount (18%): &#8377; {totalIgstAmount}</strong>                                    
+                                            </template>
+                                    </template>
                                     <template if:true={showDiscount}>
                                         <strong>Total Amount : &#8377; {totalAmount}</strong>
                                         <strong>Total Discount Amount : &#8377; {totalDiscountAmount}</strong>

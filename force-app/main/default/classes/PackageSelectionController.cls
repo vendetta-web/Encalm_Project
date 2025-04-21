@@ -10,7 +10,9 @@ public with sharing class PackageSelectionController {
             throw new AuraHandledException('Please link an airport');
         }
         Opportunity opp = [
-            SELECT Id,Service_Airport__c,Sector__c,Service_Type__c,Flight_Type__c,AccountId
+            SELECT Id,Service_Airport__c,Sector__c,Service_Type__c,Flight_Type__c,AccountId,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,
+            Account.GST_Registration_Type__c,Departure_Service_Time__c
             FROM Opportunity
             WHERE Id=:oppId
             LIMIT 1
@@ -85,12 +87,14 @@ public with sharing class PackageSelectionController {
                 pckg.priceTag = pbEntry.UnitPrice;
                 adultToChildPriceBookMap.put(pbEntry.Product2.Family, null);
                 adultToInfantPriceBookMap.put(pbEntry.Product2.Family,null);
+                calculateGst(opp, pckg, pbEntry.UnitPrice);
             } else if(pbEntry.Product2.Package_Is_For__c == 'Child') {
                 if(adultToChildPriceBookMap.containsKey(pbEntry.Product2.Family)) {
                     ChildWrapper wrp = new ChildWrapper();
                     wrp.priceBookEntryId = pbEntry.Id;
                     wrp.price = pbEntry.UnitPrice;
                     adultToChildPriceBookMap.put(pbEntry.Product2.Family,wrp);
+                    calculateGst(opp, wrp, pbEntry.UnitPrice);
                 }
             } else if(pbEntry.Product2.Package_Is_For__c == 'Infant') {
                 if(adultToInfantPriceBookMap.containsKey(pbEntry.Product2.Family)) {
@@ -117,7 +121,9 @@ public with sharing class PackageSelectionController {
             throw new AuraHandledException('Please link an airport');
         }
         Opportunity opp = [
-            SELECT Id,Service_Airport__c,Sector__c,Service_Type__c,Flight_Type__c
+            SELECT Id,Service_Airport__c,Sector__c,Service_Type__c,Flight_Type__c,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,
+            Account.GST_Registration_Type__c,Departure_Service_Time__c
             FROM Opportunity
             WHERE Id=:oppId
             LIMIT 1
@@ -159,6 +165,7 @@ public with sharing class PackageSelectionController {
             pckg.pickupTerminal = getFlightTerminalInfo(oppId);
             pckg.dropTerminal = pbEntry.Product2.Hide_Drop_Terminal__c ? '' : getDropTerminalInfo(oppId);
             pckg.hideDropTerminal =  pbEntry.Product2.Hide_Drop_Terminal__c;
+            calculateGst(opp,pckg, pbEntry.UnitPrice);
             addOnColumns.add(pckg);
         }      
 
@@ -408,7 +415,8 @@ public with sharing class PackageSelectionController {
 
         // Query Opportunity based on OpportunityId
         Opportunity opp = [
-            SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c
+            SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,Departure_Service_Time__c
             FROM Opportunity
             WHERE Id = :opportunityId
             LIMIT 1
@@ -423,9 +431,9 @@ public with sharing class PackageSelectionController {
             }
             combinedDateTimeStr=dateText + ' ' + timeText;
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
-        } else if (opp.STD_Time__c != null) {
+        } else if (opp.Departure_Service_Time__c != null) {
             dateText=opp.Date_of_Departure__c;
-            timeText=opp.STD_Time__c;// Ensure timeText includes seconds
+            timeText=opp.Departure_Service_Time__c;// Ensure timeText includes seconds
             if (timeText.length() == 5) {  // "HH:mm" format
                 timeText += ':00';  // Append ":00" for seconds
             }
@@ -491,7 +499,10 @@ public with sharing class PackageSelectionController {
                         oli.Discount_Amount__c = discountAmount/quantity;
                         oli.Status__c = 'Active';
 
-                        totalListPrice += unitPrice;    
+                        totalListPrice += unitPrice; 
+                        
+                        // GST Calculation Logic
+                        calculateGstApplicable(opp, oli);
 
                         // Add the OLI to the list
                         opportunityLineItemsToInsert.add(oli);    
@@ -499,6 +510,7 @@ public with sharing class PackageSelectionController {
                 }
                 String pickupTerminal ='';
                 String dropTerminal='';
+                // Handle pickup and drop terminals
                 for (Integer j = 0; j < Math.max(pickupTerminals.size(), dropTerminals.size()); j++) {
                     // Ensure we don't access out of bounds in case the arrays are of different lengths
                     pickupTerminal = (j < pickupTerminals.size()) ? pickupTerminals.get(j) : pickupTerminal;
@@ -517,8 +529,9 @@ public with sharing class PackageSelectionController {
                     if(!pbEntry.isEmpty() && pbEntry[0].UnitPrice !=null && pbEntry[0].List_Price_In_Percentage__c && !opp.Account.Surcharge_waived_off__c) {
                         oli.Surcharge_Amount_Applied__c = getSurchargeAmount(serviceDateTime, DateTime.now(),pbEntry[0].UnitPrice, unitPrice,  true);
                     }
-
                     totalListPrice += unitPrice;  
+                    // GST Calculation Logic
+                    calculateGstApplicable(opp, oli);
                     // Add the OLI to the list
                     opportunityLineItemsToInsert.add(oli);
                 }
@@ -654,14 +667,114 @@ public with sharing class PackageSelectionController {
         return passengerData;
     }
 
+    public static void calculateGstApplicable(Opportunity opp, OpportunityLineItem oli) {
 
+        Decimal gstRate = 0.18;  // 18% GST
+        String billingState = opp.Account.BillingState;
+        String serviceAirportState = opp.Service_Airport_Id__c !=null ? opp.Service_Airport_Id__r.State__c : '';
+        Boolean isNotIgst =false;
+        if (opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
+            opp.Account.GST_Registration_Type__c != 'Special Economic Zone (SEZ) developer/unit') {
+                isNotIgst = true;
+            }
 
+        //Logic for GST calculation
+        Decimal totalGST = oli.UnitPrice * gstRate; // Total GST
+        Decimal invoiceAmount = oli.UnitPrice - totalGST; // Invoice amount (after GST)
+
+        // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
+        Decimal sgstAmount = 0;
+        Decimal cgstAmount = 0;
+        Decimal igstAmount = 0;
+        
+        if (billingState != null && serviceAirportState != null) {
+            if (billingState.equalsIgnoreCase(serviceAirportState) && isNotIgst)  {
+                // Intra-state: Split GST into SGST and CGST
+                sgstAmount = totalGST / 2;
+                cgstAmount = totalGST / 2;
+            } else {
+                // Inter-state: Apply IGST
+                igstAmount = totalGST;
+            }
+        }
+        // Set the calculated GST values on the Opportunity Line Item
+        oli.Invoice_Amount__c = invoiceAmount;
+        oli.SGST__c = sgstAmount;
+        oli.CGST__c = cgstAmount;
+        oli.IGST__c = igstAmount;        
+    }
+
+    public static void calculateGst(Opportunity opp, Object wrapper, Decimal unitPrice) {
+        
+        Decimal gstRate = 0.18;  // 18% GST
+        String billingState = opp.Account.BillingState;
+        String serviceAirportState = opp.Service_Airport_Id__c !=null ? opp.Service_Airport_Id__r.State__c : '';
+        Boolean isNotIgst =false;
+        if (opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
+            opp.Account.GST_Registration_Type__c != 'Special Economic Zone (SEZ) developer/unit') {
+                isNotIgst = true;
+            }
+
+        //Logic for GST calculation
+        Decimal totalGST = unitPrice * gstRate; // Total GST
+        Decimal invoiceAmount = unitPrice - totalGST; // Invoice amount (after GST)
+
+        // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
+        Decimal sgstAmount = 0;
+        Decimal cgstAmount = 0;
+        Decimal igstAmount = 0;
+        
+        if (billingState != null && serviceAirportState != null) {
+            if (billingState.equalsIgnoreCase(serviceAirportState) && isNotIgst)  {
+                // Intra-state: Split GST into SGST and CGST
+                sgstAmount = totalGST / 2;
+                cgstAmount = totalGST / 2;
+            } else {
+                // Inter-state: Apply IGST
+                igstAmount = totalGST;
+            }
+        }
+        
+        if (wrapper instanceof PackageWrapper) {
+            PackageWrapper pckg = (PackageWrapper)wrapper;            
+            // Set the calculated GST values on the packages
+            pckg.priceTagBeforeTax = invoiceAmount;
+            pckg.sgst = sgstAmount;
+            pckg.cgst = cgstAmount;
+            pckg.igst = igstAmount;
+            system.debug(pckg);
+        } else if (wrapper instanceof AddonWrapper) {
+            AddonWrapper addOn = (AddonWrapper)wrapper;
+            // Set the calculated GST values on the addons
+            addOn.priceTagBeforeTax = invoiceAmount;
+            addOn.sgst = sgstAmount;
+            addOn.cgst = cgstAmount;
+            addOn.igst = igstAmount;
+            system.debug(addOn);
+        } else {
+            ChildWrapper childWrp = (ChildWrapper)wrapper;
+            // Set the calculated GST values on the child package
+            childWrp.priceTagBeforeTax = invoiceAmount;
+            childWrp.sgst = sgstAmount;
+            childWrp.cgst = cgstAmount;
+            childWrp.igst = igstAmount;
+            system.debug(childWrp);
+        }       
+    }
 
     public class PackageWrapper {
         @AuraEnabled
         public String packageName;
         @AuraEnabled
         public Decimal priceTag;
+        @AuraEnabled
+        public Decimal priceTagBeforeTax;
+        @AuraEnabled
+        public Decimal sgst;
+        @AuraEnabled
+        public Decimal cgst;
+        @AuraEnabled
+        public Decimal igst;
         @AuraEnabled
         public Id productId;
         @AuraEnabled
@@ -688,6 +801,14 @@ public with sharing class PackageSelectionController {
         @AuraEnabled
         public String priceBookEntryId;
         @AuraEnabled
+        public Decimal priceTagBeforeTax;
+        @AuraEnabled
+        public Decimal sgst;
+        @AuraEnabled
+        public Decimal cgst;
+        @AuraEnabled
+        public Decimal igst;
+        @AuraEnabled
         public Decimal price;
     }
     public class InfantWrapper {
@@ -711,6 +832,14 @@ public with sharing class PackageSelectionController {
         public String dropTerminal;
         @AuraEnabled
         public Boolean hideDropTerminal;
+        @AuraEnabled
+        public Decimal priceTagBeforeTax;
+        @AuraEnabled
+        public Decimal sgst;
+        @AuraEnabled
+        public Decimal cgst;
+        @AuraEnabled
+        public Decimal igst;
 
     }
     public class passengerWrapper {

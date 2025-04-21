@@ -122,6 +122,12 @@
                 <identifier>RecordOracle_Last_Sync__cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldItem>Record.GST_Registration_Type__c</fieldItem>
+                <identifier>RecordGST_Registration_Type__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-b88913f6-ad30-413f-86aa-d8eb16246c95</name>
         <type>Facet</type>
     </flexiPageRegions>

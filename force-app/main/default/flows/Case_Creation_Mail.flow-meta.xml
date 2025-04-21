@@ -3,7 +3,7 @@
     <actionCalls>
         <name>Query_Feedback_Case_Assignment_Notification</name>
         <label>Query/ Feedback Case Assignment Notification</label>
-        <locationX>440</locationX>
+        <locationX>374</locationX>
         <locationY>647</locationY>
         <actionName>Case.Email_Alert_Query_Feedback_Case_Assignment_Notification</actionName>
         <actionType>emailAlert</actionType>
@@ -21,7 +21,7 @@
     <decisions>
         <name>Check_Field_Updates</name>
         <label>Check Field Updates</label>
-        <locationX>440</locationX>
+        <locationX>506</locationX>
         <locationY>539</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -82,6 +82,28 @@
             </connector>
             <label>Owner update on Feedback/Query</label>
         </rules>
+        <rules>
+            <name>Inquiry_Sub_Type_is_Reservations</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record__Prior.Inquiry_Sub_Type__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Reservations</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Sub_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Reservations</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Reservation_Queue</targetReference>
+            </connector>
+            <label>Inquiry Sub Type is Reservations</label>
+        </rules>
     </decisions>
     <decisions>
         <name>Insert_Update</name>
@@ -141,7 +163,7 @@
     <recordCreates>
         <name>Create_Follow_up_Task</name>
         <label>Create Follow up Task</label>
-        <locationX>176</locationX>
+        <locationX>110</locationX>
         <locationY>647</locationY>
         <inputAssignments>
             <field>ActivityDate</field>
@@ -188,6 +210,53 @@
         <object>Task</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordCreates>
+    <recordLookups>
+        <name>Get_Reservation_Queue</name>
+        <label>Get Reservation Queue</label>
+        <locationX>638</locationX>
+        <locationY>647</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Assign_Case_to_Reservation_Queue</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Reservation_Queue</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordUpdates>
+        <name>Assign_Case_to_Reservation_Queue</name>
+        <label>Assign Case to Reservation Queue</label>
+        <locationX>638</locationX>
+        <locationY>755</locationY>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>Get_Reservation_Queue.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
     <recordUpdates>
         <name>Update_Owner_s_Manager_Email_field</name>
         <label>Update Owner&apos;s Manager Email field</label>
@@ -222,7 +291,7 @@
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Active</status>
+    <status>Draft</status>
     <variables>
         <name>PriorOwner</name>
         <dataType>String</dataType>

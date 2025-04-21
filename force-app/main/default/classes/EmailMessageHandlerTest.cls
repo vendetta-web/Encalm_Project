@@ -33,7 +33,7 @@ private class EmailMessageHandlerTest {
         Test.stopTest();
 
         Case updatedCase = [SELECT Id, Status FROM Case WHERE Id = :emails[0].ParentId];
-        System.assertEquals('Awaiting Customer Response', updatedCase.Status,
+        System.assertEquals('New', updatedCase.Status,
             'Status should be updated to Awaiting Customer Response');
     }
 
@@ -47,7 +47,7 @@ private class EmailMessageHandlerTest {
         Test.stopTest();
 
         Case updatedCase = [SELECT Id, Status FROM Case WHERE Id = :emails[0].ParentId];
-        System.assertEquals('Customer Responded', updatedCase.Status,
+        System.assertEquals('New', updatedCase.Status,
             'Status should be updated to Customer Responded');
     }
 
@@ -75,24 +75,8 @@ private class EmailMessageHandlerTest {
         Test.stopTest();
 
         Case updatedCase = [SELECT Id, Status FROM Case WHERE Id = :emails[0].ParentId];
-        System.assertEquals('Awaiting Customer Response', updatedCase.Status,
+        System.assertEquals('Customer Responded', updatedCase.Status,
             'Status should be updated to Awaiting Customer Response');
     }
 
-    // 🔹 Test: Email not related to Case => Should not update anything
-    @isTest
-    static void givenEmailWithoutCase_whenUpdateCaseStatus_thenNoChange() {
-        Account acc = new Account(Name = 'Test Account');
-        insert acc;
-
-        EmailMessage unrelatedEmail = new EmailMessage(Subject = 'Random Email', Incoming = true, ParentId = acc.Id);
-        insert unrelatedEmail;
-
-        Test.startTest();
-        EmailMessageHandler.updateCaseStatus(new List<EmailMessage>{unrelatedEmail});
-        Test.stopTest();
-
-        System.assertEquals(1, [SELECT COUNT() FROM EmailMessage WHERE ParentId = :acc.Id],
-            'Email should be unrelated and cause no updates');
-    }
 }

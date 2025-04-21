@@ -88,6 +88,16 @@
                                         </lightning-layout>  
                                     </div>
                                 </template>
+                                <template if:true={showGst}>
+                                    <strong>Net Amount : &#8377; {totalNetAmount}</strong>
+                                        <template if:true={showCgst}>
+                                            <strong>CGST Amount (9%) : &#8377; {totalCgstAmount}</strong>
+                                            <strong>SGST Amount (9%): &#8377; {totalSgstAmount}</strong>                                    
+                                        </template>
+                                        <template if:true={showIgst}>
+                                            <strong>IGST Amount (18%): &#8377; {totalIgstAmount}</strong>                                    
+                                        </template>
+                                </template>
                                 
                                 <strong>Final Amount : &#8377; {totalAmount}</strong> <!-- Show the param2 of the selected row --> 
                             </div>
@@ -312,27 +322,43 @@
                                         <div class="slds-m-top_medium">
                                     </br>
                                     <div>
-                                        <!-- First Picklist -->
-                                            <lightning-combobox
-                                            name="pickup"
-                                            label="Pickup Terminal"
-                                            options={pickupTerminalOptions}
-                                            value={pack.pickupTerminal}
-                                            onchange ={handleTerminalChange}
-                                            data-id={pack.pickupDataId}
-                                            required
-                                        ></lightning-combobox>
-            
-                                        <!-- Second Picklist -->
+                                        <!-- Pickup Terminals -->
+                                    <template for:each={pack.pickupTerminals} for:item="terminal" for:index="index">
                                         <lightning-combobox
-                                            name="drop"
-                                            label="Drop Terminal"
-                                            options={dropTerminalOptions}
-                                            value={pack.dropTerminal}
-                                            onchange ={handleTerminalChange}
-                                            data-id={pack.dropDataId}
+                                            key={terminal.id}
+                                            name="pickup"
+                                            label={terminal.id}
+                                            options={pickupTerminalOptions}
+                                            value={terminal.value}
+                                            data-index={index}
+                                            data-id={pack.addOnName}
+                                            onchange={handleTerminalChange}
                                             required
-                                        ></lightning-combobox>
+                                            message-when-value-missing="Please select a Pickup Terminal"
+                                            class={pack.pickupErrorClass} 
+                                            disabled={pack.disablePickup}>
+                                        </lightning-combobox>
+                                    </template>
+            
+                                        <!-- Drop Terminals -->
+                                    <template if:false={pack.hideDropTerminal}>
+                                        <template for:each={pack.dropTerminals} for:item="terminal" for:index="index">                                        
+                                            <lightning-combobox
+                                                key={terminal.id}
+                                                name="drop"
+                                                label={terminal.id}
+                                                options={dropTerminalOptions}
+                                                value={terminal.value}
+                                                data-index={index}
+                                                data-id={pack.addOnName}
+                                                onchange={handleTerminalChange}
+                                                required
+                                                message-when-value-missing="Please select a Drop Terminal"
+                                                class={pack.dropErrorClass} 
+                                                disabled={pack.disableDrop}>
+                                            </lightning-combobox>
+                                        </template>
+                                    </template>
                                     </div>
                                         <div class="counter">
                                             <span>Qty</span>
@@ -368,7 +394,16 @@
                                         </lightning-layout>  
                                     </div>
                                 </template>
-                                
+                                <template if:true={showGst}>
+                                    <strong>Net Amount : &#8377; {totalNetAmount}</strong>
+                                        <template if:true={showCgst}>
+                                            <strong>CGST Amount (9%) : &#8377; {totalCgstAmount}</strong>
+                                            <strong>SGST Amount (9%): &#8377; {totalSgstAmount}</strong>                                    
+                                        </template>
+                                        <template if:true={showIgst}>
+                                            <strong>IGST Amount (18%): &#8377; {totalIgstAmount}</strong>                                    
+                                        </template>
+                                </template>
                                 <strong>Final Amount : &#8377; {totalAddonAmount}</strong> <!-- Show the param2 of the selected row --> 
                             </div>
                         </div>
@@ -490,6 +525,7 @@
                                             onchange ={handleTerminalChange}
                                             data-id={pack.pickupDataId}
                                             required
+                                            disabled={pack.disableDrop}
                                         ></lightning-combobox>
             
                                         <!-- Second Picklist -->
@@ -545,6 +581,16 @@
                                             </lightning-layout-item>
                                         </lightning-layout> 
                                     </div>
+                                </template>
+                                <template if:true={showGst}>
+                                    <strong>Net Amount : &#8377; {totalNetAmount}</strong>
+                                        <template if:true={showCgst}>
+                                            <strong>CGST Amount (9%) : &#8377; {totalCgstAmount}</strong>
+                                            <strong>SGST Amount (9%): &#8377; {totalSgstAmount}</strong>                                    
+                                        </template>
+                                        <template if:true={showIgst}>
+                                            <strong>IGST Amount (18%): &#8377; {totalIgstAmount}</strong>                                    
+                                        </template>
                                 </template>
                                 
                                 <strong>Final Amount to be paid: &#8377; {totalAmountAll} - {currentTotalPackageAmount} = {totalExtraAmountAll}</strong> <!-- Show the param2 of the selected row --> 

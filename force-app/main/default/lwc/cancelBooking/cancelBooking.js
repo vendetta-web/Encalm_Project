@@ -123,6 +123,10 @@ export default class CancelBooking extends NavigationMixin(LightningElement) {
                     type: pd.type,
                     pbenteryId: pd.pbenteryId
                 }));
+                // Check data length and modify options accordingly
+            if (data.length < 2) {
+                this.cancelOptions = this.cancelOptions.filter(option => option.value !== 'partialCancel');
+            }
             } else {
                 this.showNoBooking = true;
             }

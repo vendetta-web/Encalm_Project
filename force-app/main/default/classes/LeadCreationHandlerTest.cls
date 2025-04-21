@@ -1,20 +1,14 @@
 /**
 * @File Name : LeadCreationHandlerTest.cls
 * @Description : Test Class for LeadCreationHandler.cls
-* @Author : Abhishek
-* @Last Modified By : Abhishek
-* @Last Modified On : April 10, 2025
-* @Modification Log :
-*==============================================================================
-* Ver | Date | Author | Modification
-*==============================================================================
-* 1.0 | April 10, 2025 |  Abhishek | Initial Version
+* @Author : Maxify Development Team
+* @Created Date : April 10, 2025
 **/
 @isTest
 private class LeadCreationHandlerTest {
     
-    @isTest
-    static void test_getLeadsForCase_validCaseId() {
+    @testSetup
+    static void setupData() {
         
         // Creating Test Data
         Case testCase = new Case(Subject = 'Test Case');
@@ -26,13 +20,19 @@ private class LeadCreationHandlerTest {
         Lead lead2 = new Lead(LastName = 'Test Lead 2', Company = 'TestCo',Email = 'testEmail2@gmail.com', Case__c = testCase.Id);
         leadList.add(lead2);
         insert leadList;
-        
+    }
+    
+    @isTest
+    static void test_getLeadsForCase_validCaseId() {
+        Case testCase = [Select Id from Case Where Subject = 'Test Case' Limit 1];
+        List<Lead> leadList = [Select Id, Name, Email,Company,Case__c From Lead Where Case__c =: testCase.Id];
         Test.startTest();
         List<Lead> leads = LeadCreationHandler.getLeadsForCase(testCase.Id);
         try {
             LeadCreationHandler.getLeadsForCase(null);
             System.assert(false, 'Method should throw exception for null Case Id.');
-            delete testCase;
+            
+            delete leadList;
             LeadCreationHandler.getLeadsForCase(testCase.Id);
         } catch (IllegalArgumentException e) {
             System.assertEquals('Case ID cannot be null or empty.', e.getMessage());
@@ -40,5 +40,5 @@ private class LeadCreationHandlerTest {
         Test.stopTest();
         
         System.assertEquals(2, leads.size(), '2 leads expexted');
-    }
+    }    
 }

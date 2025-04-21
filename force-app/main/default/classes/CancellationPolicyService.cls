@@ -161,11 +161,22 @@ public class CancellationPolicyService {
         // Query OpportunityLineItems based on OpportunityId
         Opportunity opp = [
             SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,Name,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,
             (SELECT Id,Product2.Family,UnitPrice,PricebookEntryId FROM opportunitylineitems WHERE Status__c = 'Active') 
             FROM Opportunity
             WHERE Id=:opportunityId
             LIMIT 1
         ];
+
+        Decimal gstRate = 0.18;  // 18% GST
+        String billingState = opp.Account.BillingState;
+        String serviceAirportState = opp.Service_Airport_Id__c !=null ? opp.Service_Airport_Id__r.State__c : '';
+        Boolean isNotIgst =false;
+        if (opp.Account.GST_Registration_Type__c != null &&
+            opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
+            opp.Account.GST_Registration_Type__c != 'Special Economic Zone (SEZ) developer/unit') {
+                isNotIgst = true;
+            }
 
         caseList = [
             SELECT Id, CreatedDate
@@ -208,33 +219,59 @@ public class CancellationPolicyService {
                 packageName = oli.Product2.Family;
                 bookingAmount += oli.UnitPrice; 
                 decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, requestDateTime, oli.UnitPrice, packageName); 
+                refundAmountPerOli =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmountPerOli);
                 refundAmount += refundAmountPerOli;
                 // to create final cancellation records
                 if(submit) {
                     oli.Status__c = 'Fully Cancelled';
                     oli.Refund_Amount__c = refundAmountPerOli;
                     oli.Amount_Deducted__c= oli.UnitPrice-refundAmountPerOli;
+                    //Logic for GST calculation
+                    Decimal totalGST = oli.Amount_Deducted__c * gstRate; // Total GST
+                    Decimal invoiceAmount = oli.Amount_Deducted__c - totalGST; // Invoice amount (after GST)
+
+                    // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
+                    Decimal sgstAmount = 0;
+                    Decimal cgstAmount = 0;
+                    Decimal igstAmount = 0;
+                    
+                    if (billingState != null && serviceAirportState != null) {
+                        if (billingState.equalsIgnoreCase(serviceAirportState) && isNotIgst)  {
+                            // Intra-state: Split GST into SGST and CGST
+                            sgstAmount = totalGST / 2;
+                            cgstAmount = totalGST / 2;
+                        } else {
+                            // Inter-state: Apply IGST
+                            igstAmount = totalGST;
+                        }
+                    }
+
+                    // Set the calculated GST values on the Opportunity Line Item
+                    oli.Invoice_Amount__c = invoiceAmount;
+                    oli.SGST__c = sgstAmount;
+                    oli.CGST__c = cgstAmount;
+                    oli.IGST__c = igstAmount;
                     oliList.add(oli);
                 }          
             }
             update oliList;   
             
             //to show preview of full cancellation
-            decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmount);
+            //decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmount);
             wrp.bookingAmount = bookingAmount;
-            wrp.refundAmount = afterGeneralCancellationRefund;
-            wrp.deductedAmount = bookingAmount - afterGeneralCancellationRefund;
+            wrp.refundAmount = refundAmount;
+            wrp.deductedAmount = bookingAmount - refundAmount;
             wrp.refundMethod = 'Original Payment Mode';
             wrp.numberOfPaxCancelled = numberOfPax;
             wrp.refundPolicyApplicable = refundPolicy != '' ? refundPolicy : 'N/A';
 
             
             //creation of transaction record if any refund is done for full cancellation
-            if(submit && afterGeneralCancellationRefund !=0) {
+            if(submit && refundAmount !=0) {
                 Transaction_History__c transactionRec= new Transaction_History__c();
                 transactionRec.Booking_Id__c = opportunityId;
-                transactionRec.Cancellation_Charges__c = bookingAmount - afterGeneralCancellationRefund;
-                transactionRec.Refund_Charges__c = afterGeneralCancellationRefund;
+                transactionRec.Cancellation_Charges__c = bookingAmount - refundAmount;
+                transactionRec.Refund_Charges__c = refundAmount;
                 transactionRec.Name = opp.Name;
                 transactionRec.Transaction_Type__c = 'Debit';
                 
@@ -259,7 +296,7 @@ public class CancellationPolicyService {
 
         //to create final cancellation record for partial cancel
         if (cancelType !='fullCancel') {      
-            Decimal refundAmountWithoutGeneralCharges = 0;  
+            //Decimal refundAmountWithoutGeneralCharges = 0;  
             Decimal generalDeduction = 0;
             Integer count = 0;  
             String paxNames = '';  
@@ -267,10 +304,11 @@ public class CancellationPolicyService {
                 String pckName = (String) row.get('packageName');
                 Decimal perUnitPrice = (Decimal) row.get('unitPrice');               
                 decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, requestDateTime, perUnitPrice, pckName);
-                refundAmountWithoutGeneralCharges += refundAmountPerOli;
-                generalDeduction = refundAmountWithoutGeneralCharges;
+                
+                refundAmountPerOli =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmountPerOli);
+                //refundAmountWithoutGeneralCharges += refundAmountPerOli;
+                //generalDeduction = refundAmountWithoutGeneralCharges;
                 if (count == 0) {
-                    generalDeduction =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmountWithoutGeneralCharges);
                     paxNames = (String) row.get('name') !=null ? (String) row.get('name') : '';
                 } else {
                     paxNames = paxNames + ', ' + (String) row.get('name');
@@ -281,6 +319,31 @@ public class CancellationPolicyService {
                     oli.Status__c = 'Partially Cancelled';
                     oli.Refund_Amount__c = refundAmountPerOli;
                     oli.Amount_Deducted__c= perUnitPrice -  refundAmountPerOli;
+                    //Logic for GST calculation
+                    Decimal totalGST = oli.Amount_Deducted__c * gstRate; // Total GST
+                    Decimal invoiceAmount = oli.Amount_Deducted__c - totalGST; // Invoice amount (after GST)
+
+                    // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
+                    Decimal sgstAmount = 0;
+                    Decimal cgstAmount = 0;
+                    Decimal igstAmount = 0;
+                    
+                    if (billingState != null && serviceAirportState != null) {
+                        if (billingState.equalsIgnoreCase(serviceAirportState) && isNotIgst)  {
+                            // Intra-state: Split GST into SGST and CGST
+                            sgstAmount = totalGST / 2;
+                            cgstAmount = totalGST / 2;
+                        } else {
+                            // Inter-state: Apply IGST
+                            igstAmount = totalGST;
+                        }
+                    }
+
+                    // Set the calculated GST values on the Opportunity Line Item
+                    oli.Invoice_Amount__c = invoiceAmount;
+                    oli.SGST__c = sgstAmount;
+                    oli.CGST__c = cgstAmount;
+                    oli.IGST__c = igstAmount;
                     oliList.add(oli);
                 }  
                 
@@ -288,7 +351,7 @@ public class CancellationPolicyService {
                 wrp.bookingAmount = wrp.bookingAmount != null ? wrp.bookingAmount : 0;
                 wrp.refundAmount = wrp.refundAmount != null ? wrp.refundAmount : 0;
                 wrp.bookingAmount += perUnitPrice; 
-                wrp.refundAmount = generalDeduction;
+                wrp.refundAmount = refundAmountPerOli;
                 wrp.deductedAmount = wrp.bookingAmount - wrp.refundAmount;
                 wrp.refundMethod = 'Original Payment Mode';
                 wrp.numberOfPaxCancelled = numberOfPax;

@@ -1,14 +1,8 @@
 /**
 * @File Name : EscalateLeadBatchTest.cls
 * @Description : Test Class for EscalateLeadBatch.cls
-* @Author : Abhishek
-* @Last Modified By : Abhishek
-* @Last Modified On : April 10, 2025
-* @Modification Log :
-*==============================================================================
-* Ver | Date | Author | Modification
-*==============================================================================
-* 1.0 | April 10, 2025 |  Abhishek | Initial Version
+* @Author : Maxify Development Team
+* @Created Date : April 10, 2025
 **/
 @isTest
 public class EscalateLeadBatchTest {

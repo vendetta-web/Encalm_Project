@@ -1,14 +1,8 @@
 /**
 * @File Name : MDEN_ModifyCustomerTest.cls
 * @Description : Test Class for MDEN_ModifyCustomer.cls
-* @Author : Abhishek
-* @Last Modified By : Abhishek
-* @Last Modified On : April 09, 2025
-* @Modification Log :
-*==============================================================================
-* Ver | Date | Author | Modification
-*==============================================================================
-* 1.0 | April 09, 2025 |  Abhishek | Initial Version
+* @Author : Maxify Development Team
+* @Created Date : April 9, 2025
 **/
 
 @isTest

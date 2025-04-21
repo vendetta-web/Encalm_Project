@@ -6,7 +6,7 @@ public class AmendmentBookingController {
             String packageName='';
             Decimal bookingAmount = 0;
             Opportunity opp = [
-                SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,
+                SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,Departure_Service_Time__c,
                 Flight_Number_Arrival__c,Flight_Number_Departure__c,
                 (SELECT Id,Product2.Family,UnitPrice,PricebookEntryId FROM opportunitylineitems WHERE Status__c = 'Active' OR Status__c = 'Rescheduled') 
                 FROM Opportunity
@@ -39,7 +39,14 @@ public class AmendmentBookingController {
     public static void upgradePackage(Id opportunityId, List<Map<String, Object>> productDetails) {
         // Create a list to store OpportunityLineItems
         List<OpportunityLineItem> opportunityLineItemsToInsert = new List<OpportunityLineItem>();
-        
+        // Query Opportunity based on OpportunityId
+        Opportunity opp = [
+            SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,Departure_Service_Time__c
+            FROM Opportunity
+            WHERE Id = :opportunityId
+            LIMIT 1
+        ];
         List<OpportunityLineItem> oliListToDelete = [SELECT Id,Product2Id,UnitPrice,PricebookEntryId,Product2.Package_Is_For__c FROM OpportunityLineItem
             WHERE OpportunityId =:opportunityId
             AND (Status__c = 'Active' OR Status__c = 'Rescheduled')
@@ -74,6 +81,8 @@ public class AmendmentBookingController {
                     oliMap.put(type, new List<OpportunityLineItem>());
                 }
                 oliMap.get(type).add(oli);
+                // GST Calculation Logic
+                calculateGstApplicable(opp, oli);
                 // Add the OLI to the list
                 opportunityLineItemsToInsert.add(oli);
             }
@@ -125,7 +134,8 @@ public class AmendmentBookingController {
 
         // Query Opportunity based on OpportunityId
         Opportunity opp = [
-            SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c
+            SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,Departure_Service_Time__c
             FROM Opportunity
             WHERE Id = :opportunityId
             LIMIT 1
@@ -140,9 +150,9 @@ public class AmendmentBookingController {
             }
             combinedDateTimeStr=dateText + ' ' + timeText;
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
-        } else if (opp.STD_Time__c != null) {
+        } else if (opp.Departure_Service_Time__c != null) {
             dateText=opp.Date_of_Departure__c;
-            timeText=opp.STD_Time__c;// Ensure timeText includes seconds
+            timeText=opp.Departure_Service_Time__c;// Ensure timeText includes seconds
             if (timeText.length() == 5) {  // "HH:mm" format
                 timeText += ':00';  // Append ":00" for seconds
             }
@@ -209,7 +219,7 @@ public class AmendmentBookingController {
                         oli.Status__c = 'Active';
 
                         totalListPrice += unitPrice;    
-
+                        calculateGstApplicable(opp, oli);
                         // Add the OLI to the list
                         opportunityLineItemsToInsert.add(oli);    
                     }                
@@ -236,6 +246,7 @@ public class AmendmentBookingController {
                     }
 
                     totalListPrice += unitPrice;  
+                    calculateGstApplicable(opp, oli);
                     // Add the OLI to the list
                     opportunityLineItemsToInsert.add(oli);
                 }
@@ -281,5 +292,42 @@ public class AmendmentBookingController {
             System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
             throw new AuraHandledException('Error in creating order summary, please show this message to admin');
         }
+    }
+
+    public static void calculateGstApplicable(Opportunity opp, OpportunityLineItem oli) {
+
+        Decimal gstRate = 0.18;  // 18% GST
+        String billingState = opp.Account.BillingState;
+        String serviceAirportState = opp.Service_Airport_Id__c !=null ? opp.Service_Airport_Id__r.State__c : '';
+        Boolean isNotIgst =false;
+        if (opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
+            opp.Account.GST_Registration_Type__c != 'Special Economic Zone (SEZ) developer/unit') {
+                isNotIgst = true;
+            }
+
+        //Logic for GST calculation
+        Decimal totalGST = oli.UnitPrice * gstRate; // Total GST
+        Decimal invoiceAmount = oli.UnitPrice - totalGST; // Invoice amount (after GST)
+
+        // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
+        Decimal sgstAmount = 0;
+        Decimal cgstAmount = 0;
+        Decimal igstAmount = 0;
+        
+        if (billingState != null && serviceAirportState != null) {
+            if (billingState.equalsIgnoreCase(serviceAirportState) && isNotIgst)  {
+                // Intra-state: Split GST into SGST and CGST
+                sgstAmount = totalGST / 2;
+                cgstAmount = totalGST / 2;
+            } else {
+                // Inter-state: Apply IGST
+                igstAmount = totalGST;
+            }
+        }
+        // Set the calculated GST values on the Opportunity Line Item
+        oli.Invoice_Amount__c = invoiceAmount;
+        oli.SGST__c = sgstAmount;
+        oli.CGST__c = cgstAmount;
+        oli.IGST__c = igstAmount;        
     }
 }

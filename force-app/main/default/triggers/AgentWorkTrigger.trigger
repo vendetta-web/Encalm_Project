@@ -6,7 +6,7 @@ trigger AgentWorkTrigger on AgentWork (after insert) {
     for (AgentWork aw : Trigger.new) {
         // Only act when the work item is assigned and opened
         System.debug('aw.Status ' + aw.Status);
-        if (aw.Status == 'Assigned' && aw.WorkItemId != null) {
+        if (aw.Status == 'Assigned' && aw.WorkItemId != null && Schema.Case.SObjectType == aw.WorkItemId.getSobjectType()) {
             Case c = [SELECT Id, TAT_Start__c, EntitlementId, Status, OwnerId FROM Case WHERE Id = :aw.WorkItemId LIMIT 1];
 
             if (c != null) {
