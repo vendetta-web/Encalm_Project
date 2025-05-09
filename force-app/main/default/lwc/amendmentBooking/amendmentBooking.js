@@ -1,21 +1,25 @@
 import { LightningElement, track, api, wire} from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPackageDetails from '@salesforce/apex/PackageSelectionController.getPackages';
 import getCurrentPackageDetails from '@salesforce/apex/AmendmentBookingController.getExistingPackage';
 import upgradePackage from '@salesforce/apex/AmendmentBookingController.upgradePackage';
 import getPicklistValues from '@salesforce/apex/CustomPicklistController.getNationalityPicklistValues';
 import createOpportunityLineItems from '@salesforce/apex/AmendmentBookingController.createOpportunityLineItems';
-import savePassengerDetails from '@salesforce/apex/PackageSelectionController.savePassengerDetails';
+import savePassengerDetails from '@salesforce/apex/AmendmentBookingController.savePassengerDetails';
 import getTerminalInfo from '@salesforce/apex/PackageSelectionController.getTerminalInfo';
 import getAddOnDetails from '@salesforce/apex/PackageSelectionController.getAddons';
 import getOpportunityDetails from '@salesforce/apex/PackageSelectionController.getOpportunityDetails';
+import sendEmailWithAttachment from '@salesforce/apex/BookingEmailHandler.sendEmailWithAttachment';
+import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
+import { RefreshEvent } from 'lightning/refresh';
 import { CloseActionScreenEvent } from 'lightning/actions';
 import { updateRecord } from 'lightning/uiRecordApi';
 import NUMBER_OF_ADULTS_FIELD from '@salesforce/schema/Opportunity.Number_of_Adults__c';
 import NUMBER_OF_CHILD_FIELD from '@salesforce/schema/Opportunity.Number_of_Children__c';
 import NUMBER_OF_INFANTS_FIELD from '@salesforce/schema/Opportunity.Number_of_Infants__c';
 
-export default class AmendmentBooking extends LightningElement {
+export default class AmendmentBooking extends NavigationMixin(LightningElement) {
     options = [
         { label: 'Add Passengers', value: 'addPassengers' },
         { label: 'Upgrade Package', value: 'upgradePackage' },
@@ -35,6 +39,7 @@ export default class AmendmentBooking extends LightningElement {
     totalIgstAmount=0;
     adddOnCount = 1;
     selectedOption = '';
+    currentPackage = '';
     selectedPackage = '';
     isAddPassengers = false;
     isUpgradePackage = false;
@@ -47,6 +52,11 @@ export default class AmendmentBooking extends LightningElement {
     showGst = false;
     showCgst =false;
     showIgst =false;
+    isLoading=false;
+    isPaxAll=false;
+    isPckUpgradeAll=false;
+    isAddOnAll=false;
+    showPaidAmount = false;
     confirmMessage ='';
     upgradeMessage = '';
     //Individual Passenger Details
@@ -55,6 +65,7 @@ export default class AmendmentBooking extends LightningElement {
     @track orderSummary=[];
     @track orderSummaryPackageUpgrade=[];
     @track orderSummaryPackageUpgradeAll=[];
+    @track previousOrderSummaryPackageAll=[];
     @track orderSummaryPackage=[];
     @track orderSummaryPackageAll=[];
     @track orderSummaryAddon=[];
@@ -130,7 +141,7 @@ export default class AmendmentBooking extends LightningElement {
             this.isAddPassengers = this.selectedOption === 'addPassengers';
             this.isUpgradePackage = this.selectedOption === 'upgradePackage';
             this.isAddAddOns = this.selectedOption === 'addAddOns';
-            this.isAll = this.selectedOption === 'all';
+            this.isAll = this.isPaxAll = this.selectedOption === 'all';
             this.loadFilterPackages();
             this.loadOpportunityData();
         }
@@ -172,7 +183,10 @@ export default class AmendmentBooking extends LightningElement {
         } else {
             this.isAddPassengers = false;
             this.passengerDetailPage = true;
-            this.handlePackageSummary();
+            const adultCount = this.adultCount - this.numberOfAdults;
+            const childCount = this.childCount - this.numberOfChildren;
+            const infantCount = this.infantCount - this.numberOfInfants;
+            this.handlePackageSummary(this.getPackage,adultCount,childCount,infantCount);
         }
     }
 
@@ -204,8 +218,8 @@ export default class AmendmentBooking extends LightningElement {
             }
         }
         if(matchFound) {  
-        this.openConfirmationPopup();   
-        this.confirmAmendment = true;
+            this.openConfirmationPopup();   
+            this.confirmAmendment = true;
         } else {
             this.showToast('Error', 'Please select a package to upgrade: !', 'error');
         }
@@ -266,71 +280,128 @@ export default class AmendmentBooking extends LightningElement {
     handleFinalSubmit() {
         this.confirmAmendment = false;
         if( this.selectedOption === 'addPassengers') {
-            this.handleFieldUpdate(); 
+            const adultCount = this.adultCount;
+            const childCount = this.childCount;
+            const infantCount = this.infantCount;
+            this.handleFieldUpdate(this.guestRows,this.orderSummary, adultCount,childCount,infantCount); 
             this.passengerDetailPage = false;         
         } else if ( this.selectedOption === 'upgradePackage') {
             this.isUpgradePackage = false;
-            this.handlePackageUpgrade();
+            this.handlePackageUpgrade(this.orderSummaryPackageUpgrade);
         } else if ( this.selectedOption === 'addAddOns') {
             this.createOlisAddons();
+        } else if (this.selectedOption === 'all') {
+            if (this.guestRowsAll.length > 0 && 
+                this.selectedPackage =='' &&
+                this.orderSummaryAddon.length == 0
+            ) {
+                const adultCount = this.numberOfAdultsAll;
+                const childCount = this.numberOfChildrenAll;
+                const infantCount = this.numberOfInfantsAll;
+                this.handleFieldUpdate(this.guestRowsAll,this.orderSummaryPackageUpgradeAll, adultCount,childCount,infantCount);
+            } else if (this.guestRowsAll.length == 0 &&
+                this.selectedPackage !=''
+            ) {
+                this.handlePackageUpgrade(this.orderSummaryPackageUpgradeAll);
+            } else if (this.guestRowsAll.length == 0 &&
+                this.selectedPackage =='' &&
+                this.orderSummaryAddon.length > 0
+            ) {
+                this.createOlisAddons();
+            } else if (this.guestRowsAll.length > 0 && 
+                this.selectedPackage !=''
+            ) {
+                this.handlePackageUpgradeAndSavePax(this.orderSummaryPackageUpgradeAll,this.guestRowsAll);
+            } else if (this.guestRowsAll.length > 0 && 
+                this.selectedPackage ==''
+            ) {
+                const adultCount = this.numberOfAdultsAll;
+                const childCount = this.numberOfChildrenAll;
+                const infantCount = this.numberOfInfantsAll;
+                this.handleFieldUpdate(this.guestRowsAll,this.orderSummaryPackageUpgradeAll, adultCount,childCount,infantCount);
+            }
         }
-        this.showToast('Success', 'Amendments done successfully: !', 'success');
-        // Dispatch an event to close the LWC component
-        this.dispatchEvent(new CloseActionScreenEvent()); 
+        this.showToast('Success', 'Amendments done successfully: !', 'success'); 
     }
     //update number of new passengers added on opportunity
-    handleFieldUpdate() {
+    handleFieldUpdate(guestList,orderList, adultCount,childCount,infantCount) {
+        this.isLoading= true;
         const fields = {};
         fields.Id = this.recordId;
-        fields[NUMBER_OF_ADULTS_FIELD.fieldApiName] = this.adultCount;
-        fields[NUMBER_OF_CHILD_FIELD.fieldApiName] = this.childCount;
-        fields[NUMBER_OF_INFANTS_FIELD.fieldApiName] = this.infantCount;
+        fields[NUMBER_OF_ADULTS_FIELD.fieldApiName] = adultCount;
+        fields[NUMBER_OF_CHILD_FIELD.fieldApiName] = childCount;
+        fields[NUMBER_OF_INFANTS_FIELD.fieldApiName] = infantCount;
         const recordInput = { fields };
         // Call updateRecord to save the updated values to Salesforce
         updateRecord(recordInput)
             .then(() => {
-                this.createOliAndPassengerRecords();
+                this.createOliAndPassengerRecords(guestList,orderList);
             })
             .catch(error => {
                 console.error('Error in handleFieldUpdate method->> ',error);
+                this.isLoading= false;
             });
     }
 
-    createOliAndPassengerRecords() {
-        createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmount })
+    createOliAndPassengerRecords(guestList,orderList) {
+        createOpportunityLineItems({ opportunityId: this.recordId, productDetails: orderList, amount: this.totalAmount })
             .then(result => {
-                console.log('Opportunity Line Items created successfully: ', result);
+                this.savePassengerData(guestList);
             })
             .catch(error => {
                 console.error('Error creating Opportunity Line Items: ', error);
             });
 
-        savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
-            .then(() => {
-                console.log('Passenger created successfully: ', result);
+        
+    }
+    savePassengerData(guestList) {
+        savePassengerDetails({ passengerData: guestList, opportunityId: this.recordId })
+            .then(() => {                
+                this.generatePdf();
             })
             .catch(error => {
                 // Handle error
                 console.error('Error saving passenger details:', error);
+                this.isLoading= false;
                 this.showToast('Error', 'Error saving Passenger details', 'error');
             });
     }
+    
     //upgrade the package
-    handlePackageUpgrade() {
-        upgradePackage({ opportunityId: this.recordId, productDetails: this.orderSummaryPackageUpgrade})
+    handlePackageUpgrade(orderSummaryDetails) {
+        this.isLoading= true;
+        upgradePackage({ opportunityId: this.recordId, productDetails: orderSummaryDetails})
             .then(result => {
+                this.generatePdf();
             })
             .catch(error => {
                 console.error('Error upgrading package ', error);
+                this.isLoading= false;
+            });
+    }
+
+    //upgrade the package for all scenario
+    handlePackageUpgradeAndSavePax(orderSummaryDetails,guestList) {
+        this.isLoading= true;
+        upgradePackage({ opportunityId: this.recordId, productDetails: orderSummaryDetails})
+            .then(result => {
+                this.savePassengerData(guestList);
+            })
+            .catch(error => {
+                console.error('Error upgrading package ', error);
+                this.isLoading= false;
             });
     }
 
     createOlisAddons() {
+        this.isLoading= true;
         createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummaryAddon, amount: this.totalAddonAmount })
             .then(result => {  
+                this.generatePdf();
             })
             .catch(error => {
                 console.error('Error creating Opportunity Line Items: ', error);
+                this.isLoading= false;
             });
     }
 
@@ -594,7 +665,8 @@ export default class AmendmentBooking extends LightningElement {
                 nationality: '',
                 passportnumber: '',
                 phone: '',
-                showDropdown: false
+                showDropdown: false,
+                isPlacard: false
             });
         }
     }
@@ -625,7 +697,7 @@ export default class AmendmentBooking extends LightningElement {
     loadCurrentPackageData() {
         getCurrentPackageDetails({opportunityId: this.recordId})
         .then((result) => {
-            this.selectedPackage = result.packageName; 
+            this.currentPackage = result.packageName; 
             this.currentTotalPackageAmount = result.totalBookingAmount;
         })
         .catch((error) => {
@@ -638,18 +710,18 @@ export default class AmendmentBooking extends LightningElement {
         this.upgradeMessage = '';
         // Define upgrade path rules
         let allowedPackages = [];
-        if (this.selectedPackage === 'Silver') {
+        if (this.currentPackage === 'Silver') {
             allowedPackages = ['Gold', 'Elite'];
-        } else if (this.selectedPackage === 'Gold') {
+        } else if (this.currentPackage === 'Gold') {
             allowedPackages = ['Elite'];
-        } else if (this.selectedPackage === 'Elite') {
+        } else if (this.currentPackage === 'Elite') {
             this.upgradeMessage = 'Existing Package is already Elite, Cannot be upgraded';
             this.filteredPackages = undefined; // No packages to show
             this.filteredPackagesAll = []; // No packages to show
             return;
         }
         
-        if (this.selectedPackage != 'Elite') {
+        if (this.currentPackage != 'Elite') {
             // Filter the packages based on the allowed package families
             this.filteredPackages = this.getPackage.filter(pkg =>
                 allowedPackages.includes(pkg.packageFamily)
@@ -849,7 +921,8 @@ export default class AmendmentBooking extends LightningElement {
                     pickupTerminals: wrapper.pickupTerminals.map(terminal => terminal.value),
                     dropTerminals: wrapper.dropTerminals.map(terminal => terminal.value),
                     isChild: false,
-                    isInfant: false
+                    isInfant: false,
+                    discountValue:0
                 };
             });   
             if (this.isAll) {
@@ -912,70 +985,82 @@ export default class AmendmentBooking extends LightningElement {
     }
 
     //Method to show the order summary on adding passengers
-    handlePackageSummary() {
-        this.orderSummaryPackage = this.getPackage
-        .filter(wrapper => wrapper.packageFamily == this.selectedPackage && wrapper.priceTag != undefined) // Filter the existing Package
+    handlePackageSummary(packageName,adultCount,childCount,infantCount) {
+        this.orderSummaryPackageAll = this.orderSummaryPackage = packageName
+        .filter(wrapper => wrapper.packageFamily == this.currentPackage && wrapper.priceTag != undefined) // Filter the existing Package
         .map(wrapper => {
             // Create an array of records based on the number of adults
             const records = [];
-                if (this.adultCount - this.numberOfAdults > 0) { 
+                if (adultCount > 0) { 
                     records.push({
-                        name: wrapper.packageName + ' (' + (this.adultCount - this.numberOfAdults)  + ' Adult)', // Copy the 'name' value for adult
-                        amount: wrapper.priceTag * (this.adultCount - this.numberOfAdults), // Calculate the amount 
-                        totalAmount: wrapper.priceTag * (this.adultCount - this.numberOfAdults),
-                        netAmount: wrapper.priceTagBeforeTax * (this.adultCount - this.numberOfAdults),
-                        cgstAmount: wrapper.cgst * (this.adultCount - this.numberOfAdults),
-                        sgstAmount: wrapper.sgst * (this.adultCount - this.numberOfAdults),
-                        igstAmount: wrapper.igst * (this.adultCount - this.numberOfAdults),
+                        name: wrapper.packageName + ' (' + (adultCount)  + ' Adult)', // Copy the 'name' value for adult
+                        amount: wrapper.priceTag * (adultCount), // Calculate the amount 
+                        totalAmount: wrapper.priceTag * (adultCount),
+                        netAmount: wrapper.priceTagBeforeTax * (adultCount),
+                        cgstAmount: wrapper.cgst * (adultCount),
+                        sgstAmount: wrapper.sgst * (adultCount),
+                        igstAmount: wrapper.igst * (adultCount),
                         productId: wrapper.productId,
                         pricebookEntryId: wrapper.pricebookEntryId,
                         unitPrice: wrapper.priceTag,
-                        count: (this.adultCount - this.numberOfAdults), // Set the count, potentially modify later based on adults
+                        count: (adultCount), // Set the count, potentially modify later based on adults
                         isChild: false,
-                        isInfant: false
+                        isInfant: false,
+                        type: 'Adult',
+                        discountValue:0
                     });
                 }
-                if (this.childCount - this.numberOfChildren > 0) {             
+                if (childCount > 0) {             
                     records.push({
-                        name: wrapper.packageName + ' (' + (this.childCount - this.numberOfChildren) + ' child)', // Copy the 'name' value for child
-                        amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (this.childCount - this.numberOfChildren), // Calculate the amount
-                        totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (this.childCount - this.numberOfChildren),
-                        netAmount: wrapper.priceTagBeforeTax * (this.childCount - this.numberOfChildren),
-                        cgstAmount: wrapper.cgst * (this.childCount - this.numberOfChildren),
-                        sgstAmount: wrapper.sgst * (this.childCount - this.numberOfChildren),
-                        igstAmount: wrapper.igst * (this.childCount - this.numberOfChildren),
-                        productId: wrapper.productId,
+                        name: wrapper.packageName + ' (' + (childCount) + ' child)', // Copy the 'name' value for child
+                        amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (childCount), // Calculate the amount
+                        totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (childCount),
+                        netAmount: wrapper.childPackageWrapper[wrapper.packageFamily].priceTagBeforeTax * (childCount),
+                        cgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].cgst * (childCount),
+                        sgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].sgst * (childCount),
+                        igstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].igst * (childCount),
+                        productId: wrapper.childPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
                         isChild: true,
-                        childCount: (this.childCount - this.numberOfChildren)  //to create child oli records
+                        type: 'Child',
+                        childCount: (childCount),  //to create child oli records
+                        discountValue:0
                     });
                 } 
-                if (this.infantCount - this.numberOfInfants > 0) {             
+                if (infantCount > 0) {             
                     records.push({
-                        name: wrapper.packageName + ' (' + (this.infantCount - this.numberOfInfants) + ' Infant)', // Copy the 'name' value for infant
-                        amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (this.infantCount - this.numberOfInfants), // Calculate the amount
-                        totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (this.infantCount - this.numberOfInfants),
+                        name: wrapper.packageName + ' (' + (infantCount) + ' Infant)', // Copy the 'name' value for infant
+                        amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (infantCount), // Calculate the amount
+                        totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (infantCount),
                         netAmount: 0,
                         cgstAmount: 0,
                         sgstAmount: 0,
                         igstAmount: 0,
-                        productId: wrapper.productId,
+                        productId: wrapper.infantPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
                         isInfant: true,
                         isChild: false,
-                        infantCount: (this.infantCount - this.numberOfInfants)  //to create infant oli records
+                        type: 'Infant',
+                        infantCount: (infantCount), //to create infant oli records
+                        discountValue:0 
                     });
                 }            
 
             return records; // Return the array of records
         })
         .flat(); // Flatten the array to combine all the records into a single array
-        this.orderSummary = [...this.orderSummaryPackage];
-        this.calculateTotalAmount();
+        
+        if (this.isAll) {
+            this.orderSummaryPackageUpgradeAll = [...this.orderSummaryPackageAll, ...this.orderSummaryAddon];
+            this.calculateTotalPackageAll();
+        } else {
+            this.orderSummary = [...this.orderSummaryPackage];
+            this.calculateTotalAmount();
+        }
         
     }
 
@@ -1014,6 +1099,8 @@ export default class AmendmentBooking extends LightningElement {
         } else if (this.totalIgstAmount !=0) {
             this.showGst = true;
             this.showIgst = true;
+        } else {
+            this.showGst = false;
         }
     }
 
@@ -1022,7 +1109,7 @@ export default class AmendmentBooking extends LightningElement {
         const index = event.target.dataset.index;  // Get the index of the clicked row
         //this.handleUnselect(event);
         this.selectedRowIndex = index;  // Update selected row
-        this.selectedPackage = this.filteredPackages[index].packageName;
+        this.currentPackage = this.filteredPackages[index].packageName;
         this.selectedAmount = this.filteredPackages[index].priceTag;
         this.updateButtonPackageLabels(); // Recompute the button labels after selection
         this.orderSummaryPackage = this.filteredPackages
@@ -1045,24 +1132,26 @@ export default class AmendmentBooking extends LightningElement {
                     count: this.numberOfAdults, // Set the count, potentially modify later based on adults
                     isChild: false,
                     isInfant: false,
-                    type: 'Adult'
+                    discountValue:0 ,
+                    type: 'Adult' //to create infant oli records
                 });
                 if (this.numberOfChildren > 0) {             
                     records.push({
                         name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
                         amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, // Calculate the amount
                         totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren,
-                        netAmount: wrapper.priceTagBeforeTax * this.numberOfChildren,
-                        cgstAmount: wrapper.cgst * this.numberOfChildren,
-                        sgstAmount: wrapper.sgst * this.numberOfChildren,
-                        igstAmount: wrapper.igst * this.numberOfChildren,
-                        productId: wrapper.productId,
+                        netAmount: wrapper.childPackageWrapper[wrapper.packageFamily].priceTagBeforeTax * this.numberOfChildren,
+                        cgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].cgst * this.numberOfChildren,
+                        sgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].sgst * this.numberOfChildren,
+                        igstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].igst * this.numberOfChildren,
+                        productId: wrapper.childPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
                         isChild: true,
                         childCount: this.numberOfChildren,  //to create child oli records
-                        type: 'Child'
+                        type: 'Child',
+                        discountValue:0 
                     });
                 } 
                 if (this.numberOfInfants > 0) {             
@@ -1074,14 +1163,15 @@ export default class AmendmentBooking extends LightningElement {
                         cgstAmount: 0,
                         sgstAmount: 0,
                         igstAmount: 0,
-                        productId: wrapper.productId,
+                        productId: wrapper.infantPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
                         isInfant: true,
                         isChild: false,
                         infantCount: this.numberOfInfants,  //to create infant oli records,
-                        type: 'Infant'
+                        type: 'Infant',
+                        discountValue:0 
                     });
                 }            
 
@@ -1118,11 +1208,36 @@ export default class AmendmentBooking extends LightningElement {
         const index = event.target.dataset.index;  // Get the index of the clicked row
         //this.handleUnselect(event);
         this.selectedRowIndex = index;  // Update selected row
+        this.updatePackageAllButtonLabels(this.selectedRowIndex);
+       // this.setOtherAllButtonLabel(this.selectedRowIndex);
         this.selectedPackage = this.filteredPackagesAll[index].packageName;
-        this.selectedAmount = this.filteredPackagesAll[index].priceTag;
-        this.updateButtonPackageLabelsAll(); // Recompute the button labels after selection
+        this.selectedAmount = this.filteredPackagesAll[index].priceTag;        
+
+        //Store previous state before updating**
+        if (this.previousOrderSummaryPackageAll.length === 0 && this.guestRowsAll.length > 0) {
+            this.previousOrderSummaryPackageAll = [...this.orderSummaryPackageAll];
+        }
+        let matchFound = false;
+        //Check if any item has `buttonLabel` set to `'Remove'`**
+        for (let item of this.filteredPackagesAll) {
+            if (item.buttonLabel === 'Remove') {
+                matchFound = true;
+                break;  // Exit loop once a match is found
+            }
+        }
+
+        //If no match is found, restore previous state**
+        if (!matchFound) {
+            this.orderSummaryPackageAll = [...this.previousOrderSummaryPackageAll];
+            this.previousOrderSummaryPackageAll = []; // Clear previous state after restoring
+            this.orderSummaryPackageUpgradeAll = [...this.orderSummaryPackageAll, ...this.orderSummaryAddon];
+            this.selectedPackage = '';
+            this.calculateTotalPackageAll();
+            return; // Exit early, no need to recalculate
+        }
+        //continue with the package upgrade
         this.orderSummaryPackageAll = this.filteredPackagesAll
-        .filter(wrapper => wrapper.buttonLabel === 'Selected') // Filter condition
+        .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
         .map(wrapper => {
             const numberOfRecords = this.numberOfAdultsAll > this.numberOfChildrenAll ? this.numberOfAdultsAll : this.numberOfChildrenAll; // or any other condition to determine number of records
             // Create an array of records based on the number of adults
@@ -1140,22 +1255,26 @@ export default class AmendmentBooking extends LightningElement {
                     unitPrice: wrapper.priceTag,
                     count: this.numberOfAdultsAll, // Set the count, potentially modify later based on adults
                     isChild: false,
-                    isInfant: false
+                    isInfant: false,
+                    type: 'Adult',
+                    discountValue:0 
                 });
                 if (this.numberOfChildrenAll > 0) {             
                     records.push({
                         name: wrapper.packageName + ' (' + this.numberOfChildrenAll + ' child)', // Copy the 'name' value for child
                         amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildrenAll, // Calculate the amount
                         totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildrenAll,
-                        netAmount: wrapper.priceTagBeforeTax * this.numberOfChildrenAll,
-                        cgstAmount: wrapper.cgst * this.numberOfChildrenAll,
-                        sgstAmount: wrapper.sgst * this.numberOfChildrenAll,
-                        igstAmount: wrapper.igst * this.numberOfChildrenAll,
-                        productId: wrapper.productId,
+                        netAmount: wrapper.childPackageWrapper[wrapper.packageFamily].priceTagBeforeTax * this.numberOfChildrenAll,
+                        cgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].cgst * this.numberOfChildrenAll,
+                        sgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].sgst * this.numberOfChildrenAll,
+                        igstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].igst * this.numberOfChildrenAll,
+                        productId: wrapper.childPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
                         isChild: true,
+                        discountValue:0,
+                        type: 'Child',
                         childCount: this.numberOfChildrenAll  //to create child oli records
                     });
                 } 
@@ -1168,12 +1287,14 @@ export default class AmendmentBooking extends LightningElement {
                         cgstAmount: 0,
                         sgstAmount: 0,
                         igstAmount: 0,
-                        productId: wrapper.productId,
+                        productId: wrapper.infantPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
                         isInfant: true,
                         isChild: false,
+                        type: 'Infant',
+                        discountValue:0,
                         infantCount: this.numberOfInfantsAll  //to create infant oli records
                     });
                 }            
@@ -1181,11 +1302,106 @@ export default class AmendmentBooking extends LightningElement {
             return records; // Return the array of records
         })
         .flat(); // Flatten the array to combine all the records into a single array
-
-            this.orderSummaryPackageUpgradeAll = [...this.orderSummaryPackageAll, ...this.orderSummaryAddon];
-            this.calculateTotalPackageAll();
+        this.orderSummaryPackageUpgradeAll = [...this.orderSummaryPackageAll, ...this.orderSummaryAddon];
+        this.calculateTotalPackageAll();
         
     }
+    /*
+    //Method to show the order summary on adding passengers from all section
+    handlePackageSummary() {
+        this.orderSummaryPackage = this.getPackage
+        .filter(wrapper => wrapper.packageFamily == this.currentPackage && wrapper.priceTag != undefined) // Filter the existing Package
+        .map(wrapper => {
+            // Create an array of records based on the number of adults
+            const records = [];
+                if (this.numberOfAdultsAll > 0) { 
+                    records.push({
+                        name: wrapper.packageName + ' (' + (this.numberOfAdultsAll)  + ' Adult)', // Copy the 'name' value for adult
+                        amount: wrapper.priceTag * (this.numberOfAdultsAll), // Calculate the amount 
+                        totalAmount: wrapper.priceTag * (this.numberOfAdultsAll),
+                        netAmount: wrapper.priceTagBeforeTax * (this.numberOfAdultsAll),
+                        cgstAmount: wrapper.cgst * (this.numberOfAdultsAll),
+                        sgstAmount: wrapper.sgst * (this.numberOfAdultsAll),
+                        igstAmount: wrapper.igst * (this.numberOfAdultsAll),
+                        productId: wrapper.productId,
+                        pricebookEntryId: wrapper.pricebookEntryId,
+                        unitPrice: wrapper.priceTag,
+                        count: (this.numberOfAdultsAll), // Set the count, potentially modify later based on adults
+                        isChild: false,
+                        isInfant: false,
+                        discountValue:0
+                    });
+                }
+                if (this.numberOfChildrenAll > 0) {             
+                    records.push({
+                        name: wrapper.packageName + ' (' + (this.numberOfChildrenAll) + ' child)', // Copy the 'name' value for child
+                        amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (this.numberOfChildrenAll), // Calculate the amount
+                        totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * (this.numberOfChildrenAll),
+                        netAmount: wrapper.priceTagBeforeTax * (this.numberOfChildrenAll),
+                        cgstAmount: wrapper.cgst * (this.numberOfChildrenAll),
+                        sgstAmount: wrapper.sgst * (this.numberOfChildrenAll),
+                        igstAmount: wrapper.igst * (this.numberOfChildrenAll),
+                        productId: wrapper.productId,
+                        pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
+                        unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
+                        count: 1, // Set the count, potentially modify later based on children
+                        isChild: true,
+                        childCount: (this.numberOfChildrenAll),  //to create child oli records
+                        discountValue:0
+                    });
+                } 
+                if (this.numberOfInfantsAll > 0) {             
+                    records.push({
+                        name: wrapper.packageName + ' (' + (this.numberOfInfantsAll) + ' Infant)', // Copy the 'name' value for infant
+                        amount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (this.numberOfInfantsAll), // Calculate the amount
+                        totalAmount: wrapper.infantPackageWrapper[wrapper.packageFamily].price * (this.numberOfInfantsAll),
+                        netAmount: 0,
+                        cgstAmount: 0,
+                        sgstAmount: 0,
+                        igstAmount: 0,
+                        productId: wrapper.productId,
+                        pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
+                        unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
+                        count: 1, // Set the count, potentially modify later based on children
+                        isInfant: true,
+                        isChild: false,
+                        infantCount: (this.numberOfInfantsAll), //to create infant oli records
+                        discountValue:0 
+                    });
+                }            
+
+            return records; // Return the array of records
+        })
+        .flat(); // Flatten the array to combine all the records into a single array
+        this.orderSummary = [...this.orderSummaryPackage];
+        this.orderSummaryPackageUpgradeAll = [...this.orderSummaryPackageAll, ...this.orderSummaryAddon, ...this.orderSummaryPackage];
+            this.calculateTotalPackageAll();
+        
+    }*/
+
+    updatePackageAllButtonLabels(ind) {
+        const boxElement = this.template.querySelector('.box');
+        this.filteredPackagesAll = this.filteredPackagesAll.map((wrapper, index) => {
+            return {
+                ...wrapper, // Keep existing properties
+                buttonLabel: ind == index ? wrapper.buttonLabel == 'Select' ? 'Remove' : 'Select' : 'Select'
+            };
+        });
+    }
+
+    
+    /*
+    setOtherAllButtonLabel(ind) {
+        let buttonLabel = 'buttonLabel';
+        // Loop through the array and update only the selected index
+        this.filteredPackagesAll.forEach((item, index) => {
+            if (index === ind) {
+                item[buttonLabel] = 'Remove';
+            } else {
+                item[buttonLabel] = 'Select'; // Reset all other buttons
+            }
+        });
+    }*/
 
     // Add rows for a specific type of guest (Adult/Child/Infant)
     addGuestRowsAll(type, count) {
@@ -1218,27 +1434,24 @@ export default class AmendmentBooking extends LightningElement {
         }
     }
 
-    // Precompute button labels for each row for all scenario
-    updateButtonPackageLabelsAll() {
-        this.filteredPackagesAll = this.filteredPackagesAll.map((wrapper, index) => {
-            return {
-                ...wrapper, // Keep existing properties
-                buttonLabel: this.selectedRowIndex == index ? 'Selected' : 'Select' // Change label based on selection
-            };
-        });
-    }
-
     calculateTotalPackageAll() {
         this.totalAmountAll = this.orderSummaryPackageUpgradeAll.reduce((sum, currentItem) => {
             return sum + currentItem.totalAmount;
         }, 0);
         this.calculateGst(this.orderSummaryPackageUpgradeAll);
         this.totalExtraAmountAll = this.totalAmountAll - this.currentTotalPackageAmount;
+        if (this.totalAmountAll > this.currentTotalPackageAmount) {
+            this.showPaidAmount = true;
+        }
+        else{
+            this.showPaidAmount = false;
+        }
     }
 
     resetValuesOnTabChanges(){
         this.orderSummaryPackageUpgrade=[];
         this.orderSummaryPackageUpgradeAll = [];
+        this.previousOrderSummaryPackageAll =[];
         this.orderSummaryAddon = [];
         this.totalAddonAmount = 0;
         this.totalExtraAmountAll = 0;
@@ -1247,44 +1460,46 @@ export default class AmendmentBooking extends LightningElement {
         this.showGst = false;
         this.showCgst =false;
         this.showIgst =false;
+        this.showPaidAmount = false;
         this.totalNetAmount = 0;
         this.totalCgstAmount = 0;
         this.totalSgstAmount = 0;
         this.totalIgstAmount = 0;
     }
     handlePassengerInformation() {
-        if(this.guestRowsAll.length < 1) {
-            this.showToast('Error', 'Please add atleast one passenger!', 'error');
+        if (this.validateAllSelection()) {
+            this.isAll = false;
+            this.openPassengerPage = true;
+        } else {            
+            this.showToast('Error', 'Please make an amendment to proceed!', 'error');
+        }
+    }
+    validateAllSelection() {
+        //check for package selection
+        let matchFound = false;
+        let buttonLabel = 'buttonLabel';
+        for (let item of this.filteredPackagesAll) {
+            // Check if the package is selected
+            if (item[buttonLabel] == 'Remove') {
+                matchFound = true;
+                break;  // Exit loop after finding the match
+            }
+        }
+        //check for addon selection
+        let addOnmatchFound = false;
+        let addOnbuttonLabel = 'buttonLabel';
+        for (let item of this.getAddonDetail) {
+            // Check if the addon is selected
+            if (item[addOnbuttonLabel] == 'Remove') {
+                addOnmatchFound = true;
+                break;  // Exit loop after finding the match
+            }
+        }
+        //validate if any option is selected
+        if (this.guestRowsAll.length < 1 && !matchFound && !addOnmatchFound) {
+            return false;
         } else {
-            let matchFound = false;
-            let buttonLabel = 'buttonLabel';
-            for (let item of this.filteredPackagesAll) {
-                // Check if the package is selected
-                if (item[buttonLabel] == 'Selected') {
-                    matchFound = true;
-                    break;  // Exit loop after finding the match
-                }
-            }
-            if(matchFound) { 
-                let addOnmatchFound = false;
-                let buttonLabel = 'buttonLabel';
-                for (let item of this.getAddonDetail) {
-                    // Check if the addon is selected
-                    if (item[buttonLabel] == 'Remove') {
-                        addOnmatchFound = true;
-                        break;  // Exit loop after finding the match
-                    }
-                }
-                if (addOnmatchFound) {
-                    this.isAll = false;
-                    this.openPassengerPage = true;
-                } else {
-                    this.showToast('Error', 'Please select an Add-On!', 'error');
-                }
-            } else {
-                this.showToast('Error', 'Please select a package to upgrade!', 'error');
-            }
-
+            return true;
         }
     }
     confirmAllUpgrade() {
@@ -1307,10 +1522,133 @@ export default class AmendmentBooking extends LightningElement {
         }
     }
 
+    validatePassengersDataAll() {
+        const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
+            .reduce((validSoFar, input_Field_Reference) => {
+                input_Field_Reference.reportValidity();
+                return validSoFar && input_Field_Reference.checkValidity();
+            }, true);
+        const All_Compobox_Valid = [...this.template.querySelectorAll('lightning-combobox')]
+        .reduce((validSoFar, input_Field_Reference) => {
+            input_Field_Reference.reportValidity();
+            return validSoFar && input_Field_Reference.checkValidity();
+        }, true);
+        if(All_Input_Valid && All_Compobox_Valid) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     openUpgradeAllPage() {
         this.openPassengerPage = false;
         this.isAll = true;
+        this.isPaxAll = true;
+    }
+
+    OpenPassengerInfo() {
+        this.isPaxAll = false;
+        if (this.guestRowsAll.length > 0)  {   
+            //get the current package
+            const adultCount = this.numberOfAdultsAll - this.numberOfAdults;
+            const childCount = this.numberOfChildrenAll - this.numberOfChildren;
+            const infantCount = this.numberOfInfantsAll - this.numberOfInfants;
+            this.handlePackageSummary(this.getPackage,adultCount,childCount,infantCount)  ;       
+            this.openPassengerPage = true;
+        } else {
+            this.orderSummaryPackageUpgradeAll = [];
+            this.showGst = false;
+            this.totalAmountAll = 0;
+            this.isPckUpgradeAll = true;
+        }
+    }
+
+    returnToPassengerCount() {
+        this.openPassengerPage = false;
+        this.isPaxAll = true;
+    }
+
+    openPackageUpgrade() {        
+        if (this.guestRowsAll.length > 0)  { 
+            var errorMessage = 'Please resolve all the required checks.'
+            if(this.validatePassengersDataAll()) {
+                this.openPassengerPage=false;
+                this.isPckUpgradeAll = true;
+            } else {
+                this.showToast('Error', errorMessage, 'error');
+            }
+        } else {            
+            this.openPassengerPage=false;
+            this.isPckUpgradeAll = true;
+        }
+    }
+
+    returnToPassengerDetail() {
+        this.isPckUpgradeAll=false;
+        if (this.guestRowsAll.length > 0)  { 
+            this.openPassengerPage = true;
+        } else {
+            this.isPaxAll = true;
+        }
+    }
+
+    openAddonPage() {
+        this.isPckUpgradeAll=false;
+        this.isAddOnAll = true;
+    }
+
+    returnToPackageUpgrade() {
+        this.isAddOnAll = false;
+        this.isPckUpgradeAll = true;
+    }
+
+    openSubmitConfirmation() {
+        if (this.validateAllSelection()) {
+            //this.openPassengerPage = true;
+            this.openConfirmationPopup();  
+            this.confirmAmendment = true;
+        } else {            
+            this.showToast('Error', 'Please make an amendment to proceed!', 'error');
+        }
+    }
+
+    generatePdf() {
+        // Call Apex method to generate and save PDF with the current record
+        generateAndSavePDF({ recordId: this.recordId})
+            .then((result) => {
+                this.showToast('Success', 'Booking Voucher updated successfully', 'success');
+                this.dispatchEvent(new RefreshEvent());
+				this.handleSendEmail();
+            })
+            .catch((error) => {
+                this.showToast('Error', 'Error while generating Voucher', 'error');
+                console.error(error);
+                this.isLoading= false;
+            });
     }
     
+    handleSendEmail() {
+        sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Modified/Rescheduled' })
+            .then(() => {
+                this.showToast('Success', 'Email sent successfully!', 'success');
+                this.isLoading= false;
+                // Dispatch an event to close the LWC component
+                this.dispatchEvent(new CloseActionScreenEvent());
+                this.handleCloseComponent();
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading= false;
+            });
+    }
+    handleCloseComponent() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: this.recordId,
+                actionName: 'view'
+            }
+        });
+    }
 
 }

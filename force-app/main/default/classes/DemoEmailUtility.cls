@@ -75,6 +75,24 @@ public class DemoEmailUtility {
                     mail.setSaveAsActivity(false);
                 }
             }
+            
+            //attach files
+            StaticResource res1 = [SELECT Body FROM StaticResource WHERE Name = 'Shopping_Email_Price_Map'];
+        	StaticResource res2 = [SELECT Body FROM StaticResource WHERE Name = 'Shopping_Email_Cancellation_Policy'];
+
+            Blob pdf1 = res1.Body;
+            Blob pdf2 = res2.Body;
+    
+            Messaging.EmailFileAttachment attachment1 = new Messaging.EmailFileAttachment();
+            attachment1.setFileName('Atithya Price Map.pdf');
+            attachment1.setBody(pdf1);
+            attachment1.setContentType('application/pdf');
+    
+            Messaging.EmailFileAttachment attachment2 = new Messaging.EmailFileAttachment();
+            attachment2.setFileName('Atithya Cancellation/ Reschedule Policy.pdf');
+            attachment2.setBody(pdf2);
+            attachment2.setContentType('application/pdf');
+            mail.setFileAttachments(new Messaging.EmailFileAttachment[] { attachment1, attachment2 });
 
             emailList.add(mail);
         }

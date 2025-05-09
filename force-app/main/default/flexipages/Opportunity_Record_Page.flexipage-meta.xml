@@ -297,16 +297,6 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Service_Time__c</fieldItem>
-                <identifier>RecordService_Time__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
                 <fieldItem>Record.Service_Airport_Id__c</fieldItem>
                 <identifier>RecordService_Airport_Id__cField</identifier>
             </fieldInstance>
@@ -473,6 +463,10 @@
         </itemInstances>
         <itemInstances>
             <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
                 <fieldItem>Record.Service_Date_Time__c</fieldItem>
                 <identifier>RecordService_Date_Time__cField</identifier>
             </fieldInstance>

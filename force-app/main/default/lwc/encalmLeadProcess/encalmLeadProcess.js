@@ -1,15 +1,22 @@
 import { api, LightningElement, wire, track } from 'lwc';
 import { getRecord, getFieldValue, updateRecord } from 'lightning/uiRecordApi';
+import { getPicklistValues } from 'lightning/uiObjectInfoApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import STAGE_NAME from "@salesforce/schema/Lead.Status";
 import RECORD_TYPE_ID from "@salesforce/schema/Lead.RecordTypeId";
 import FOLLOWUP_FIELD from "@salesforce/schema/Lead.Set_Follow_up_Date_and_Time__c"; 
+import UPDATED_BY_FLOW from "@salesforce/schema/Lead.Updated_By_Flow__c";
 import LEAD_OWNER from "@salesforce/schema/Lead.OwnerId"; 
 import REASON_FOR_CLOSE from "@salesforce/schema/Lead.Reason_For_Close__c"; 
 import convertLead from '@salesforce/apex/LeadConversionController.convertLead';
 import { NavigationMixin } from 'lightning/navigation'; 
+import { refreshApex } from '@salesforce/apex';
 
-const fields = [STAGE_NAME, RECORD_TYPE_ID, FOLLOWUP_FIELD, LEAD_OWNER, REASON_FOR_CLOSE]; 
+import LEAD_OBJECT from '@salesforce/schema/Lead';
+import LEAD_DISPOSITION from "@salesforce/schema/Lead.Disposition__c"; 
+import LEAD_SUB_DISPOSITION from "@salesforce/schema/Lead.Sub_Disposition__c"; 
+
+const fields = [STAGE_NAME, RECORD_TYPE_ID,UPDATED_BY_FLOW, FOLLOWUP_FIELD, LEAD_OWNER, REASON_FOR_CLOSE, LEAD_DISPOSITION, LEAD_SUB_DISPOSITION]; 
 
 export default class EncalmLeadProcess extends NavigationMixin(LightningElement) {
     @track reservationStages = ['Open', 'Awaiting Customer response','Customer Responded','Escalated', 'Closed/Converted'];
@@ -31,7 +38,12 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     @track selectedValue = ''; 
     @track finalStageOptions = [{ label: 'Close', value: 'Close' }, { label: 'Convert', value: 'Convert' }];
     @track showMarkStatusButton = false;
-    @track isMarkStatusDisabled = false;
+    @track isMarkStatusDisabled = true;
+
+    @track recordTypeId;
+    @track dispositionOptions = [];
+    @track subDispositionOptions = [];
+    @track selectedSubDispositionValue; 
 
     @wire(getRecord, { recordId: '$recordId', fields })
     getfieldValue({ error, data }) {
@@ -39,7 +51,8 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             var result = JSON.parse(JSON.stringify(data));
             this.RecordType = data.recordTypeInfo.name;
             this.recordTypeId = result.fields.RecordTypeId.value;
-            this.followUpFieldValue = result.fields.Set_Follow_up_Date_and_Time__c.value; 
+            this.followUpFieldValue = result.fields.Set_Follow_up_Date_and_Time__c.value;
+            this.updateFlag = result.fields.Updated_By_Flow__c.value; 
             this.leadOwnerId = result.fields.OwnerId.value; 
             this.showcustompath = true;
             this.pathValues = [];
@@ -59,6 +72,40 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             // Check and open the follow-up modal if needed
             this.checkAndOpenFollowUpModal();
         }
+    }
+
+    @wire(getPicklistValues, {
+        recordTypeId: '$recordTypeId',
+        fieldApiName: LEAD_DISPOSITION
+    })
+    wiredDispositionValues({ data, error }) {
+        if (data) {
+            this.dispositionOptions = data.values.map(item => ({
+                label: item.label,
+                value: item.value
+            }));
+        } else if (error) {
+            console.error(error);
+        }
+    }
+
+    @wire(getPicklistValues, {
+        recordTypeId: '$recordTypeId',
+        fieldApiName: LEAD_SUB_DISPOSITION
+    })
+    wiredSubDispositionValues({ data, error }) {
+        if (data) {
+            this.subDispositionOptions = data.values.map(item => ({
+                label: item.label,
+                value: item.value
+            }));
+        } else if (error) {
+            console.error(error);
+        }
+    }
+
+    handleSubDispositionChange(event) {
+        this.selectedSubDispositionValue = event.detail.value;
     }
 
     // Set reservation or sales stages
@@ -81,7 +128,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     }
 
     checkAndOpenFollowUpModal() {
-        if (this.currentStage === 'Awaiting Customer response' && !this.followUpFieldValue) {
+        if (this.currentStage === 'Awaiting Customer response' && this.updateFlag){ //!this.followUpFieldValue) {
             setTimeout(() => {
                 this.isStageFollowup = true;
                 this.isStageClosed = false;
@@ -90,6 +137,16 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         }
     }
 
+    handleStepClick(event) {
+        const clickedStage = event.currentTarget.dataset.value;
+        if (clickedStage === 'Closed' && this.currentStage !== clickedStage) {
+            this.isMarkStatusDisabled = false;
+        }else{
+            this.isMarkStatusDisabled = true;
+        } 
+    }
+
+
     handleMarkStatus() {
         // if (this.RecordType === 'Sales' && !this.isLeadOwnerUser()) { 
         //     this.showToast('info', 'Lead Owner must be a User to update the stage in Sales record.');
@@ -97,25 +154,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         // }
 
         let newStage = this.getActiveStage();
-        let currentStatus = this.currentStage; 
-
-        const statusOrder = this.finalpathvalue.map(stage => stage.label);// getting all Lead Status values in an Array
-
-        let currentIndex = statusOrder.indexOf(currentStatus); // getting index of current Lead status value
-        let newIndex = statusOrder.indexOf(newStage); // getting index of new Lead Status Value
-
-        //  Prevent user from changing Lead Status to previous values
-        if (newIndex < currentIndex) {
-            this.showToast('error', 'Cannot Change Lead Status to Previous Value.');
-            return;
-        }
-
-        // Allow only +1 forward change.
-        if (newIndex - currentIndex !== 1) {
-            this.showToast('error', 'You can only move the Lead Status to the next step.');
-            return;
-        }
-
+        
         if (newStage === 'Closed') {
             this.isStageClosed = true;
             this.isStageFollowup = false;
@@ -131,6 +170,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
         }
 
         this.updateRecord(newStage);
+        refreshApex(this.wiredResult);
     }
 
     getActiveStage() {
@@ -145,7 +185,19 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
 
     updateRecord(newStage) {
         const fields = {};
-        if (newStage === 'Awaiting Customer response' && this.RecordType === 'Reservation' && this.followUpDateTime) {
+        if (newStage === 'Awaiting Customer response') {
+            if (!this.followUpDateTime) {
+            this.showToast( 'error' , 'Follow-up Date and Time is required.' );
+            return;
+            }
+            
+            const followUpDateTime = new Date(this.followUpDateTime);
+            const now = new Date();
+            
+            if (followUpDateTime <= now) {
+                this.showToast('error', 'Follow-up Date and Time must be a future date and time.');
+                return;
+            }
             fields[FOLLOWUP_FIELD.fieldApiName] = this.followUpDateTime;
         }
         fields[STAGE_NAME.fieldApiName] = newStage; // Set the new status value
@@ -160,6 +212,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             .catch(error => {
                 this.handleError(error);
             });
+            this.closeModal();
     }
 
     handleError(error) {
@@ -202,7 +255,8 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
 
     handlePicklistChange(event) {
         this.selectedValue = event.target.value;
-        this.isLeadClose = this.selectedValue === 'Close';
+        this.isLeadClose = this.selectedValue === 'Lead Lost';
+       // this.isLeadClose = this.selectedValue === 'Close';
     }
 
     handleReasonChange(event) {
@@ -214,7 +268,6 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             this.handleCloseOrConvert();
         } else if (this.isStageFollowup) {
             this.updateRecord('Awaiting Customer response');
-            this.closeModal();
         }
     }
 
@@ -245,8 +298,15 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     
     handleCloseOrConvert() {
         if (this.selectedValue) {
-            if (this.selectedValue === 'Close') {
-                this.closeLead();
+           // if (this.selectedValue === 'Close') {
+            if (this.selectedValue === 'Lead Lost') {
+                if(this.selectedSubDispositionValue == null || this.selectedSubDispositionValue == undefined){
+                    this.showToast('Error', 'Please fill all the required fields before submit');
+                }
+                else{
+                    this.closeLead();
+                }
+                
             } else if (this.selectedValue === 'Convert' && this.RecordType === 'Reservation') {
                 this.isBookingOpen = true;
                 this.isModalOpen = false;
@@ -261,6 +321,8 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
 
     closeLead() {
         const fields = {
+            [LEAD_DISPOSITION.fieldApiName]: this.selectedValue,
+            [LEAD_SUB_DISPOSITION.fieldApiName]: this.selectedSubDispositionValue,
             [STAGE_NAME.fieldApiName]: 'Closed',
             [REASON_FOR_CLOSE.fieldApiName]: this.reasonForClose,
         };

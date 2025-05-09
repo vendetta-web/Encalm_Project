@@ -53,11 +53,12 @@ public with sharing class MDEN_PdfAttachmentController {
             {
                 pdfBlob = pdfPage.getContent();
             }
-            
+            // Get today's date formatted as DD-MM-YYYY
+            String todayDate = System.now().format();
             // Save PDF as File in Salesforce
             ContentVersion cv = new ContentVersion(
-                Title = 'Proforma_Invoice.pdf',
-                PathOnClient = 'Proforma_Invoice.pdf',
+                Title = 'Proforma_Invoice_' + todayDate + '.pdf',
+                PathOnClient = 'Proforma_Invoice_' + todayDate + '.pdf',
                 VersionData = pdfBlob,
                 IsMajorVersion = true
             );
@@ -76,9 +77,11 @@ public with sharing class MDEN_PdfAttachmentController {
             
             //Logic to update opportunity stage once voucher is created
             Opportunity opp = [SELECT Id, StageName FROM Opportunity WHERE Id = :recordId LIMIT 1];
-            opp.StageName = 'Quotation Sent';            
-            // Update the Opportunity record
-            update opp;
+            if (opp.StageName == 'Quotation' || opp.StageName == null || opp.StageName == '') {                
+                opp.StageName = 'Quotation Sent';            
+                // Update the Opportunity record
+                update opp;
+            }
             
             return opp.StageName;
             
@@ -90,6 +93,10 @@ public with sharing class MDEN_PdfAttachmentController {
     
     public Opportunity opp { get; set; }
     public Decimal totalAmount { get; set; } 
+    public Decimal totalSGST { get; set; }
+    public Decimal totalCGST { get; set; }
+    public Decimal totalIGST { get; set; }
+    public Decimal taxableAmount { get; set; }
     public String totalAmountInWords {get; set; }
     public String formattedTodayDate { get; set; }
     public List<OppLineItemWrapper> oppLineItems { get; set; }
@@ -121,11 +128,11 @@ public with sharing class MDEN_PdfAttachmentController {
                 // 🔹 Fetch Opportunity Record
                 opp = [SELECT Id, Name, CreatedDate, Service_Type__c, Service_Airport__c, Flight_Type__c, 
                        Flight_Number_Arrival__c, Flight_Number_Departure__c,Departure_Airport__c, Arriving_Airport__c, Date_of_Arrival__c, 
-                       Date_of_Departure__c, STA_Time__c, STD_Time__c, Departure_Service_Time__c, Arrival_Service_Time__c, Service_Time__c,
+                       Date_of_Departure__c, STA_Time__c, STD_Time__c, Departure_Service_Time__c, Arrival_Service_Time__c,
                        Departure_Flight_Schedule__c, Arriving_Flight_Schedule__c,
                        Account.Name, Account.BillingState, Account.BillingCountry, Account.GST__c,
                        (SELECT Id, Name, Age__c, Travel_Class__c,Travel_PNR_No__c, Airline_PNR__c FROM Passenger_Details__r),
-                       (SELECT Id, Product2.Name, Quantity, UnitPrice, TotalPrice, HSN_HAC__c, Discount_Amount__c FROM OpportunityLineItems)
+                       (SELECT Id, Product2.Name, Quantity, UnitPrice, TotalPrice, HSN_HAC__c, Discount_Amount__c,Invoice_Amount__c,SGST__c,CGST__c,IGST__c FROM OpportunityLineItems)
                        FROM Opportunity WHERE Id = :recordId];
                 
                 System.debug('Successfully fetched Opportunity record.');
@@ -137,7 +144,7 @@ public with sharing class MDEN_PdfAttachmentController {
                         break;
                     }
                 }
-                System.debug('hasDiscount-->'+hasDiscount);	
+                System.debug('hasDiscount-->'+hasDiscount); 
                 //Process totalAmount
                 AggregateResult[] totalResult = [SELECT SUM(TotalPrice) totalAmount FROM OpportunityLineItem WHERE OpportunityId = :recordId];
                 totalAmount = (totalResult.isEmpty() || totalResult[0].get('totalAmount') == null) ? 0 : (Decimal) totalResult[0].get('totalAmount');
@@ -155,8 +162,16 @@ public with sharing class MDEN_PdfAttachmentController {
                 //Process Opportunity Line Items
                 oppLineItems = new List<OppLineItemWrapper>();
                 counter = 1;
+                totalSGST = 0;
+                totalCGST = 0;
+                totalIGST = 0;
+                taxableAmount = 0;
                 for (OpportunityLineItem o : opp.OpportunityLineItems) {
                     oppLineItems.add(new OppLineItemWrapper(counter, o));
+                    totalSGST += o.SGST__c != null && o.SGST__c >0 ? o.SGST__c : 0;
+                    totalCGST += o.CGST__c != null && o.CGST__c >0 ? o.CGST__c : 0;
+                    totalIGST += o.IGST__c != null && o.IGST__c >0 ? o.IGST__c : 0;
+                    taxableAmount += o.Invoice_Amount__c != null && o.Invoice_Amount__c > 0 ? o.Invoice_Amount__c : 0;
                     counter++;
                 }
                 
@@ -266,4 +281,12 @@ public with sharing class MDEN_PdfAttachmentController {
         }
         
     }
+    public Boolean getIsIntraStateTax() {
+        return totalSGST > 0 || totalCGST > 0;
+    }
+    
+    public Boolean getIsInterStateTax() {
+        return totalIGST > 0;
+    }
+
 }

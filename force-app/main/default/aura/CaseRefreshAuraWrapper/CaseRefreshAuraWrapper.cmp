@@ -1,0 +1,9 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <aura:attribute name="recordId" type="Id" />
+    
+    <!-- Handle LWC custom event -->
+    <aura:handler name="refresh" event="c:RefreshEvent" action="{!c.handleRefresh}" />
+    
+    <!-- Include your LWC -->
+    <c:caseRefreshSubscriber recordId="{!v.recordId}" />
+</aura:component>

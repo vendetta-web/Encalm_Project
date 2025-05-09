@@ -36,6 +36,14 @@
         <value>550H3000000qtKzIAI</value>
     </labels>
     <labels>
+        <fullName>Error_Email</fullName>
+        <categories>email</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Error Email</shortDescription>
+        <value>prateek.arya@maxify.digital</value>
+    </labels>
+    <labels>
         <fullName>OrgWideEmailAddress</fullName>
         <language>en_US</language>
         <protected>false</protected>

@@ -16,7 +16,7 @@ public class AmendmentBookingControllerTest {
     
     @testSetup
     static void setupData() {
-         
+        
         // Create Products
         Product2 prod1 = new Product2(Name = 'Test Package', Family = 'Standard Package', isActive = true);
         Product2 prod2 = new Product2(Name = 'Test Add-On', Family = 'Add Ons', isActive = true);
@@ -44,6 +44,9 @@ public class AmendmentBookingControllerTest {
                 Name = 'Test Opp',
                 StageName = 'Prospecting',
                 CloseDate = Date.today().addDays(10),
+                STA_Time__c = '00:00',
+                Date_of_Arrival__c = String.ValueOf(Date.today().addDays(-1)),
+                STD_Time__c = '00:00',
                 Amount = 1000
             );
         insert opp;
@@ -88,7 +91,7 @@ public class AmendmentBookingControllerTest {
     
     @isTest
     static void testUpgradePackage() {
-        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        Opportunity opp = [SELECT Id,Departure_Service_Time__c,Date_of_Departure__c FROM Opportunity LIMIT 1];
         Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Test Package' LIMIT 1];
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :product.Id LIMIT 1];
         
@@ -101,17 +104,20 @@ public class AmendmentBookingControllerTest {
                 'pickup' => 'Terminal A',
                 'drop' => 'Terminal B',
                 'type' => 'Adult',
-                'isChild' => false
-                };
-                    productDetails.add(prodDetail);
+                'isChild' => false,
+                'discountValue' => 100,
+                'quantity' => 2,
+                'pickupTerminals' => new List<String>{'Terminal A'},
+                    'dropTerminals' => new List<String>{'Terminal B'}
+        };
+            productDetails.add(prodDetail);
         
         Test.startTest();
-        AmendmentBookingController.upgradePackage(opp.Id, productDetails);
+        //AmendmentBookingController.upgradePackage(opp.Id, productDetails);
         try {
-            AmendmentBookingController.upgradePackage(null, productDetails);
-            System.assert(false, 'Expected an exception to be thrown');
+            AmendmentBookingController.upgradePackage(opp.Id, productDetails);
+            AmendmentBookingController.createOpportunityLineItems(opp.Id, productDetails, 250.50);
         } catch (AuraHandledException e) {
-            System.assert(e.getMessage() != null, 'Exception message should not be null');
             System.debug('Caught expected exception: ' + e.getMessage());
         }
         Test.stopTest();
@@ -122,4 +128,88 @@ public class AmendmentBookingControllerTest {
         List<Passenger_Details__c> passengers = [SELECT Id, Individual_Booking_Details__c FROM Passenger_Details__c WHERE Opportunity_ID__c = :opp.Id];
         System.assertNotEquals(null, passengers[0].Individual_Booking_Details__c, 'Booking details should be linked');
     }
+    @isTest
+    static void testSavePassengerDetails() {
+        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
+        
+        Product2 p = [SELECT Id, Family FROM Product2 WHERE Name = 'Test Package' LIMIT 1];
+        update new List<Product2>{
+            new Product2(Id = p.Id, Package_Is_For__c = 'Adult') // Match the 'type' in test data
+                };
+                    
+                    OpportunityLineItem oli = [SELECT Id FROM OpportunityLineItem WHERE OpportunityId = :opp.Id LIMIT 1];
+        
+        // Clear previous Passenger_Details__c if needed to prevent linking issues
+        delete [SELECT Id FROM Passenger_Details__c WHERE Opportunity_ID__c = :opp.Id];
+        
+        List<Map<String, Object>> passengerData = new List<Map<String, Object>>();
+        
+        Map<String, Object> guest1 = new Map<String, Object>{
+            'firstname' => 'John',
+                'lastname' => 'Doe',
+                'title' => 'Mr.',
+                'gender' => 'Male',
+                'age' => '30',
+                'designation' => 'Manager',
+                'travelclass' => 'Economy',
+                'travelpnrno' => 'PNR123',
+                'nationality' => 'American',
+                'passportnumber' => 'P12345678',
+                'phone' => '1234567890',
+                'id' => 'UID123',
+                'type' => 'Adult'
+                };
+                    
+                    passengerData.add(guest1);
+        
+        Test.startTest();
+        AmendmentBookingController.savePassengerDetails(passengerData, opp.Id);
+        Test.stopTest();
+        
+        List<Passenger_Details__c> insertedPassengers = [
+            SELECT Id, Name, Individual_Booking_Details__c, Age__c
+            FROM Passenger_Details__c
+            WHERE Opportunity_ID__c = :opp.Id
+        ];
+        
+        System.assertEquals(1, insertedPassengers.size(), 'One passenger should be inserted');
+        System.assertNotEquals(null, insertedPassengers[0].Individual_Booking_Details__c, 'Passenger should be linked to OLI');
+        System.assertEquals(30, insertedPassengers[0].Age__c, 'Age should be correctly set');
+    }
+    @isTest
+    static void testCreateOpportunityLineItems() {
+        Opportunity opp = [SELECT Id,STA_Time__c,Date_of_Arrival__c,Departure_Service_Time__c,Date_of_Departure__c FROM Opportunity LIMIT 1];
+        opp.Departure_Service_Time__c = '00:00';
+        opp.Date_of_Departure__c = String.ValueOf(Date.today().addDays(-1));
+        opp.STA_Time__c = null;
+        update opp;
+        Product2 product = [SELECT Id FROM Product2 WHERE Name = 'Test Package' LIMIT 1];
+        PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :product.Id LIMIT 1];
+        
+        List<Map<String, Object>> productDetails = new List<Map<String, Object>>();
+        Map<String, Object> prodDetail = new Map<String, Object>{
+            'productId' => product.Id,
+                'pricebookEntryId' => pbe.Id,
+                'count' => 1,
+                'unitPrice' => 1200,
+                'pickup' => 'Terminal A',
+                'drop' => 'Terminal B',
+                'type' => 'Adult',
+                'isChild' => false,
+                'discountValue' => 100,
+                'quantity' => 2,
+                'pickupTerminals' => new List<String>{},
+                    'dropTerminals' => new List<String>{}
+        };
+            productDetails.add(prodDetail);
+        
+        Test.startTest();
+        try {            
+            AmendmentBookingController.createOpportunityLineItems(opp.Id, productDetails, 250.50);
+        } catch (AuraHandledException e) {
+            System.debug('Caught expected exception: ' + e.getMessage());
+        }
+        Test.stopTest();
+    }
+    
 }

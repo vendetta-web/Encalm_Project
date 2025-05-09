@@ -1,0 +1,477 @@
+.selectbtn {
+    --sds-c-button-brand-color-background: #debd80;
+    --sds-c-button-brand-color-border: #debd80;
+    --sds-c-button-brand-color-background-hover: #debd80;
+    --sds-c-button-brand-color-border-hover: #debd80;
+}
+
+.encalmbg {
+    --sds-c-button-brand-color-background: #cda45e;
+    --sds-c-button-brand-color-border: #cda45e;
+    --sds-c-button-brand-color-background-hover: #cda45e;
+    --sds-c-button-brand-color-border-hover: #cda45e;
+}
+
+.custom-label {
+    color: #444;
+    font-size: 14px;
+}
+/* Container for the box */
+.param2-container {
+    display: flex;
+    justify-content: left;  /* left align box */
+    align-items: center;  /* Center vertically */
+    margin-top: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* Style for the box that shows the selected param2 */
+.param2-box {
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    max-width: 400px;  /* Set a max width for the box */
+    width: 100%;  /* Allow box to be responsive */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);  /* Add a slight shadow for better visual effect */
+    text-align: center;  /* Center the text inside the box */
+}
+
+/* Header style inside the box */
+.param2-box strong {
+    font-weight: bold;
+    color: #0070d2; /* Salesforce blue */
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Paragraph style for the param2 content */
+.param2-box p {
+    font-size: 16px;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Ensuring that grid items fit properly */
+.slds-grid {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping when necessary */
+}
+
+/* Style for individual columns */
+.column {
+    width: 32%; /* Roughly 1/3 of the container width */
+    margin: 10px 0; /* Vertical margin for spacing */
+    padding: 0.5rem;
+    border: 1px solid #cda45e; /* Border around each column */
+    box-sizing: border-box; /* Ensure padding is included in the width */
+}
+
+/* Add a border under the package name */
+.package-name {
+    border-bottom: 2px solid #cda45e; /* Line under package name */
+    padding-bottom: 10px; /* Add some space between the package name and the next element */
+}
+
+/* Add a border under the price tag */
+.price-tag {
+    border-bottom: 2px solid #cda45e; /* Line under price tag */
+    padding-bottom: 10px; /* Add space between price tag and services list */
+}
+
+/* Style for the individual items in the list */
+.slds-item {
+    border-bottom: 1px solid #cda45e; /* Border between service items */
+    padding: 5px 0;
+}
+
+/* Remove border for the last service item */
+.slds-item:last-child {
+    border-bottom: none;
+}
+
+/* Responsive Layout: Adjust the number of columns on smaller screens */
+@media (max-width: 768px) {
+    .column {
+        width: 48%; /* 2 columns on medium screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .column {
+        width: 100%; /* 1 column on small screens */
+    }
+}
+
+/* Consistent spacing around the button */
+lightning-button {
+    margin-top: 10px;
+}
+
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+}
+
+.counter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    max-width: 300px;
+}
+
+span {
+    font-size: 16px;
+}
+
+.count {
+    padding: 5px 10px;
+    font-weight: bold;
+}
+
+.btn {
+    padding: 5px 10px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    background-color: #eee;
+    border-radius: 3px;
+}
+
+.plus {
+    color: #28a745; /* Green color for + icon */
+    font-weight: bold;
+}
+
+.minus {
+    color: #dc3545; /* Red color for - icon */
+    font-weight: bold;
+}
+
+.age-range {
+    font-size: 12px;
+    color: #777;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between; /* This pushes the items to opposite sides */
+    padding: 10px;
+}
+
+.left-value {
+    font-size: x-large; /* You can change this as needed */
+    text-align: left;
+    align-content: end;
+
+}
+
+.right-value {
+    font-size: 15px; /* You can change this as needed */
+    text-align: right;
+    align-content: end;
+}
+
+.left-value-addon {
+    font-size: large; /* You can change this as needed */
+    text-align: left;
+    align-content: end;
+
+}
+
+.right-value-addon {
+    font-size: 15px; /* You can change this as needed */
+    text-align: right;
+    align-content: end;
+}
+.box {
+    width: 200px;
+    height: 200px;
+    background-color: lightgrey;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.btns {
+    padding: 5px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    border: black;
+    background-color: #FFFFFF;
+    border-radius: 3px;
+    color: #0176D3;
+    border: 0.5px solid #000000a1;
+}
+
+.remove {
+    color: black; /* red color for remove */
+    /*background-color: red;*/
+}
+
+.select {
+    color: #2857a7; /* blue color for select */
+}
+
+.guest-row {
+    display: flex;
+    flex-wrap: wrap;  /* Allow fields to wrap if they overflow */
+    gap: 15px;  /* Adds space between the fields */
+    margin-bottom: 15px; /* Adds     space between rows */
+    margin-left: 10px; /* Adds space from first rows */
+    margin-right: 10px; /* Adds space from   last rows */
+}
+
+.guest-rows {
+    display: flex;
+    flex-wrap: wrap;  /* Allow fields to wrap if they overflow */
+    gap: 15px;  /* Adds space between the fields */
+    margin-bottom: 15px; /* Adds     space between rows */
+    margin-left: 10px; /* Adds space from first rows */
+    margin-right: 10px; /* Adds space from   last rows */
+}
+
+.input-field {
+    flex: 1 1 180px;  /* Ensures each field is flexible and has a minimum width */
+}
+
+.field-container {
+    display: flex;
+    justify-content: space-between; /* Distribute the fields evenly */
+    gap: 10px; /* Space between fields */
+}
+
+.field {
+    flex: 1;
+    max-width: 150px; /* Limit width of each field */
+    word-wrap: break-word; /* Ensure text wraps within the container */
+    margin-left: 10px; /* Adds space from first rows */
+}
+
+@media screen and (max-width: 600px) {
+    lightning-layout-item {
+        flex: 1 1 100%; /* On small screens, items can stack */
+    }
+}
+
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+.dropdown {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute;
+    width: 180px;
+    z-index: 10; /* Bring the dropdown above other elements */
+    max-height: 200px; /* Set the maximum height */
+    overflow-y: auto; /* Add vertical scrolling */
+}
+
+.fixed-width {
+    width: 200px; /* Set a fixed width for the input and combobox fields */
+}
+
+.input-field {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.error-message {
+    color: #BA0517; /* Red text */
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.slds-input.error {
+    border: 2px solid #ff4c4c; /* Apply custom border styling */
+}
+
+/* Style for the message box */
+.message-box {
+    background-color: #cda45e; /* Custom background color */
+    color: #ffffff; /* White text color */
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 32px; /* Big font size */
+    font-weight: bold;
+    width: 100%;
+    margin-top: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Optional: Customize text further */
+.message-text {
+    font-size: 36px;
+    font-family: 'Arial', sans-serif;
+}
+
+
+/* Optional: Customize text further */
+.message-text {
+    font-size: 36px;
+    font-family: 'Arial', sans-serif;
+}
+
+.price-details-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Main card styling */
+.price-details-card {
+    background-color: #192441; /* Dark navy blue background to match screenshot */
+    color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 400px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Card header */
+.card-header {
+    padding: 20px 24px 10px;
+}
+
+.card-header h2 {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0;
+    color: white;
+}
+
+/* Card body containing price details */
+.card-body {
+    padding: 0 24px 16px;
+}
+
+/* Price row styling */
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    align-items: center;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 8px 0;
+}
+
+/* Sub-row style for indented items */
+.price-row.sub-row {
+    font-size: 13px;
+    color: #d1d1d1;
+    padding-top: 2px;
+    padding-bottom: 10px;
+}
+
+/* Section dividers */
+.section-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 12px 0 8px;
+}
+
+/* Net amount section */
+.net-amount-section {
+    padding: 2px 0;
+}
+
+/* Total amount section */
+.total-amount-section {
+    padding: 2px 0;
+}
+
+/* Total amount row */
+.price-row.total {
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 0;
+}
+
+/* Reward points information */
+.reward-points {
+    margin-top: 14px;
+    font-size: 14px;
+    color: #ceae6d; /* Gold color for reward text to match screenshot */
+    text-align: center;
+    padding: 4px 0;
+}
+
+/* Continue button container */
+.button-container {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Continue button styling */
+.continue-button {
+    background-color: #ceae6d; /* Exact gold/tan button color from screenshot */
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: 500;
+    padding: 12px 24px;
+    width: 100%;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.continue-button:hover {
+    background-color: #c0a059; /* Slightly darker gold on hover */
+}
+
+/* Price label and value alignment */
+.price-label {
+    flex: 1;
+    padding-right: 10px;
+    opacity: 0.9;
+}
+
+.price-value {
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Target only price details section */
+.price-details-card {
+    background-color: #192441;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    padding: 16px;
+    color: white;
+}
+
+.price-details-card-preview {
+    background-color: #192441;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    padding: 16px;
+    color: white;
+    width: 100%;
+    max-width: 800px;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .price-details-card {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+}

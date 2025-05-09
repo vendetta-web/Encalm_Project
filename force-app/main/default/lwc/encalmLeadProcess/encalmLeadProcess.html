@@ -8,14 +8,15 @@
                         variant="shaded">
                         <template if:true={finalpathvalue} for:each={finalpathvalue} for:item="step" for:index="index">
                             <lightning-progress-step data-index={index} data-value={step.value} key={step.value}
-                                label={step.label} value={step.value}>
+                                label={step.label} value={step.value} onclick={handleStepClick}>
                             </lightning-progress-step>
                         </template>
                     </lightning-progress-indicator>
                 </div>
 
                 <div class="slds-col slds-size_2-of-12" style="margin-left: 1rem;" >
-                    <lightning-button label="Mark Status" onclick={handleMarkStatus} variant="brand"></lightning-button>
+                    <!--<lightning-button label="Mark Status" onclick={handleMarkStatus} variant="brand"></lightning-button>-->
+                    <lightning-button label="Mark Status" onclick={handleMarkStatus} variant="brand" disabled={isMarkStatusDisabled}></lightning-button>
                 </div>
             </div>
         </div>
@@ -36,12 +37,32 @@
                 <!-- Modal Body -->
                 <template if:true={isStageClosed}>
                     <div class="slds-modal__content slds-p-around_medium">
-                        <lightning-combobox name="picklist" label="What you want to do?" placeholder="Select an option"
+                       <!-- <lightning-combobox name="picklist" label="What you want to do?" placeholder="Select an option"
                             options={finalStageOptions} value={selectedValue} onchange={handlePicklistChange}>
+                        </lightning-combobox>-->
+
+
+                        <lightning-combobox
+                            name="disposition"
+                            label="Disposition"
+                            value={selectedValue}
+                            options={dispositionOptions}
+                            onchange={handlePicklistChange}
+                            required>
                         </lightning-combobox>
 
-                        <!-- Add Reason_For_Close__c field -->
                         <template if:true={isLeadClose}>
+                            <lightning-combobox
+                                name="subDisposition"
+                                label="Sub Disposition"
+                                value={selectedSubDispositionValue}
+                                options={subDispositionOptions}
+                                onchange={handleSubDispositionChange}
+                                required ={isLeadClose}>
+                            </lightning-combobox>
+
+                        <!-- Add Reason_For_Close__c field -->
+                        
                             <lightning-input type="text" label="Reason For Close" value={reasonForClose}
                                 onchange={handleReasonChange}>
                             </lightning-input>

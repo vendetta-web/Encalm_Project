@@ -78,7 +78,7 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </actionCalls>
     <apiVersion>63.0</apiVersion>
-    <description>Update by Prateek _19 March</description>
+    <description>Update by Abhishek _25 April</description>
     <environments>Default</environments>
     <formulas>
         <name>CCAddresses</name>
@@ -162,7 +162,7 @@
         <connector>
             <targetReference>Get_Email_Message_record_from_Case</targetReference>
         </connector>
-        <filterLogic>and</filterLogic>
+        <filterLogic>1 AND (2 OR 3)</filterLogic>
         <filters>
             <field>Id</field>
             <operator>EqualTo</operator>
@@ -175,6 +175,13 @@
             <operator>EqualTo</operator>
             <value>
                 <stringValue>Open</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Customer Responded</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -198,6 +205,12 @@
             <field>Status</field>
             <value>
                 <stringValue>Awaiting Customer response</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Updated_By_Flow__c</field>
+            <value>
+                <booleanValue>true</booleanValue>
             </value>
         </inputAssignments>
         <object>Lead</object>

@@ -37,6 +37,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     isModalOpen = false;
     jsPDFInitialized = false;
     isLoading = false;
+    isPaxIncreased = false;
     getPackage;
     isQuotationSent=false;
     bookingStage='';
@@ -118,7 +119,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     mobile;
     title='';
     @track opportunityFieldValues = {};
-
+    @track location;
+    @track booker;
 
     connectedCallback() {        
         this.loadPackageData();
@@ -172,7 +174,26 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showModal = true;
             this.showHeader = true;
             this.showChild = false;
-        } else if (this.processState === 'Package Selection') {
+        } else if (this.isPaxIncreased) {            
+            this.showModal = true;
+            this.showHeader = true;
+            this.showChild = false;
+            this.showGst = false;
+            this.showCgst =false;
+            this.showIgst =false;
+            this.orderSummaryPackage=[];
+            this.orderSummaryAddon=[];
+            this.orderSummary=[];
+            this.totalAmount=0;
+            this.totalDiscountAmount = 0;
+            this.totalAmountAfterDiscount = 0;
+            this.totalNetAmount = 0;
+            this.totalCgstAmount = 0;
+            this.totalSgstAmount = 0;
+            this.totalIgstAmount = 0;
+            this.selectedPassenger = undefined;
+            this.getAddonDetail = undefined;
+        }else if (this.processState === 'Package Selection') {
             // package selection was completed
             this.showPackageSelection(); 
             this.calculateTotalPackage();
@@ -222,22 +243,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     loadDetailsAfterUpdate() {
-        this.showModal = true;
-        this.showHeader = true;
-        this.showChild = false;
-        this.showGst = false;
-        this.showCgst =false;
-        this.showIgst =false;
-        this.orderSummaryPackage=[];
-        this.orderSummaryAddon=[];
-        this.orderSummary=[];
-        this.totalAmount=0;
-        this.totalDiscountAmount = 0;
-        this.totalAmountAfterDiscount = 0;
-        this.totalNetAmount = 0;
-        this.totalCgstAmount = 0;
-        this.totalSgstAmount = 0;
-        this.totalIgstAmount = 0;
+        this.isPaxIncreased =true;
         this.loadPackageData();
         this.loadAddonData();
         this.loadPassengerData();
@@ -311,21 +317,23 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         getAddOnDetails({ oppId: this.recordId })
         .then((result) => {
             this.isLoading = true;
-            this.getAddonDetail = result.map((item) => ({
-                ...item, // Spread the existing properties
-                buttonLabel: 'Select', // Button label for the add-ons
-                adddOnCount: 1, // Default count
-                class: 'btns select', // Default class
-                disablePickup: item.pickupTerminal ? true : false, // Disable pickup if it has a value
-                disableDrop: item.dropTerminal ? true : false, // Disable drop if it has a value
-                pickupTerminals: [
-                    { id: 'Pickup Terminal 1', value: item.pickupTerminal || '' } // Initialize Pickup Terminal
-                ],
-                dropTerminals: [
-                    { id: 'Drop Terminal 1', value: item.dropTerminal || '' } // Initialize Drop Terminal
-                ],
-            }));
-            this.getTerminals();
+            if (result) {                
+                this.getAddonDetail = result.map((item) => ({
+                    ...item, // Spread the existing properties
+                    buttonLabel: 'Select', // Button label for the add-ons
+                    adddOnCount: 1, // Default count
+                    class: 'btns select', // Default class
+                    disablePickup: item.pickupTerminal ? true : false, // Disable pickup if it has a value
+                    disableDrop: item.dropTerminal ? true : false, // Disable drop if it has a value
+                    pickupTerminals: [
+                        { id: 'Pickup Terminal 1', value: item.pickupTerminal || '' } // Initialize Pickup Terminal
+                    ],
+                    dropTerminals: [
+                        { id: 'Drop Terminal 1', value: item.dropTerminal || '' } // Initialize Drop Terminal
+                    ],
+                }));
+                this.getTerminals();
+            }
             this.isLoading = false;
         })
         .catch((error) => {
@@ -709,7 +717,9 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.numberOfChildren = result.NoOfChild;
             this.numberOfInfants = result.NoOfInfant;
             this.bookingStage = result.bookingStage;
-            
+            //Added by Abhishek
+            this.booker = result.booker;
+            this.location = result.location;
             this.guestRows = []; 
             this.addGuestRows('Adult', this.numberOfAdults);
             this.addGuestRows('Child', this.numberOfChildren);
@@ -1025,6 +1035,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         }
     }
     openDetailPage(){
+        window.scrollTo({top: 0, behavior:'smooth'});
         this.showModal=true;
         this.passengerDetailPage = false;
 
@@ -1086,7 +1097,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 	
 	handleSendEmail() {
-        sendEmailWithAttachment({ opportunityId: this.recordId })
+        sendEmailWithAttachment({ opportunityId: this.recordId , actionType: '' })
             .then(() => {
                 this.showToast('Success', 'Email sent successfully!', 'success');
             })
@@ -1120,7 +1131,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         // Ensure the `index` parameter is explicitly provided in the `forEach` callback
         this.getPackage.forEach((wrapper, index) => {
             // Check if showPackage is true and the packageFamily matches condition
-            if (wrapper.showPackage === true && wrapper.packageFamily === 'Gold') {
+            if (wrapper.showPackage === true && wrapper.packageFamily === this.selectedPackage) {
                 wrapper.buttonLabel = 'Selected'; // Update the button label
                 matchingIndex = index; // Store the index of the matching package
             } else {
@@ -1132,25 +1143,27 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     showSelectedAddons() {
-        this.orderSummaryAddon = this.getAddonDetail
-        .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
-        .map(wrapper => {
-            return {
-                name: wrapper.addOnName + ' ' + wrapper.adddOnCount + ' Qty',
-                amount: wrapper.addOnTag * wrapper.adddOnCount,
-                totalAmount: wrapper.addOnTag * wrapper.adddOnCount,
-                button: true,
-                productId: wrapper.productId,
-                pricebookEntryId: wrapper.pricebookEntryId,
-                unitPrice: wrapper.addOnTag,
-                count: wrapper.adddOnCount,
-                pickupTerminals: wrapper.pickupTerminals.map(terminal => terminal.value),
-                dropTerminals: wrapper.dropTerminals.map(terminal => terminal.value),
-                discountValue: 0,
-                isChild: false,
-                isInfant: false
-            };
-        });
+        if(this.getAddonDetail) {            
+            this.orderSummaryAddon = this.getAddonDetail
+            .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
+            .map(wrapper => {
+                return {
+                    name: wrapper.addOnName + ' ' + wrapper.adddOnCount + ' Qty',
+                    amount: wrapper.addOnTag * wrapper.adddOnCount,
+                    totalAmount: wrapper.addOnTag * wrapper.adddOnCount,
+                    button: true,
+                    productId: wrapper.productId,
+                    pricebookEntryId: wrapper.pricebookEntryId,
+                    unitPrice: wrapper.addOnTag,
+                    count: wrapper.adddOnCount,
+                    pickupTerminals: wrapper.pickupTerminals.map(terminal => terminal.value),
+                    dropTerminals: wrapper.dropTerminals.map(terminal => terminal.value),
+                    discountValue: 0,
+                    isChild: false,
+                    isInfant: false
+                };
+            });
+        }
     }
 
     // logic to maintain the state of the selected packages

@@ -320,3 +320,496 @@ span {
     font-size: 36px;
     font-family: 'Arial', sans-serif;
 }
+
+.price-details-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Main card styling */
+.price-details-card {
+    background-color: #192441; /* Dark navy blue background to match screenshot */
+    color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 400px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+/* Card header */
+.card-header {
+    padding: 20px 24px 10px;
+}
+
+.card-header h2 {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0;
+    color: white;
+}
+
+/* Card body containing price details */
+.card-body {
+    padding: 0 24px 16px;
+}
+
+/* Price row styling */
+.price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    align-items: center;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 8px 0;
+}
+
+/* Sub-row style for indented items */
+.price-row.sub-row {
+    font-size: 13px;
+    color: #d1d1d1;
+    padding-top: 2px;
+    padding-bottom: 10px;
+}
+
+/* Section dividers */
+.section-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 12px 0 8px;
+}
+
+/* Net amount section */
+.net-amount-section {
+    padding: 2px 0;
+}
+
+/* Total amount section */
+.total-amount-section {
+    padding: 2px 0;
+}
+
+/* Total amount row */
+.price-row.total {
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 0;
+}
+
+/* Reward points information */
+.reward-points {
+    margin-top: 14px;
+    font-size: 14px;
+    color: #ceae6d; /* Gold color for reward text to match screenshot */
+    text-align: center;
+    padding: 4px 0;
+}
+
+/* Continue button container */
+.button-container {
+    padding: 16px 24px 24px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Continue button styling */
+.continue-button {
+    background-color: #ceae6d; /* Exact gold/tan button color from screenshot */
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: 500;
+    padding: 12px 24px;
+    width: 100%;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.continue-button:hover {
+    background-color: #c0a059; /* Slightly darker gold on hover */
+}
+
+/* Price label and value alignment */
+.price-label {
+    flex: 1;
+    padding-right: 10px;
+    opacity: 0.9;
+}
+
+.price-value {
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Target only price details section */
+.price-details-card {
+    background-color: #192441;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    padding: 16px;
+    color: white;
+}
+
+.price-details-card-preview {
+    background-color: #192441;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    padding: 16px;
+    color: white;
+    width: 100%;
+    max-width: 800px;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .price-details-card {
+        max-width: 100%;
+        border-radius: 8px;
+    }
+}
+
+/*Add on new css */
+
+/* Main container */
+.add-ons-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    width: 100%; /* Ensures full width */
+    max-width: 100%; /* Prevents unnecessary restriction */
+    padding: 0 16px; /* Adds subtle padding */
+}
+
+/* Title styling */
+.add-ons-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Service list container
+.service-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+     */
+
+/* Service list container */
+.service-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Automatically adjusts */
+    gap: 16px;
+}
+
+/* Service card styling */
+.service-card {
+    background-color: #f5f0e8; /* Light beige background */
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: visible; /* Prevents dropdown options from being hidden */
+    flex: 1 1 auto; /* Makes items expand and adjust */
+    max-width: 100%; /* Allows up to 4 in a row */
+}
+
+lightning-combobox {
+    max-width: 100%; /* Prevents dropdown from extending beyond */
+    z-index: 1000; /* Keeps it above other elements */
+}
+
+/* Icon container styling */
+.service-icon-container {
+    background-color: #cda45e; /* Tan/gold sidebar */
+    width: 85px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+}
+
+/* Icon styling */
+.service-icon {
+    width: 40px;
+    height: 40px;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.porter-icon, .car-icon {
+    width: 100%;
+    height: 100%;
+}
+
+/* Service details container */
+.service-details {
+    flex: 1;
+    padding: 16px 20px;
+    position: relative;
+}
+
+/* Service name styling */
+.service-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+    overflow-wrap: anywhere; /* Allows breaking at arbitrary points */
+    white-space: normal; /* Ensures wrapping */
+}
+
+/* Service type (SUV, SEDAN) styling */
+.service-type {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    position: absolute;
+    top: 16px;
+    right: 20px;
+}
+
+/* Service price styling */
+.service-price {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    text-align: right;
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+}
+
+/* "per unit" styling */
+.per-unit {
+    font-size: 14px;
+    font-weight: normal;
+    color: #666;
+}
+
+/* Service description styling */
+.service-description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+/* Service info container */
+.service-info {
+    margin-bottom: 12px;
+    padding-right: 70px; /* Make room for the service type */
+}
+
+/* Service controls container */
+.service-controls {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-right: 120px; /* Make room for the price */
+    padding-top: 10px;
+}
+
+/* Quantity section container */
+.quantity-section {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+/* Quantity buttons styling */
+.quantity-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: white;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    cursor: pointer;
+    color: #333;
+    padding: 0;
+    line-height: 1;
+}
+
+.quantity-btn.minus {
+    color: #333;
+}
+
+.quantity-btn.plus {
+    color: #333;
+}
+
+/* Quantity value styling */
+.quantity-value {
+    font-size: 16px;
+    font-weight: 500;
+    min-width: 20px;
+    text-align: center;
+    margin: 0 2px;
+}
+
+/* Add to cart button styling */
+.add-to-cart-btn {
+    background-color: #cda45e; /* Gold/tan button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+    margin-left: 10px;
+    position: absolute;
+    bottom: 0;
+    transform: translateX(-50%);
+    left: 50%;
+}
+
+/* Add to cart button styling */
+.add-to-cart-btn-addon {
+    background-color: #cda45e; /* Gold/tan button */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s;
+    margin-left: 10px;
+}
+
+.add-to-cart-btn:hover {
+    background-color: #b89447; /* Darker gold on hover */
+}
+
+/* Cart icon in the button */
+.cart-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .service-card {
+        flex-direction: column;
+    }
+    
+    .service-icon-container {
+        width: 100%;
+        padding: 16px 0;
+    }
+    
+    .service-type {
+        position: static;
+        margin-top: 8px;
+        text-align: left;
+    }
+    
+    .service-price {
+        position: static;
+        margin-top: 16px;
+        text-align: left;
+    }
+    
+    .service-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding-right: 0;
+    }
+    
+    .add-to-cart-btn {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    
+    .quantity-section {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .drop-terminal-container {
+        position: relative;
+        z-index: 1000; /* Ensures dropdown appears above other elements */
+    }
+}
+
+
+    /* for packages */
+
+    /* Main container */
+    .package-container {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        width: 100%; /* Ensures full width */
+        max-width: 100%; /* Prevents unnecessary restriction */
+        padding: 0 16px; /* Adds subtle padding */
+    }
+    
+    /* Title styling */
+    .package-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+    }
+        /* Service list container */
+    .service-list-package {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Automatically adjusts */
+        gap: 16px;
+    }
+    
+    /* Service card styling */
+    .service-card-package {
+        display: flex;
+        flex-direction: column; /* Makes content stack vertically */
+        justify-content: space-between; /* Pushes button to bottom */
+        align-items: center; /* Centers button horizontally */
+        background-color: #f5f0e8;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: visible;
+        flex: 1 1 auto;
+        max-width: 100%;
+        padding: 16px;
+        position: relative;
+        height: 600px;
+    }
+
+    .lightning-button {
+        width: 100%; /* Ensures full width */
+        max-width: 200px; /* Limits button size */
+        align-self: center; /* Centers button inside flex container */
+    }
+
+    /* Title styling */
+    .package-Name {
+        font-family: 'Dancing Script', 'Segoe Script', 'Brush Script MT', cursive;
+        font-size: 32px;
+        font-weight: 300;
+        font-style: italic;
+        color: #B8965D; /* Golden color */
+        letter-spacing: 0.5px;
+        line-height: 1.2;
+        text-align: center;
+        margin: 0;
+        padding: 5px 0;
+        transform: rotate(-2deg); /* Slight rotation for a more handwritten appearance */
+    }
+
+    .small-input {
+        max-width: 250px; /* Adjust as needed */
+        margin-right: 1rem;
+    }

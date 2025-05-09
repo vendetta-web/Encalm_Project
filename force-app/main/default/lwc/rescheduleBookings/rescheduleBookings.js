@@ -5,10 +5,13 @@ import showReschedulingCharges from '@salesforce/apex/RescheduleBooking.showResc
 import saveData from '@salesforce/apex/RescheduleBooking.saveData';
 import getFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getFlightDetails';
 import getTransitFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getTransitFlightDetails';
+import sendEmailWithAttachment from '@salesforce/apex/BookingEmailHandler.sendEmailWithAttachment';
+import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
+import { RefreshEvent } from 'lightning/refresh';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
 
-export default class RescheduleBookings extends LightningElement {
+export default class RescheduleBookings extends NavigationMixin(LightningElement) {
     @api recordId;
     @track opportunityFieldValues = {};
     bookingData;
@@ -16,6 +19,7 @@ export default class RescheduleBookings extends LightningElement {
     isDeparture=false;
     isTransit=false;
     showSummary = false;
+    isLoading = false;
     flightNumber = '';
     flightNumberArrival='';
     flightNumberDeparture='';
@@ -86,9 +90,15 @@ export default class RescheduleBookings extends LightningElement {
         .then((result) => {
             this.RescheduleSummary = result;
             this.newReschedulingCount = result.countOfRescheduling + 1;
+            //Generate pdf and send email
+            if(isSubmit) {
+                this.generatePdf();
+            }
         })
         .catch((error) => {
             console.error(error);
+            this.isLoading = false;
+            this.closeModal();
         });
     }
 
@@ -157,15 +167,18 @@ export default class RescheduleBookings extends LightningElement {
     }
 
     handleSave() {
+        this.isLoading = true;
         this.opportunityFieldValues['Number_of_Rescheduling_Done__c'] = this.newReschedulingCount;
         saveData({ oppId: this.recordId, opportunityFieldValues: this.opportunityFieldValues })
         .then((opportunityId) => {
-        
+            //Save the data on OLI
+            this.loadReschedulingSummaryData(true);
         })
         .catch((error) => {
             console.log('error->>>>>>>'+JSON.stringify(error));
+            this.closeModal();
+            this.isLoading = false;
         });
-        this.loadReschedulingSummaryData(true);
     }
 
     //to get field values to save in opp record
@@ -388,7 +401,6 @@ export default class RescheduleBookings extends LightningElement {
 
     handleFinalSubmit() {
         this.handleSave();
-        this.closeModal();
     }
 
     closeModal() {
@@ -396,5 +408,46 @@ export default class RescheduleBookings extends LightningElement {
         this.confirmRescheduling = false;
         // Dispatch an event to close the LWC component
         this.dispatchEvent(new CloseActionScreenEvent());
+    }
+
+    generatePdf() {
+        // Call Apex method to generate and save PDF with the current record
+        generateAndSavePDF({ recordId: this.recordId})
+            .then((result) => {
+                this.showToast('Success', 'Booking Voucher updated successfully', 'success');
+                this.dispatchEvent(new RefreshEvent());
+				this.handleSendEmail();
+            })
+            .catch((error) => {
+                this.showToast('Error', 'Error while generating Voucher', 'error');
+                console.error(error);
+                this.isLoading = false;
+                this.closeModal();
+            });
+    }
+    
+    handleSendEmail() {
+        sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Modified/Rescheduled'  })
+            .then(() => {
+                this.showToast('Success', 'Email sent successfully!', 'success');
+                this.isLoading = false;
+                this.closeModal();
+                this.handleCloseComponent();
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+                this.closeModal();
+            });
+    }
+
+    handleCloseComponent() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: this.recordId,
+                actionName: 'view'
+            }
+        });
     }
 }

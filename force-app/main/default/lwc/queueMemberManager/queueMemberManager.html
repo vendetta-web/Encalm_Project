@@ -1,0 +1,51 @@
+<template>
+    <div class="slds-p-around_medium">
+        <h2 class="slds-text-heading_medium slds-m-bottom_medium">Queue Member Management</h2>
+
+        <lightning-combobox
+            name="queueSelector"
+            label="Select Queue"
+            placeholder="Select Queue"
+            options={queueOptions}
+            value={selectedQueueId}
+            onchange={handleQueueChange}>
+        </lightning-combobox>
+
+        <template if:true={selectedQueueId}>
+            <div class="slds-m-top_medium">
+                <lightning-button label="Edit Queue" variant="brand" onclick={showEditSection}></lightning-button>
+            </div>
+        </template>
+
+        <template if:true={showView}>
+            <div class="slds-m-top_medium">
+                <lightning-datatable
+                    key-field="Id"
+                    data={queueMembers}
+                    columns={viewColumns}
+                    hide-checkbox-column>
+                </lightning-datatable>
+            </div>
+        </template>
+
+        <template if:true={showEdit}>
+            <div class="slds-grid slds-m-top_medium" style="justify-content: center;">
+                <div class="slds-col" style="width: 80%;">
+                    <lightning-dual-listbox
+                        name="availableUsers"
+                        source-label="Available Members"
+                        selected-label="Selected Members"
+                        options={userOptions}
+                        value={selectedUserIds}
+                        onchange={handleUserSelection}>
+                    </lightning-dual-listbox>
+                </div>
+            </div>
+
+            <div class="slds-m-top_medium">
+                <lightning-button variant="brand-outline" label="Cancel" onclick={handleCancel} class="slds-m-left_small"></lightning-button>
+                <lightning-button variant="brand" label="Save Changes" onclick={saveChanges} class="slds-m-left_small"></lightning-button>
+            </div>
+        </template>
+    </div>
+</template>

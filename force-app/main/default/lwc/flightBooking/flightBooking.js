@@ -9,12 +9,24 @@ import getTransitFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getTr
 import processBooking from '@salesforce/apex/LeadConversionController.processBooking';
 import getFlightInfo from '@salesforce/apex/Flight_Booking_encalm.getFlightInfo';
 import createOpportunity from '@salesforce/apex/Flight_Booking_encalm.createOpportunity';
+import getLocation from '@salesforce/apex/Flight_Booking_encalm.getLocation'
+import getContactsByAccount from '@salesforce/apex/Flight_Booking_encalm.getContactsByAccount'
+import isBusinessAccount from '@salesforce/apex/Flight_Booking_encalm.isBusinessAccount'
 // Define the fields for both Lead and Case (AccountId and Account Name)
 const LEAD_FIELDS = ['Lead.ConvertedAccountId', 'Lead.ConvertedAccount.Name', 'Lead.IsConverted', 'Lead.Account__c', 'Lead.Account__r.Name'];
 const CASE_FIELDS = ['Case.AccountId', 'Case.Account.Name'];
 
 export default class FlightBooking extends NavigationMixin(LightningElement) {
     @api recordId;
+    @track value;
+    @track value2;
+    @track recordTypeName;
+    @track disableBooker = true;
+    @track showFields = false;
+    @track options = [];
+    @track bookers = [];
+    @track contact ;
+    @track location ;
     isLoading = false;
     accountId='';
     selectedAccount;
@@ -59,6 +71,7 @@ showFlightNumberDepart = false;
 @track filteredAirportOptionsDepTo = [];
 @track filteredFlightNumberOptionsArrival = [];
 @track filteredFlightNumberOptionsDeparture = [];
+@track businessAccount = false;
 sectorOption = [
     {label : 'Domestic', value : 'Domestic'},
     {label: 'International', value : 'International'},
@@ -108,12 +121,92 @@ sectorOption = [
             if (accountId && accountName) {
                 this.selectedAccount = { Id: accountId, Name: accountName };
                 this.accountId = this.selectedAccount.Id ? this.selectedAccount.Id : '';
+                // Added by Abhishek
+                if(this.accountId != null){
+                    this.checkAccountType();
+                    this.fetchAccountLocation();
+                }
             } else {
                 this.selectedAccount = null;
             }
         } else if (error) {
             console.error('Error fetching record data:', error);
         }
+    }
+    // Added by Abhishek 
+    handleChange(event) {
+        const selectedState = event.detail.value;
+        console.log('Selected Billing Related to AccountId:', selectedState);
+        this.value2 = null;
+        const selectedOption = this.options.find(opt => opt.value === selectedState);
+        this.location = selectedOption ? selectedOption.label : null;
+        console.log('Location >>>',this.location);
+        if(this.location != null && this.location != undefined){
+            this.disableBooker = false;
+        }
+        this.fetchAccountRelatedContacts(selectedState);        
+    }
+    
+    handleBookerChange(event) {
+        this.contact = event.detail.value;
+        console.log('Selected Contact:', this.contact);
+    }
+
+    checkAccountType() {
+        isBusinessAccount({ accountId: this.accountId })
+            .then(result => {
+                console.log()
+                this.showFields = result; // true if Business Account, false otherwise
+                console.log('Is Business Account:', result);
+            })
+            .catch(error => {
+                this.error = error.body ? error.body.message : error.message;
+                console.error('Error:', this.error);
+            });
+    }
+
+    fetchAccountLocation(){
+        getLocation({ accountId: this.accountId })
+            .then(results => {
+                this.options = results.map(item => ({
+                    label: item.label,
+                    value: item.value
+                }));
+                if (this.options.length === 1) {
+                 this.value = this.options[0].value; // Set value directly
+                 this.location = this.options[0].label;
+                 if(this.location != null && this.location != undefined){
+                    this.disableBooker = false;
+                 }
+                 console.log('this.location+++++++',this.location);
+
+                 this.fetchAccountRelatedContacts(this.value);
+                }
+                this.error = undefined;
+            })
+            .catch(error => {
+                this.error = error?.body?.message || error.message;
+                this.options = [];
+            });
+    }
+    fetchAccountRelatedContacts(accountId){
+        getContactsByAccount({ accountId: accountId })
+            .then(data => {
+                this.bookers = data.map(contact => ({
+                    label: `${contact.FirstName ? contact.FirstName : ''} ${contact.LastName}`,
+                    value: contact.Id
+                }));
+                if (this.bookers.length === 1) {
+                this.value2 = this.bookers[0].value; // auto-select contact if only one
+                this.contact = this.value2;
+                console.log('this.contact++++',this.contact);
+            }
+                this.error = undefined;
+            })
+            .catch(error => {
+                this.error = error?.body?.message || error.message;
+                this.bookers = [];
+            });
     }
 
     // Dynamically assign the fields based on whether the record is Lead or Case
@@ -869,6 +962,10 @@ handleBooking() {
     this.opportunityFieldValues['Number_of_Adults__c'] = this.adultCount;
     this.opportunityFieldValues['Number_of_Children__c'] = this.childCount;
     this.opportunityFieldValues['Number_of_Infants__c'] = this.infantCount;
+    if(this.showFields){
+        this.opportunityFieldValues['Location__c'] = this.location;
+        this.opportunityFieldValues['Booker__c'] = this.contact;
+    }
     this.isLoading = true;
     //this.opportunityFieldValues[''] = this.flightSchedule;
     processBooking({ recId: this.recordId, accId: this.accountId, opportunityFieldValues: this.opportunityFieldValues })

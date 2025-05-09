@@ -64,10 +64,10 @@ public class CaseTriggerHandler {
             
             for (Case c : newCases) {
                 // Case oldCase = oldCasesMap.get(c.Id);
-               // if (ownerProfileMap.containsKey(c.OwnerId) && ownerProfileMap.get(c.OwnerId) == 'Reservation') {
+                if (ownerProfileMap.containsKey(c.OwnerId) && ownerProfileMap.get(c.OwnerId) == 'Reservation') {
                     c.TAT_Start__c = System.now();
                     c.EntitlementId =  System.Label.EntitlementId;
-               // }
+                }
             }
         }
     }

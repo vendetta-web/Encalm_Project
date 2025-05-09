@@ -1,3 +1,18 @@
+.custom-modal .slds-modal__container {
+    max-width: 100vw;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.custom-modal .slds-modal__content {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+
 /* Style for the lightning layout items */
 .lightning-layout-item {
     border: 1px solid #e0e0e0; /* Light border between items */

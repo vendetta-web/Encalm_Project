@@ -1,0 +1,1 @@
+<aura:event type="COMPONENT" description="Event to refresh Lightning record page" />

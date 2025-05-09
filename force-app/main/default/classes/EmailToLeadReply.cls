@@ -15,7 +15,7 @@ global class EmailToLeadReply implements Messaging.InboundEmailHandler {
                 System.debug('Lead Name: ' + leadName);
 
                 // Query the most recently modified lead with the extracted name
-                List<Lead> leads = [SELECT Id,Status,OwnerId,CreatedById FROM Lead WHERE Name = :leadName ORDER BY LastModifiedDate DESC LIMIT 1];
+                List<Lead> leads = [SELECT Id,Status,Department__c,OwnerId,CreatedById FROM Lead WHERE Name = :leadName ORDER BY LastModifiedDate DESC LIMIT 1];
 
                 if (!leads.isEmpty()) {
                   //  String senderInfo = 'Email received from: ' + email.fromName + ' <' + envelope.fromAddress + '>\n\n';
@@ -33,25 +33,27 @@ global class EmailToLeadReply implements Messaging.InboundEmailHandler {
                     // Insert the new task
                     insert newTask;
                     
-                    if (email.textAttachments != null && email.textAttachments.size() > 0) {
-                    for (integer i = 0 ; i < email.textAttachments.size() ; i++) {
-                        Attachment attachment = new Attachment();
-                        // attach to the newly created contact record
-                        attachment.ParentId = newTask.Id;
-                        attachment.Name = email.textAttachments[i].filename;
-                        attachment.Body = blob.valueOf(email.textAttachments[i].body);
-                        attachment.OwnerID = leads[0].CreatedById;
-                        attachList.add(attachment);
-                        }
-                    }
-        
-                    if(!attachList.isEmpty()){
-                        insert attachList;
-                        }
-                    
                     leads[0].Status='Customer Responded';
+                    if(leads[0].Department__c=='Reservations'){
                     leads[0].OwnerId=leads[0].CreatedById;
+                    }else if(leads[0].Department__c=='Sales'){
+                        List<User> salesReps = [SELECT Id FROM User WHERE Profile.Name = 'Sales' AND UserRole.Name = 'Executive' LIMIT 1];
+                            if (!salesReps.isEmpty()) {
+                                leads[0].OwnerId = salesReps[0].Id;
+                            }   
+                    }
                     update leads;
+                    List<String> subjectList = new List<String>{'Email:','Re: Sandbox:'};
+                    List<Task> tskRecord = [Select id,Status,Subject FROM Task Where WhoId =: leads[0].Id AND Status = 'Open' AND Subject NOT IN : subjectList LIMIT 1];
+                    if(!tskRecord.IsEmpty()){
+                    tskRecord[0].Status = 'Completed';
+                    update tskRecord;
+                    }
+                    List<RefreshEvent__e> events = new List<RefreshEvent__e>();
+                    events.add(new RefreshEvent__e(LeadId__c = leads[0].Id,CaseId__c = ''));
+                    if(!events.IsEmpty()){
+                        EventBus.publish(events);
+                    }
                     System.debug('Task created successfully: ' + newTask.Id);
                 } else {
                     System.debug('No lead found with the name: ' + leadName);

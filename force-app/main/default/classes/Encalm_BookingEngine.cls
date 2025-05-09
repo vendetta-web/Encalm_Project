@@ -56,9 +56,6 @@ public with sharing class Encalm_BookingEngine {
                 SELECT Id,
                 Flight_Detail__r.Name, STA__c, STD__c, Flight_Date__c
                 FROM Flight_Schedule__c
-                WHERE Flight_Date__c =: flightDate
-                AND Flight_Detail__r.Arrival_Airport__r.Airport_Code__c =:arrivalAirport
-                AND Flight_Detail__r.Departure_Airport__r.Airport_Code__c =:departAirport
                 ];
             if(flightScheduleList!=null) {
                 for(Flight_Schedule__c fly: flightScheduleList) {
@@ -95,7 +92,8 @@ public with sharing class Encalm_BookingEngine {
                     FROM Flight_Schedule__c
                     WHERE Flight_Date__c =:flightDate
                     AND Flight_Detail__c
-                    IN (SELECT Main_Flight__c FROM Transit_Flight_Detail__c WHERE Transit_Airport__r.Airport_Code__c  =:transitAirport AND Main_Flight__r.Departure_Airport__r.Airport_Code__c =:departAirport)
+                    IN (SELECT Id FROM Flight_Detail__c WHERE Departure_Airport__r.Airport_Code__c =: departAirport AND Arrival_Airport__r.Airport_Code__c =:transitAirport)
+                    // IN (SELECT Main_Flight__c FROM Transit_Flight_Detail__c WHERE Transit_Airport__r.Airport_Code__c  =:transitAirport AND Main_Flight__r.Departure_Airport__r.Airport_Code__c =:departAirport)
                     ];
             } else if (String.isBlank(departAirport)) {                
                 flightScheduleList = [
@@ -103,7 +101,8 @@ public with sharing class Encalm_BookingEngine {
                     FROM Flight_Schedule__c
                     WHERE Flight_Date__c =:flightDate
                     AND Flight_Detail__c
-                    IN (SELECT Connecting_Flight__c FROM Transit_Flight_Detail__c WHERE Transit_Airport__r.Airport_Code__c  =:transitAirport AND Connecting_Flight__r.Arrival_Airport__r.Airport_Code__c =:arrivalAirport)
+                    IN (SELECT Id FROM Flight_Detail__c WHERE Departure_Airport__r.Airport_Code__c =: transitAirport AND Arrival_Airport__r.Airport_Code__c =:arrivalAirport)
+                   // IN (SELECT Connecting_Flight__c FROM Transit_Flight_Detail__c WHERE Transit_Airport__r.Airport_Code__c  =:transitAirport AND Connecting_Flight__r.Arrival_Airport__r.Airport_Code__c =:arrivalAirport)
                     ];
             }  
             if(flightScheduleList!=null) {

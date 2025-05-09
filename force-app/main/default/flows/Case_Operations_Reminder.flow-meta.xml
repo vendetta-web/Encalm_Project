@@ -170,7 +170,7 @@
             <field>DeveloperName</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>Assistant_General_Manager</stringValue>
+                <stringValue>Assistant_General_Manager_Operations</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>

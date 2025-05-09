@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Query_Feedback_Case_Assignment_Notification</name>
         <label>Query/ Feedback Case Assignment Notification</label>
-        <locationX>374</locationX>
-        <locationY>647</locationY>
+        <locationX>314</locationX>
+        <locationY>755</locationY>
         <actionName>Case.Email_Alert_Query_Feedback_Case_Assignment_Notification</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -21,8 +21,8 @@
     <decisions>
         <name>Check_Field_Updates</name>
         <label>Check Field Updates</label>
-        <locationX>506</locationX>
-        <locationY>539</locationY>
+        <locationX>578</locationX>
+        <locationY>647</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>Folloup_Date_Time_Updated</name>
@@ -30,6 +30,13 @@
             <conditions>
                 <leftValueReference>$Record.Follow_up_Date_and_Time__c</leftValueReference>
                 <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>Get_Task</leftValueReference>
+                <operator>IsNull</operator>
                 <rightValue>
                     <booleanValue>true</booleanValue>
                 </rightValue>
@@ -104,14 +111,40 @@
             </connector>
             <label>Inquiry Sub Type is Reservations</label>
         </rules>
+        <rules>
+            <name>Update_Existing_Follow_Up_Task</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Follow_up_Date_and_Time__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Follow_up_Date_and_Time__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+            </conditions>
+            <conditions>
+                <leftValueReference>Get_Task.WhatId</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_Task</targetReference>
+            </connector>
+            <label>Update Existing Follow Up Task</label>
+        </rules>
     </decisions>
     <decisions>
         <name>Insert_Update</name>
         <label>Insert/ Update</label>
-        <locationX>176</locationX>
+        <locationX>182</locationX>
         <locationY>431</locationY>
         <defaultConnector>
-            <targetReference>Check_Field_Updates</targetReference>
+            <targetReference>Get_Task</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>Update</defaultConnectorLabel>
         <rules>
@@ -127,7 +160,7 @@
             <label>Insert</label>
         </rules>
     </decisions>
-    <description>Updated by Saurabh- 1 Mar</description>
+    <description>Updated by Abhishek- 28 th April</description>
     <environments>Default</environments>
     <formulas>
         <name>isNew</name>
@@ -163,8 +196,8 @@
     <recordCreates>
         <name>Create_Follow_up_Task</name>
         <label>Create Follow up Task</label>
-        <locationX>110</locationX>
-        <locationY>647</locationY>
+        <locationX>50</locationX>
+        <locationY>755</locationY>
         <inputAssignments>
             <field>ActivityDate</field>
             <value>
@@ -213,8 +246,8 @@
     <recordLookups>
         <name>Get_Reservation_Queue</name>
         <label>Get Reservation Queue</label>
-        <locationX>638</locationX>
-        <locationY>647</locationY>
+        <locationX>578</locationX>
+        <locationY>755</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Assign_Case_to_Reservation_Queue</targetReference>
@@ -238,11 +271,46 @@
         <object>Group</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
+    <recordLookups>
+        <name>Get_Task</name>
+        <label>Get Task</label>
+        <locationX>578</locationX>
+        <locationY>539</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Check_Field_Updates</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>WhatId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>TaskSubtype</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Task</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
     <recordUpdates>
         <name>Assign_Case_to_Reservation_Queue</name>
         <label>Assign Case to Reservation Queue</label>
-        <locationX>638</locationX>
-        <locationY>755</locationY>
+        <locationX>578</locationX>
+        <locationY>863</locationY>
         <inputAssignments>
             <field>OwnerId</field>
             <value>
@@ -260,7 +328,7 @@
     <recordUpdates>
         <name>Update_Owner_s_Manager_Email_field</name>
         <label>Update Owner&apos;s Manager Email field</label>
-        <locationX>176</locationX>
+        <locationX>182</locationX>
         <locationY>323</locationY>
         <connector>
             <targetReference>Insert_Update</targetReference>
@@ -281,8 +349,61 @@
         </inputAssignments>
         <inputReference>$Record</inputReference>
     </recordUpdates>
+    <recordUpdates>
+        <name>Update_Task</name>
+        <label>Update Task</label>
+        <locationX>842</locationX>
+        <locationY>755</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>WhatId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>TaskSubtype</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Task</stringValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>SetReminderTime</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>IsReminderSet</field>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ReminderDateTime</field>
+            <value>
+                <elementReference>SetReminderTime</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <stringValue>Updated Follow Up</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+    </recordUpdates>
     <start>
-        <locationX>50</locationX>
+        <locationX>56</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Update_Owner_s_Manager_Email_field</targetReference>
@@ -291,7 +412,7 @@
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
         <triggerType>RecordAfterSave</triggerType>
     </start>
-    <status>Draft</status>
+    <status>Active</status>
     <variables>
         <name>PriorOwner</name>
         <dataType>String</dataType>

@@ -148,7 +148,8 @@ public class CancellationPolicyService {
         String opportunityId,
         Integer numberOfPax,
         Boolean submit) {
-        List<OpportunityLineItem> oliList = new List<OpportunityLineItem>();
+        List<OpportunityLineItem> oliList = new List<OpportunityLineItem>();        
+        Set<Id> cancelledOli = new Set<Id>();
         cancellationDetailsWrapper wrp = new cancellationDetailsWrapper();
         List<Transaction_History__c> transactionList= new List<Transaction_History__c>();
         List<Case> caseList = new List<Case>();
@@ -160,9 +161,9 @@ public class CancellationPolicyService {
         
         // Query OpportunityLineItems based on OpportunityId
         Opportunity opp = [
-            SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,Name,
-            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,
-            (SELECT Id,Product2.Family,UnitPrice,PricebookEntryId FROM opportunitylineitems WHERE Status__c = 'Active') 
+            SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,Name,Number_of_Adults__c,Number_of_Children__c,Number_of_Infants__c,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,Departure_Service_Time__c,
+            (SELECT Id,Product2.Family,UnitPrice,PricebookEntryId FROM opportunitylineitems WHERE Status__c = 'Active' OR Status__c = 'Rescheduled') 
             FROM Opportunity
             WHERE Id=:opportunityId
             LIMIT 1
@@ -201,9 +202,9 @@ public class CancellationPolicyService {
             }
             combinedDateTimeStr=dateText + ' ' + timeText;
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
-        } else if (opp.STD_Time__c != null) {
+        } else if (opp.Departure_Service_Time__c != null || opp.STD_Time__c != null) {
             dateText=opp.Date_of_Departure__c;
-            timeText=opp.STD_Time__c;// Ensure timeText includes seconds
+            timeText= opp.Departure_Service_Time__c !=null ? opp.Departure_Service_Time__c : opp.STD_Time__c;// Ensure timeText includes seconds
             if (timeText.length() == 5) {  // "HH:mm" format
                 timeText += ':00';  // Append ":00" for seconds
             }
@@ -211,11 +212,14 @@ public class CancellationPolicyService {
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
         }
         //both scenarios of preview of cancellation and creating cancellation records for full cancellation
-        if (cancelType =='fullCancel') {    
-            numberOfPax = opp.opportunitylineitems.size();    
+        if (cancelType =='fullCancel') {  
+            numberOfPax=0;   
             bookingAmount = 0;  
             Decimal refundAmount = 0;   
             for (opportunitylineitem oli: opp.opportunitylineitems) {
+                if (oli.Product2.Family != 'Surcharge') {   
+                    numberOfPax = numberOfPax + 1;
+                }
                 packageName = oli.Product2.Family;
                 bookingAmount += oli.UnitPrice; 
                 decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, requestDateTime, oli.UnitPrice, packageName); 
@@ -252,9 +256,17 @@ public class CancellationPolicyService {
                     oli.CGST__c = cgstAmount;
                     oli.IGST__c = igstAmount;
                     oliList.add(oli);
+                    //update opportunity fields
+                    opp.Number_of_Adults__c=0;
+                    opp.Number_of_Children__c=0;
+                    opp.Number_of_Infants__c=0;
+                    update opp;
+                    if(!Test.IsRunningTest()){
+                    	getSWIFTTokenFuture(opportunityId,'Cancel'); //MDEN_SWIFT.getAccessToken(opportunityId,'Cancel');
+                    }
                 }          
             }
-            update oliList;   
+            update oliList;  
             
             //to show preview of full cancellation
             //decimal afterGeneralCancellationRefund =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmount);
@@ -316,6 +328,7 @@ public class CancellationPolicyService {
                 if((Id) row.get('oliId') !=null) {
                     OpportunityLineItem oli = new OpportunityLineItem(); 
                     oli.Id = (Id) row.get('oliId');
+                    cancelledOli.add(oli.Id);
                     oli.Status__c = 'Partially Cancelled';
                     oli.Refund_Amount__c = refundAmountPerOli;
                     oli.Amount_Deducted__c= perUnitPrice -  refundAmountPerOli;
@@ -374,6 +387,39 @@ public class CancellationPolicyService {
                     transactionList.add(transactionRec);
                 } 
                 insert transactionList;
+                
+                List<Passenger_Details__c> updatePaxList = [
+                SELECT Id,Passenger_Type__c FROM Passenger_Details__c 
+                WHERE Opportunity_ID__c =:opportunityId 
+                AND Individual_Booking_Details__c NOT IN: cancelledOli];
+
+                Decimal adultCount = 0;
+                Decimal childCount = 0;
+                Decimal infantCount = 0;
+
+                if(updatePaxList != null && updatePaxList.size() > 0) {
+                    for (Passenger_Details__c pax: updatePaxList) {
+                        switch on pax.Passenger_Type__c {
+                            when 'Adult' {
+                                adultCount++;
+                            }
+                            when 'Child' {
+                                childCount++;
+                            }
+                            when 'Infant' {
+                                infantCount++;
+                            }
+                        }
+                    }
+                    opp.Number_of_Adults__c=adultCount;
+                    opp.Number_of_Children__c=childCount;
+                    opp.Number_of_Infants__c=infantCount;
+                    update opp;
+                }
+                if(!Test.IsRunningTest()){
+                	getSWIFTTokenFuture(opportunityId,'Partially Cancelled'); //MDEN_SWIFT.getAccessToken(opportunityId,'Partially Cancelled');
+                }
+                
             }
         }
         if(numberOfPax == 0) {
@@ -381,7 +427,12 @@ public class CancellationPolicyService {
         }
         return wrp;
     }
-
+    
+    @future(callout=true)
+    public static void getSWIFTTokenFuture(String opportunityId, String actionType) {
+        MDEN_SWIFT.getAccessToken(opportunityId, actionType);
+    }
+    
     @AuraEnabled(cacheable=true)
     public static List<passengerDetailsWrapper> getBookingToCancel(String opportunityId) {
         List<passengerDetailsWrapper> pdList = new List<passengerDetailsWrapper>();

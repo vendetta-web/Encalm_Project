@@ -3,7 +3,7 @@ public class LogErrorUtil {
         system.debug('test');
         // Create new Log Parsing Error record
         Log_Parsing_Error__c errorLog = new Log_Parsing_Error__c();
-        errorLog.Error_Message__c = e.getMessage();
+        errorLog.Message__c = e.getMessage();
         errorLog.Apex_Class_Name__c = apexClassName;
         errorLog.Method_Name__c = methodName;
         errorLog.Error_Timestamp__c = System.now();

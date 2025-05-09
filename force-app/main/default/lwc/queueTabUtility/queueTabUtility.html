@@ -1,0 +1,76 @@
+<template>
+   
+    <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-modal_large slds-fade-in-open">
+            <div class="slds-modal__container" style="max-width: 60rem; width: 60%;">
+
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                        <lightning-icon icon-name="utility:close" size="small" alternative-text="close" class="slds-button__icon slds-button__icon_large"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Queue Member Management</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_small" style="height: 500px; overflow-y: auto;">
+
+                        <div class="slds-p-around_medium">
+                            <lightning-combobox
+                                name="queueSelector"
+                                label="Select Queue"
+                                placeholder="Select Queue"
+                                options={queueOptions}
+                                value={selectedQueueId}
+                                onchange={handleQueueChange}>
+                            </lightning-combobox>
+
+                            <template if:true={selectedQueueId}>
+                                <div class="slds-m-top_medium">
+                                    <!--<lightning-button label="View Queue Members" variant="brand" onclick={showViewSection} class="slds-m-right_small"></lightning-button>-->
+                                    <lightning-button label="Edit Queue" variant="brand" onclick={showEditSection}></lightning-button>
+                                </div>
+                           </template>
+
+                            <template if:true={showView}>
+                                <div class="slds-m-top_medium">
+                                    <lightning-datatable
+                                        key-field="Id"
+                                        data={queueMembers}
+                                        columns={viewColumns}
+                                        hide-checkbox-column>
+                                    </lightning-datatable>
+                                </div>
+                            </template>
+
+                            <template if:true={showEdit}>
+                                <div class="slds-grid slds-m-top_medium" style="justify-content: center;">
+                                    <div class="slds-col" style="width: 80%;">
+                                        <lightning-dual-listbox
+                                            name="availableUsers"
+                                            source-label="Available Members"
+                                            selected-label="Selected Members"
+                                            options={userOptions}
+                                            value={selectedUserIds}
+                                            onchange={handleUserSelection}>
+                                        </lightning-dual-listbox>
+                                    </div>
+                                </div>
+
+                                <div class="slds-m-top_medium">
+                                    <lightning-button variant="brand-outline" label="Cancel" onclick={handleCancel} class="slds-m-left_small"></lightning-button>
+                                    <lightning-button variant="brand" label="Save Changes" onclick={saveChanges} class="slds-m-left_small"></lightning-button>
+                                </div>
+
+                            </template>
+                        </div>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Close" onclick={closeModal} class="slds-m-left_small"></lightning-button>
+                </footer>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

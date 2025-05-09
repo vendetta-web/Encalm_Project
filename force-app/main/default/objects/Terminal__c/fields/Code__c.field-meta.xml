@@ -55,6 +55,11 @@
                 <default>false</default>
                 <label>Terminal 1D</label>
             </value>
+            <value>
+                <fullName>Terminal 1I</fullName>
+                <default>false</default>
+                <label>Terminal 1I</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

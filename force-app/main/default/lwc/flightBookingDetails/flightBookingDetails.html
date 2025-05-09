@@ -36,19 +36,20 @@
 
     <template if:true={showModal}>    
     <div class="demo-only demo-only--sizing slds-grid slds-wrap">
-    <lightning-card title="Select Package" class="slds-size_3-of-4">
-        <div class="slds-card__body">
-            <div class="slds-grid slds-wrap"  style="margin-left: 15px;" slot="actions">
+    <lightning-card class="slds-size_3-of-4">
+        <div class="package-container">
+            <h2 class="package-title">Packages</h2>
+            <div class="service-list-package">
                 <template for:each={getPackage} for:item="pack" for:index="index">
-                    <div key={pack.packageName} if:true={pack.showPackage} class="slds-col slds-size_1-of-3 column">
+                    <div key={pack.packageName} if:true={pack.showPackage} class="service-card-package">
                         <div class="package">
                             <!-- Apply the class to package name -->
                             <div class="slds-text-heading_medium package-name row" style="padding-left: 10px;">
-                                <span class="left-value" style="font-size: x-large;">{pack.packageName}</span>
-                                <span class="right-value" style="text-align: right;">{currency} {pack.priceTag}</span>
+                                <div class="package-Name">{pack.packageName}</div>
+                                <div class="service-description">{currency} {pack.priceTag}</div>
                             </div>                            
                             <div class="slds-m-top_medium">
-        
+                                
                                 <!-- Iterate through services and display each row -->
                                 <ul class="slds-list_dotted">
                                     <template for:each={pack.services} for:item="row">
@@ -57,13 +58,15 @@
                                 </ul>
         
                                 <!-- Select Button -->
-                                <lightning-button 
-                                    label={pack.buttonLabel} 
-                                    data-index={index} 
-                                    onclick={handleSelect}
-                                    class={pack.class}
-                                    variant="brand">
-                                </lightning-button>
+                                
+                                <button class="add-to-cart-btn" data-index={index} onclick={handleSelect}>
+                                    <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <circle cx="9" cy="21" r="1"></circle>
+                                        <circle cx="20" cy="21" r="1"></circle>
+                                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                    </svg>
+                                    {pack.buttonLabel}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -73,113 +76,158 @@
     </br>
     </br>
     <template if:true={getAddonDetail}>
-    <div style="font-weight: bold;font-size: 16px;margin-left: 16px;">Select Add Ons</div>
-        <div class="slds-card__body">
-            <div class="slds-grid slds-wrap"  style="margin-left: 15px;" slot="actions">
-                <template for:each={getAddonDetail} for:item="pack"  for:index="index">
-                    <div key={pack.packageName} class="slds-col slds-size_1-of-3 column">
-                        <div class="package">
-                            <div class="slds-text-heading_small package-name row" style="padding-left: 10px;">
-                                <span class="left-value-addon">{pack.addOnName}</span>
-                                <span class="right-value-addon">{currency} {pack.addOnTag}</span>
+        <div class="add-ons-container">
+            <h2 class="add-ons-title">Add Ons Service</h2>
+            <div class="service-list">
+                    <template for:each={getAddonDetail} for:item="pack"  for:index="index">
+                        <div key={pack.packageName} class="service-card">
+                            <div class="service-icon-container">
+                                <div class="service-icon">
+                                    <svg class="porter-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                        <path d="M12 10V6M8.5 14h7M7 18h10M7.5 6h9c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5h-9c-.83 0-1.5-.67-1.5-1.5v-9c0-.83.67-1.5 1.5-1.5zM12 6c1.1 0 2-.9 2-2s-.9-2-2 2 .9 2 2 2z"></path>
+                                    </svg>                                    
+                                </div>
                             </div>
-                
-                            <div class="slds-m-top_medium">
-                                <div>
-                                    <!-- Pickup Terminals -->
-                                    <template for:each={pack.pickupTerminals} for:item="terminal" for:index="index">
-                                        <lightning-combobox
-                                            key={terminal.id}
-                                            name="pickup"
-                                            label={terminal.id}
-                                            options={pickupTerminalOptions}
-                                            value={terminal.value}
-                                            data-index={index}
-                                            data-id={pack.addOnName}
-                                            onchange={handleTerminalChange}
-                                            required
-                                            message-when-value-missing="Please select a Pickup Terminal"
-                                            class={pack.pickupErrorClass} 
-                                            disabled={pack.disablePickup}>
-                                        </lightning-combobox>
-                                    </template>
-                
-                                    <!-- Drop Terminals -->
-                                    <template if:false={pack.hideDropTerminal}>
-                                        <template for:each={pack.dropTerminals} for:item="terminal" for:index="index">                                        
-                                            <lightning-combobox
-                                                key={terminal.id}
-                                                name="drop"
-                                                label={terminal.id}
-                                                options={dropTerminalOptions}
-                                                value={terminal.value}
-                                                data-index={index}
-                                                data-id={pack.addOnName}
-                                                onchange={handleTerminalChange}
-                                                required
-                                                message-when-value-missing="Please select a Drop Terminal"
-                                                class={pack.dropErrorClass} 
-                                                disabled={pack.disableDrop}>
-                                            </lightning-combobox>
-                                        </template>
-                                    </template>
-                                </div>
-                
-                                <div class="counter">
-                                    <span>Qty</span>
-                                    <button data-id="decrementAddOn" data-index={index} onclick={decrementAddOn} class="btn minus">-</button>
-                                    <span class="count">{pack.adddOnCount}</span>
-                                    <button data-id="incrementAddOn" data-index={index} onclick={incrementAddOn} class="btn plus">+</button>
-                                </div>
-                
-                                <button onclick={handleAddOnSelect} data-index={index} class={pack.class}>{pack.buttonLabel}</button>
+
+                            <div class="service-details">
+                                <div class="service-name">{pack.addOnName}</div>
+                                <div class="service-description">{currency} {pack.addOnTag}</div>
+                            
+                    
+                                    <div class="slds-m-top_medium">
+                                        <div>
+                                            <div class="terminal-container">
+                                                <!-- Pickup Terminals -->
+                                                <template for:each={pack.pickupTerminals} for:item="terminal" for:index="index">
+                                                    <lightning-combobox
+                                                        key={terminal.id}
+                                                        name="pickup"
+                                                        label={terminal.id}
+                                                        options={pickupTerminalOptions}
+                                                        value={terminal.value}
+                                                        data-index={index}
+                                                        data-id={pack.addOnName}
+                                                        onchange={handleTerminalChange}
+                                                        required
+                                                        message-when-value-missing="Please select a Pickup Terminal"
+                                                        class={pack.pickupErrorClass} 
+                                                        disabled={pack.disablePickup}>
+                                                    </lightning-combobox>
+                                                </template>
+                                            </div>
+                        
+                                            <!-- Drop Terminals -->
+                                            <template if:false={pack.hideDropTerminal}>
+                                                <div class="terminal-container">
+                                                    <template for:each={pack.dropTerminals} for:item="terminal" for:index="index">                                        
+                                                        <lightning-combobox
+                                                            key={terminal.id}
+                                                            name="drop"
+                                                            label={terminal.id}
+                                                            options={dropTerminalOptions}
+                                                            value={terminal.value}
+                                                            data-index={index}
+                                                            data-id={pack.addOnName}
+                                                            onchange={handleTerminalChange}
+                                                            required
+                                                            message-when-value-missing="Please select a Drop Terminal"
+                                                            class={pack.dropErrorClass} 
+                                                            disabled={pack.disableDrop}>
+                                                        </lightning-combobox>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="service-controls">
+                                            <div class="quantity-section">
+                                                <button class="quantity-btn minus" data-index={index} onclick={decrementAddOn}>-</button>
+                                                    <span class="quantity-value">{pack.adddOnCount}</span>
+                                                <button class="quantity-btn plus" data-index={index} onclick={incrementAddOn}>+</button>
+                                                <button class="add-to-cart-btn-addon" data-index={index} onclick={handleAddOnSelect}>
+                                                    <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                        <circle cx="9" cy="21" r="1"></circle>
+                                                        <circle cx="20" cy="21" r="1"></circle>
+                                                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                                    </svg>
+                                                    {pack.buttonLabel}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                             </div>
                         </div>
-                    </div>
-                </template>
-                
+                    </template>
             </div>
         </div>
     </template>
     
     </lightning-card>
-    <lightning-card title="Order Summary" class="slds-size_1-of-4">
-        <div class="slds-card__body">
-            <template if:true={orderSummary}>
-                <div class="param2-container">
-                    <div class="param2-box">
+    <lightning-card class="slds-size_1-of-4">
+        <div class="price-details-container">
+            <div class="price-details-card">
+                <div class="card-header">
+                    <h2>Price Details</h2>
+                </div>
+                <div class="card-body">
+                    <template if:true={orderSummary}>
                         <template for:each={orderSummary} for:item="value">
-                            <div key={value} style="font-family: Brandon !important;font-size: 16px;">
-                                <lightning-layout multiple-rows="true">
-                                    <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                        {value.name}
-                                    </lightning-layout-item>
-                                    <lightning-layout-item size="3" class="slds-p-around_small">
-                                        <p>&#8377; {value.amount}</p> <!-- Show the param2 of the selected row -->
-                                    </lightning-layout-item>
-                                </lightning-layout>  
+                            <div key={value} class="price-row">
+                                <div class="price-label">{value.name}</div>
+                                <div class="price-value">&#8377; {value.amount}</div>
                             </div>
                         </template>
-                        <template if:true={showGst}>
-                            <strong>Net Amount : &#8377; {totalNetAmount}</strong>
-                                <template if:true={showCgst}>
-                                    <strong>CGST Amount (9%) : &#8377; {totalCgstAmount}</strong>
-                                    <strong>SGST Amount (9%): &#8377; {totalSgstAmount}</strong>                                    
+    
+                        
+                        <div class="net-amount-section">
+                            <template if:true={showGst}>  
+                                <div class="section-divider"></div>
+                                <div class="price-row">
+                                    <div class="price-label">Net Amount: </div>
+                                    <div class="price-value">&#8377; {totalNetAmount}</div>
+                                </div>                         
+                                <template if:true={showCgst}>                                    
+                                    <div class="price-row">
+                                        <div class="price-label">CGST Amount (9%)</div>
+                                        <div class="price-value">&#8377; {totalCgstAmount}</div>
+                                    </div>
+                                    <div class="price-row">
+                                        <div class="price-label">SGST Amount (9%)</div>
+                                        <div class="price-value">&#8377; {totalSgstAmount}</div>
+                                    </div>
                                 </template>
+                                
                                 <template if:true={showIgst}>
-                                    <strong>IGST Amount (18%): &#8377; {totalIgstAmount}</strong>                                    
+                                    <div class="price-row">
+                                        <div class="price-label">IGST Amount (18%)</div>
+                                        <div class="price-value">&#8377; {totalIgstAmount}</div>
+                                    </div>
                                 </template>
-                        </template>
-                        <template if:true={showDiscount}>
-                            <strong>Total Amount : &#8377; {totalAmount}</strong>
-                            <strong>Total Discount Amount : &#8377; {totalDiscountAmount}</strong>
-                        </template>
-                        <strong>{amountMessage} : &#8377; {totalAmountAfterDiscount}</strong> <!-- Show the amount or amount after discount --> 
-                    </div>
+                            </template>
+                        </div>
+    
+                        <div class="section-divider"></div>
+                        <div class="total-amount-section">
+                            <template if:true={showDiscount}>                                
+                                <div class="price-row">
+                                    <div class="price-label">Total Amount</div>
+                                    <div class="price-value">&#8377; {totalAmount}</div>
+                                </div>
+                                <div class="price-row">
+                                    <div class="price-label">Total Discount Amount</div>
+                                    <div class="price-value">&#8377; {totalDiscountAmount}</div>
+                                </div>
+                            </template>
+                            <div class="price-row total">
+                                <div class="price-label">{amountMessage}</div>
+                                <div class="price-value">&#8377; {totalAmountAfterDiscount}</div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
-            </template>
+            </div>
         </div>
     </lightning-card>
+    
     
     
     
@@ -358,38 +406,58 @@
             <!--preview final details-->
             <template if:true={showPreview}>
                                     
-                <lightning-card title="Order Summary">
+                <lightning-card>
                     <div class="slds-card__body">
                         <template if:true={orderSummary}>
-                            <div class="param2-container">
-                                <div class="param2-box">
+                            <div class="price-details-card-preview">
+                                <div class="card-header">
+                                    <h2>Price Details</h2>
+                                </div>
+                                <div class="card-body">
                                     <template for:each={orderSummary} for:item="value">
-                                        <div key={value} style="font-family: Brandon !important;font-size: 16px;">
-                                            <lightning-layout multiple-rows="true">
-                                                <lightning-layout-item size="9" class="slds-p-around_small" style="text-align: left;">
-                                                    {value.name}
-                                                </lightning-layout-item>
-                                                <lightning-layout-item size="3" class="slds-p-around_small">
-                                                    <p>&#8377; {value.amount}</p> <!-- Show the param2 of the selected row -->
-                                                </lightning-layout-item>
-                                            </lightning-layout>  
+                                        <div key={value} class="price-row">
+                                            <div class="price-label">{value.name}</div>
+                                            <div class="price-value">&#8377; {value.amount}</div>
                                         </div>
                                     </template>
-                                    <template if:true={showGst}>
-                                        <strong>Net Amount : &#8377; {totalNetAmount}</strong>
-                                            <template if:true={showCgst}>
-                                                <strong>CGST Amount (9%) : &#8377; {totalCgstAmount}</strong>
-                                                <strong>SGST Amount (9%): &#8377; {totalSgstAmount}</strong>                                    
-                                            </template>
-                                            <template if:true={showIgst}>
-                                                <strong>IGST Amount (18%): &#8377; {totalIgstAmount}</strong>                                    
-                                            </template>
-                                    </template>
-                                    <template if:true={showDiscount}>
-                                        <strong>Total Amount : &#8377; {totalAmount}</strong>
-                                        <strong>Total Discount Amount : &#8377; {totalDiscountAmount}</strong>
-                                    </template>
-                                    <strong>{amountMessage} : &#8377; {totalAmountAfterDiscount}</strong> <!-- Show the amount or amount after discount -->
+                                    <div class="section-divider"></div>
+                                    <div class="net-amount-section">
+                                        <template if:true={showGst}>
+                                            <div class="price-row">
+                                                <div class="price-label">Net Amount</div>
+                                                <div class="price-value">&#8377; {totalNetAmount}</div>
+                                            </div>
+                                                <template if:true={showCgst}>
+                                                    <div class="price-row">
+                                                        <div class="price-label">CGST Amount (9%)</div>
+                                                        <div class="price-value">&#8377; {totalCgstAmount}</div>
+                                                    </div>
+                                                    <div class="price-row">
+                                                        <div class="price-label">SGST Amount (9%)</div>
+                                                        <div class="price-value">&#8377; {totalSgstAmount}</div>
+                                                    </div>                                   
+                                                </template>
+                                                <template if:true={showIgst}>
+                                                    <div class="price-row">
+                                                        <div class="price-label">IGST Amount (18%)</div>
+                                                        <div class="price-value">&#8377; {totalIgstAmount}</div>
+                                                    </div>                                  
+                                                </template>
+                                        </template>
+                                    </div>
+                                    <div class="total-amount-section">
+                                        <template if:true={showDiscount}>                                            
+                                        <div class="section-divider"></div>
+                                            <div class="price-row">
+                                                <div class="price-label">Total Discount Amount</div>
+                                                <div class="price-value">&#8377; {totalDiscountAmount}</div>
+                                            </div>
+                                        </template>
+                                        <div class="price-row total">
+                                            <div class="price-label">{amountMessage}</div>
+                                            <div class="price-value">&#8377; {totalAmountAfterDiscount}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -482,6 +550,13 @@
                                 
                             </div>  
                         </template>         
+                    </lightning-card>
+                          
+                    <lightning-card title = "Booker Details">
+                        <div class="guest-rows">
+                            <lightning-input class = "small-input" label ="Booker Name" value = {booker} disabled></lightning-input>
+                            <lightning-input class = "small-input" label ="Location" value = {location} disabled></lightning-input>
+                        </div>
                     </lightning-card>
                     <template if:false={isQuotationSent}>
                         <footer class="slds-modal__footer">

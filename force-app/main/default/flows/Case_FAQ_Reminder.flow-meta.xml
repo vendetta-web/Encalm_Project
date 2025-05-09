@@ -5,7 +5,7 @@
         <label>Send Case FAQ Email Reminder</label>
         <locationX>176</locationX>
         <locationY>566</locationY>
-        <actionName>Case.EmailAlert_CaseFAQ_Reminder</actionName>
+        <actionName>Case.Email_Alert_Case_FAQ_Reminder</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -14,7 +14,7 @@
                 <elementReference>case_id</elementReference>
             </value>
         </inputParameters>
-        <nameSegment>Case.EmailAlert_CaseFAQ_Reminder</nameSegment>
+        <nameSegment>Case.Email_Alert_Case_FAQ_Reminder</nameSegment>
         <offset>0</offset>
     </actionCalls>
     <actionCalls>

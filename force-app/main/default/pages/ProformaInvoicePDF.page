@@ -67,8 +67,8 @@
             <div class="header">
                <table>
                     <tr>
-                        <td width="30%" style="text-align: center;">
-                            <apex:image url="{!$Resource.Encalm_Logo}" width="100" height="100"/>
+                        <td width="30%"  style="text-align: center;">
+                            <apex:image url="{!$Resource.Atithya_Logo}" width="100" height="100"/>
                         </td>
                         <td width="30%" style="text-align: center;">
                             <apex:image url="{!$Resource.Encalm_Logo}" width="100" height="100"/>
@@ -89,7 +89,7 @@
             <div class="footer">
                 <hr/>
                 <p style="text-align: center;">Registered Address: Tag Tower, Plot No. 17-18, Phase IV, Udyog Vihar, Sector 18, Gurugram, Haryana 122015</p> 
-                <p style="text-align: center;">Terms and Condition of Services as provided on <a href="https://www.encalm.com">www.encalm.com</a> shall apply</p>
+                <p style="text-align: center;">Terms and Condition of Services as provided on <a href="https://encalm.com/termsandconditions">www.encalm.com/termsandconditions</a> shall apply</p>
 				<p style="text-align: center;">For all booking query please feel free to write us on <a href="guest.services@encalm.com">guest.services@encalm.com</a></p>                
             </div>
             
@@ -135,7 +135,7 @@
                             <td>{!item.oppLineItem.UnitPrice}</td>
                             <td>GST 18%</td>
                             <td style="{!discountColumnStyle}">{!item.oppLineItem.Discount_Amount__c}</td>
-                            <td>{!item.oppLineItem.TotalPrice}</td>
+                            <td>{!item.oppLineItem.Invoice_Amount__c}</td>
                         </tr>
                     </apex:repeat>
                 </table>
@@ -145,20 +145,31 @@
                     <!-- Right Half (Table) - Pushes to the right using margin-left: auto -->
                     <div style="margin-left: auto; width: 50%;">
                         <table style="border-collapse: collapse; width: 100%; border: 1px solid lightgray;">
+                                <tr>
+                                    <td style="text-align: left; width: 70%">Net Amount</td>
+                                    <td style="text-align: right; width: 30%;">{!taxableAmount}</td>
+                                </tr>
+                            
+                            <apex:outputPanel rendered="{!isIntraStateTax}">
+                                <tr>
+                                    <td style="text-align: left; width: 90%">SGST (9%)</td>
+                                    <td style="text-align: right;">{!totalSGST}</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: left;">CGST (9%)</td>
+                                    <td style="text-align: right;">{!totalCGST}</td>
+                                </tr>
+                            </apex:outputPanel>
+                
+                            <apex:outputPanel rendered="{!isInterStateTax}">
+                                <tr>
+                                    <td style="text-align: left;">IGST (18%)</td>
+                                    <td style="text-align: right;">{!totalIGST}</td>
+                                </tr>
+                            </apex:outputPanel>
+                            
                             <tr>
-                                <td style="text-align: left; width: 70%;">Taxable Amount</td>
-                                <td style="text-align: right; width: 30%;">{}</td>
-                            </tr>
-                            <tr>
-                                <td style="text-align: left;">SGST (9%) on {}</td>
-                                <td style="text-align: right;">{}</td>
-                            </tr>
-                            <tr>
-                                <td style="text-align: left;">CGST (9%) on {}</td>
-                                <td style="text-align: right;">{}</td>
-                            </tr>
-                            <tr>
-                                <td style="text-align: left;"><b>Total</b></td>
+                                <td style="text-align: left;"><b>Final Amount</b></td>
                                 <td style="text-align: right;"><b>{!totalAmount}</b></td>
                             </tr>
                         </table>
@@ -247,6 +258,7 @@
                     </apex:repeat>
                 </table>
             </div>
+            
         </body>
     </html>
 </apex:page>

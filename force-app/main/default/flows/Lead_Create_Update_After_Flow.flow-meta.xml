@@ -167,12 +167,17 @@
             <label>Not Existing Account</label>
         </rules>
     </decisions>
-    <description>Update by Saurabh _21 MArch</description>
+    <description>Update by Abhishek_25 April</description>
     <environments>Default</environments>
     <formulas>
         <name>IS_NEW</name>
         <dataType>Boolean</dataType>
         <expression>ISNEW()</expression>
+    </formulas>
+    <formulas>
+        <name>SetDueDate</name>
+        <dataType>Date</dataType>
+        <expression>DATEVALUE({!$Record.Set_Follow_up_Date_and_Time__c})</expression>
     </formulas>
     <formulas>
         <name>setTimeReminder</name>
@@ -240,7 +245,7 @@
         <inputAssignments>
             <field>ActivityDate</field>
             <value>
-                <elementReference>$Record.Set_Follow_up_Date_and_Time__c</elementReference>
+                <elementReference>SetDueDate</elementReference>
             </value>
         </inputAssignments>
         <inputAssignments>
@@ -354,7 +359,7 @@
         <connector>
             <targetReference>Check_followUp</targetReference>
         </connector>
-        <filterLogic>or</filterLogic>
+        <filterLogic>and</filterLogic>
         <filters>
             <field>WhoId</field>
             <operator>EqualTo</operator>
@@ -363,10 +368,17 @@
             </value>
         </filters>
         <filters>
-            <field>Subject</field>
+            <field>Status</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>TaskSubtype</field>
             <operator>NotEqualTo</operator>
             <value>
-                <stringValue>Email:</stringValue>
+                <stringValue>Email</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
@@ -450,6 +462,12 @@
             <field>Trigger_Time_15__c</field>
             <value>
                 <elementReference>setTimeReminder</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Updated_By_Flow__c</field>
+            <value>
+                <booleanValue>false</booleanValue>
             </value>
         </inputAssignments>
         <inputReference>$Record</inputReference>
@@ -542,6 +560,19 @@
                 <elementReference>$Record.Id</elementReference>
             </value>
         </filters>
+        <filters>
+            <field>TaskSubtype</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Task</stringValue>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>SetDueDate</elementReference>
+            </value>
+        </inputAssignments>
         <inputAssignments>
             <field>IsReminderSet</field>
             <value>

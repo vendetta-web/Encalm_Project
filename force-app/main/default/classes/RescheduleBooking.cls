@@ -104,7 +104,7 @@ public class RescheduleBooking {
                         return policy.Charges__c;
                     } 
                 }
-                else if (!policy.Applicable_Per_Booking__c &&  policy.Time_Frame__c.contains('-')) {
+                else if (policy.Applicable_Per_Booking__c &&  policy.Time_Frame__c.contains('-')) {
                     List<String> rangeValues = policy.Time_Frame__c.split('-');
                     Integer lowerValue = Integer.valueOf(rangeValues[0]); // First value (24)
                     Integer upperValue = Integer.valueOf(rangeValues[1]); // Second value (48)
@@ -222,7 +222,7 @@ public class RescheduleBooking {
         // Query OpportunityLineItems based on OpportunityId
         Opportunity opp = [
             SELECT STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Amount,
-            Flight_Number_Arrival__c,Flight_Number_Departure__c,Number_of_Rescheduling_Done__c,Name,
+            Flight_Number_Arrival__c,Flight_Number_Departure__c,Number_of_Rescheduling_Done__c,Name,Departure_Service_Time__c,
             (SELECT Id,Product2.Family,UnitPrice,PricebookEntryId FROM opportunitylineitems WHERE Status__c = 'Active' OR Status__c = 'Rescheduled') 
             FROM Opportunity
             WHERE Id=:opportunityId
@@ -238,9 +238,9 @@ public class RescheduleBooking {
             }
             combinedDateTimeStr=dateText + ' ' + timeText;
             serviceDateTime = DateTime.valueOf(combinedDateTimeStr);
-        } else if (opp.STD_Time__c != null) {
+        } else if (opp.Departure_Service_Time__c != null || opp.STD_Time__c != null) {
             dateText=opp.Date_of_Departure__c;
-            timeText=opp.STD_Time__c;// Ensure timeText includes seconds
+            timeText=opp.Departure_Service_Time__c !=null ? opp.Departure_Service_Time__c : opp.STD_Time__c;// Ensure timeText includes seconds
             if (timeText.length() == 5) {  // "HH:mm" format
                 timeText += ':00';  // Append ":00" for seconds
             }

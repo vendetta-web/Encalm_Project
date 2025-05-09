@@ -29,7 +29,7 @@ export default class GenericTATTimer extends LightningElement {
                 const escalationLevel = data.fields.Escalation_Level__c?.value;
                 if(escalationLevel == "Level 1"){
                     this.escalationLevel = "Agent Escalation - Escalated to manager due to no action taken"; 
-                    if(status == 'Open')
+                    if(status == 'Open' || status == 'Customer Responded')
                         this.startCountdown();
                 }
                 else if(escalationLevel == "Level 2"){

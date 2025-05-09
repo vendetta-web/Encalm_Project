@@ -134,10 +134,20 @@ public class EmailParser {
     
     private static String extractPhoneNumber(String text) {
         System.debug('Extracting phone number from text: ' + text);
-        Pattern phonePattern = Pattern.compile('(?:\\+\\d{1,3}[-.\\s]?)?\\(?\\d{1,4}\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}');
+        //Pattern phonePattern = Pattern.compile('(?:\\+\\d{1,3}[-.\\s]?)?\\(?\\d{1,4}\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}');
+        //Pattern phonePattern = Pattern.compile('(?=(?:\\D*\\d){10,})(?:\\+\\d{1,3}[-.\\s]?)?\\(?\\d{1,4}\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}');
+        Pattern phonePattern = Pattern.compile('\\b\\d{10,}\\b');
         Matcher matcher = phonePattern.matcher(text);
         if (matcher.find()) {
-            System.debug('Phone number found: ' + matcher.group());
+            System.debug('Phone number found (10 digits): ' + matcher.group());
+            return matcher.group();
+        }
+        
+        // If no continuous digits are found, check for more complex formats
+        phonePattern = Pattern.compile('(?:\\+?\\d{1,3}[-.\\s]?)?(?:\\(?\\d{1,4}\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9})|\\b\\d{10,}\\b');
+        matcher = phonePattern.matcher(text);
+        if (matcher.find()) {
+            System.debug('Phone number found (with separators): ' + matcher.group());
             return matcher.group();
         }
         System.debug('No phone number found.');

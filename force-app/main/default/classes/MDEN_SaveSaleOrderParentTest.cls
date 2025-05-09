@@ -10,7 +10,7 @@ public class MDEN_SaveSaleOrderParentTest {
     @isTest
     static void testSaveSaleOrderParent() {
         // Set up required terminal
-        Terminal__c terminal = new Terminal__c(Name='T1', Code__c='Terminal 1');
+        Terminal__c terminal = new Terminal__c(Name='T1', Code__c='Terminal 1I');
         insert terminal;
         
         // Set up required airline

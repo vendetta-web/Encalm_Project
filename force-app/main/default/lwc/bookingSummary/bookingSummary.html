@@ -1,0 +1,168 @@
+<template>
+    <template if:true={flightDetails}>
+        <lightning-card title="Flight Details">
+            <div class="field-container">
+                <div class="field">
+                    <strong>Service At Airport: </strong> 
+                    <lightning-formatted-text value={flightDetails.serviceAirport}></lightning-formatted-text>
+                </div>
+                <div class="field">
+                    <strong>Flight Number: </strong> 
+                    <lightning-formatted-text value={flightDetails.flightNumber}></lightning-formatted-text>
+                </div>
+                <div class="field">
+                    <strong>Flight Date: </strong> 
+                    <lightning-formatted-text value={flightDetails.flightDate}></lightning-formatted-text>
+                </div>
+                <div class="field">
+                    <strong>Number of Adults: </strong> 
+                    <lightning-formatted-number value={flightDetails.numberOfAdults}></lightning-formatted-number>
+                </div>
+                <div class="field">
+                    <strong>Number of Childs: </strong> 
+                    <lightning-formatted-number value={flightDetails.numberOfChildren}></lightning-formatted-number>
+                </div>
+                <div class="field">
+                    <strong>Number of Infants: </strong> 
+                    <lightning-formatted-number value={flightDetails.numberOfInfants}></lightning-formatted-number>
+                </div>
+            </div>
+        </lightning-card>
+    </template>
+    <!--Show Booking Details-->
+    <template if:true={showPreview}>                                    
+        <lightning-card>
+            <div class="slds-card__body">
+                <template if:true={orderSummary}>
+                    <div class="price-details-card-preview">
+                        <div class="card-header">
+                            <h2>Price Details</h2>
+                        </div>
+                        <div class="card-body">
+                            <template for:each={orderSummary} for:item="value">
+                                <div key={value} class="price-row">
+                                    <div class="price-label">{value.name}</div>
+                                    <div class="price-value">&#8377; {value.amount}</div>
+                                </div>
+                            </template>
+                            <div class="section-divider"></div>
+                            <div class="net-amount-section">
+                                <template if:true={showGst}>
+                                    <div class="price-row">
+                                        <div class="price-label">Net Amount</div>
+                                        <div class="price-value">&#8377; {totalNetAmount}</div>
+                                    </div>
+                                        <template if:true={showCgst}>
+                                            <div class="price-row">
+                                                <div class="price-label">CGST Amount (9%)</div>
+                                                <div class="price-value">&#8377; {totalCgstAmount}</div>
+                                            </div>
+                                            <div class="price-row">
+                                                <div class="price-label">SGST Amount (9%)</div>
+                                                <div class="price-value">&#8377; {totalSgstAmount}</div>
+                                            </div>                                   
+                                        </template>
+                                        <template if:true={showIgst}>
+                                            <div class="price-row">
+                                                <div class="price-label">IGST Amount (18%)</div>
+                                                <div class="price-value">&#8377; {totalIgstAmount}</div>
+                                            </div>                                  
+                                        </template>
+                                </template>
+                            </div>
+                            <div class="section-divider"></div>
+                            <div class="total-amount-section">
+                                <template if:true={showDiscount}>
+                                    <div class="price-row">
+                                        <div class="price-label">Total Discount Amount</div>
+                                        <div class="price-value">&#8377; {totalDiscountAmount}</div>
+                                    </div>
+                                </template>
+                                <div class="price-row total">
+                                    <div class="price-label">{amountMessage}</div>
+                                    <div class="price-value">&#8377; {totalAmountAfterDiscount}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </lightning-card>
+            <lightning-card title="Guest Details">
+                <template for:each={guestRows} for:item="guest">
+                    <div key={guest.id} class="guest-rows" data-index={index}>
+                        <lightning-layout horizontal-align="start">
+                            <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
+                                <lightning-input class="input-field" label="Passenger" value={guest.type} disabled></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Title field (disabled for display purpose) -->
+                            <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
+                                <lightning-input disabled class="input-field" name="Title__c" label="Title" value={guest.title}></lightning-input>                                
+                            </lightning-layout-item>
+                            
+                            <!-- First Name field -->
+                            <lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
+                                <lightning-input disabled class="input-field" label="First Name" value={guest.firstname}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Last Name field -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input disabled class="input-field" label="Last Name" value={guest.lastname}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Gender field (Picklist) -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input disabled class="input-field" label="Gender" value={guest.gender}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Age field -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input disabled class="input-field" label="Age" value={guest.age}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Designation field -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input disabled class="input-field" label="Designation" value={guest.designation}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Travel Class field (Picklist) -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input disabled class="input-field" label="Travel Class" value={guest.travelclass}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Travel PNR No field -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input disabled class="input-field" label="Travel PNR No" value={guest.travelpnrno}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Travel Nationality field -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input class="input-field" disabled data-index={index} label="Nationality" value={guest.nationality}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Travel Passport Number field -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input class="input-field" disabled data-index={index} label="Passport Number" value={guest.passportnumber}></lightning-input>
+                            </lightning-layout-item>
+                            <!-- Travel Mobile field -->
+                            <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                <lightning-input class="input-field" disabled data-index={index} label="Phone" value={guest.phone}></lightning-input>
+                            </lightning-layout-item>
+                    </lightning-layout>
+                    </div>
+                </template>
+            </lightning-card>
+
+            <lightning-card title="Placard Details">
+                <template if:true={selectedPassenger}>
+                <div class="guest-rows">
+                        <!-- Title field (disabled for display purpose) -->
+                        <lightning-input disabled class="input-field" name="Title__c" label="Title" value={selectedPassenger.title}></lightning-input>
+                        
+                        <!-- First Name field -->
+                        <lightning-input disabled class="input-field" name="First_Name__c" label="First Name" value={selectedPassenger.firstname}></lightning-input>
+                        
+                        <!-- Last Name field -->
+                        <lightning-input disabled class="input-field" name="Last_Name__c"  label="Last name" value={selectedPassenger.lastname}></lightning-input>
+                                                            
+                        <!-- Mobile field -->
+                        <lightning-input disabled class="input-field" name="Mobile__c" label="Mobile" value={selectedPassenger.phone}></lightning-input>
+                        
+                    </div>  
+                </template>         
+            </lightning-card>
+        
+    </template>
+</template>

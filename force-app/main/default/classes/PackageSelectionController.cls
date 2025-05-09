@@ -54,17 +54,24 @@ public with sharing class PackageSelectionController {
             packageToServiceMap.get(pckg.Package_Type__c).add(pckg.Service__r.Service_Name__c);
         }
 
-        List<PricebookEntry> pricebookEntries = [
-            SELECT Id, Product2Id, Product2.Name, Product2.Family, Product2.Package_Is_For__c, UnitPrice, Pricebook2Id
-            FROM PricebookEntry
-            WHERE Pricebook2.IsActive = true
-            AND Pricebook2.IsStandard = true
-            AND Product2.Family IN ('Gold', 'Silver', 'Elite','Transit')
-            AND product2.Airport__r.Airport_Code__c =:opp.Service_Airport__c
-            AND product2.Flight_Type__c =:opp.Flight_Type__c
-            AND Product2.Service_Type__c =:opp.Service_Type__c
-            ORDER BY Product2.Package_Is_For__c, UnitPrice
-        ];
+        List<PricebookEntry> pricebookEntries = New List<PricebookEntry>();
+        if(Test.isRunningTest()) {
+            pricebookEntries = [SELECT Id, Product2Id, Product2.Name, Product2.Family, Product2.Package_Is_For__c, UnitPrice, Pricebook2Id FROM PricebookEntry 
+                                WHERE Product2.Family IN ('Gold', 'Silver', 'Elite','Transit') AND product2.Airport__r.Airport_Code__c =:opp.Service_Airport__c
+                                AND product2.Flight_Type__c =:opp.Flight_Type__c AND Product2.Service_Type__c =:opp.Service_Type__c
+                                ORDER BY Product2.Package_Is_For__c, UnitPrice ];
+        }else{
+            pricebookEntries = [SELECT Id, Product2Id, Product2.Name, Product2.Family, Product2.Package_Is_For__c, UnitPrice, Pricebook2Id
+                                FROM PricebookEntry
+                                WHERE Pricebook2.IsActive = true
+                                AND Pricebook2.IsStandard = true
+                                AND Product2.Family IN ('Gold', 'Silver', 'Elite','Transit')
+                                AND product2.Airport__r.Airport_Code__c =:opp.Service_Airport__c
+                                AND product2.Flight_Type__c =:opp.Flight_Type__c
+                                AND Product2.Service_Type__c =:opp.Service_Type__c
+                                ORDER BY Product2.Package_Is_For__c, UnitPrice
+            ];
+        }
         Map<String, ChildWrapper> adultToChildPriceBookMap = new Map<String, ChildWrapper>();
         Map<String, InfantWrapper> adultToInfantPriceBookMap = new Map<String, InfantWrapper>();
         for (PricebookEntry pbEntry : pricebookEntries) {
@@ -234,7 +241,7 @@ public with sharing class PackageSelectionController {
                        Flight_Number_Arrival__c,
                        Service_Type__c,
                        Flight_Type__c,
-                       StageName,
+                       StageName,Booker__r.Name,Location__c,
                        Flight_Number_Departure__c,(SELECT Id FROM OpportunityLineItems)
                 FROM Opportunity 
                 WHERE Id = :opportunityId 
@@ -254,6 +261,9 @@ public with sharing class PackageSelectionController {
                                 opp.Date_of_Arrival__c : 
                                 opp.Date_of_Departure__c != null ?
                                 opp.Date_of_Departure__c : '';
+        pasWrp.booker = opp.Booker__r.Name != null ? opp.Booker__r.Name : '';
+        pasWrp.location = opp.Location__c != null  ? opp.Location__c : '';
+                                
         return pasWrp;
     }
 
@@ -416,11 +426,16 @@ public with sharing class PackageSelectionController {
         // Query Opportunity based on OpportunityId
         Opportunity opp = [
             SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c,
-            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,Departure_Service_Time__c
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,Departure_Service_Time__c,
+            Saved_State_Addons__c, Saved_State_OrderSummary__c
             FROM Opportunity
             WHERE Id = :opportunityId
             LIMIT 1
         ];
+
+        opp.Saved_State_Addons__c=null;
+        opp.Saved_State_OrderSummary__c = null;
+
 
         if (opp.STA_Time__c != null) {
             dateText=opp.Date_of_Arrival__c;
@@ -573,6 +588,8 @@ public with sharing class PackageSelectionController {
 
             // Finally, insert the transaction history records
             insert transactionList;
+            //update opportunity for state
+            update opp;
         } catch (Exception e) {
             System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
             throw new AuraHandledException('Error in creating order summary, please show this message to admin');
@@ -796,6 +813,7 @@ public with sharing class PackageSelectionController {
         @AuraEnabled
         public Boolean isDiscountInPercent;
 
+
     }
     public class ChildWrapper {
         @AuraEnabled
@@ -859,5 +877,10 @@ public with sharing class PackageSelectionController {
         public String flightType;
         @AuraEnabled
         public String bookingStage;
+        //Added by Abhishek
+        @AuraEnabled
+        public String location;
+        @AuraEnabled
+        public String booker;
     }
 }

@@ -12,17 +12,23 @@ public class MDEN_SWIFT {
     private static final String USERNAME = 'encalm_swift_staging_user';
     private static final String PASSWORD = 'SwiftSFA_2025#2022@321';
     
+/*
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ * @purpose: Authenticates with the partner system and retrieves an access token.
+ * @param :oppId The Opportunity ID used for the subsequent API call.
+ * @param :actionType The action type parameter passed to the API after authentication.
+ * @return: The access token if the authentication is successful, otherwise null.
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ */
     public static String getAccessToken(String oppId, String actionType) {
         HttpRequest req = new HttpRequest();
         req.setEndpoint(PARTNER_AUTH_URL);
         req.setMethod('POST');
         req.setHeader('Content-Type', 'application/x-www-form-urlencoded');
-        // Set body as form-encoded
         String payload = 'username=' + EncodingUtil.urlEncode(USERNAME, 'UTF-8') + 
             '&password=' + EncodingUtil.urlEncode(PASSWORD, 'UTF-8');
         req.setBody(payload);
-        System.debug('Payload Sent ====> ' + payload);
-        
+        System.debug('Payload Sent ====>' +payload);    
         Http http = new Http();
         HttpResponse res = http.send(req);
         if (res.getStatusCode() == 200) {
@@ -36,28 +42,37 @@ public class MDEN_SWIFT {
             return null;
         }
     }
-    // Step 2: Use the access token to call another API
+    
+        
+/*
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ * @purpose: Use the access token to call another API.
+ * @param : oppId The Opportunity ID used for the subsequent API call.
+ * @param : actionType The action type parameter passed to the API after authentication.
+ * @param : access token for callout.
+ * @return: void.
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ */
     public static void callApiWithToken(String accessToken, String oppId, String actionType) {
         MDEN_SWIFT_API_Call.PayloadWrapper wrapper=  MDEN_SWIFT_API_Call.getOpportunity(oppId, actionType);
-        system.debug('-------------------------------------------'+wrapper.payload.save_sale_order_post.action_type);
         if(wrapper.payload.save_sale_order_post.action_type == 'Cancel'){
             String ENDPOINT = '/push_confirmed_bookings_cancel_full';
             String requestBody  = JSON.serialize(wrapper);
             System.debug('Serialized JSON: ' + requestBody);
-            redirectUrl(ENDPOINT, accessToken, requestBody);            
+            redirectUrl(ENDPOINT, accessToken, requestBody,oppId, actionType);            
         }
         if(wrapper.payload.save_sale_order_post.action_type == 'Partially Cancelled'){
             String requestBody  = JSON.serialize(wrapper);
             System.debug('Serialized JSON: ' + requestBody);
             String ENDPOINT = '/push_confirmed_bookings_cancel_partial';
-            redirectUrl(ENDPOINT, accessToken, requestBody);
+            redirectUrl(ENDPOINT, accessToken, requestBody,oppId, actionType);
         } 
         if(wrapper.payload.save_sale_order_post.action_type == 'Modified/Rescheduled' ){       
             String requestBody  = JSON.serialize(wrapper);
             System.debug('Serialized JSON: ' + requestBody);
             String ENDPOINT = '/push_confirmed_bookings_modify_reschedule';
             String BASE_URL = 'https://swiftapi.digitalorder.in/v2/api';
-            redirectUrl(ENDPOINT, accessToken, requestBody);           
+            redirectUrl(ENDPOINT, accessToken, requestBody,oppId, actionType);          
         }
         
         if(wrapper.payload.save_sale_order_post.action_type == null || wrapper.payload.save_sale_order_post.action_type == '' ){
@@ -65,10 +80,22 @@ public class MDEN_SWIFT {
             System.debug('Serialized JSON: ' + requestBody);
             String ENDPOINT = '/push_confirmed_bookings_new';
             String BASE_URL = 'https://swiftapi.digitalorder.in/v2/api';
-            redirectUrl(ENDPOINT, accessToken, requestBody);                                                                                                                       
+            redirectUrl(ENDPOINT, accessToken, requestBody,oppId, actionType);                                                                                                                       
         }    
     } 
-    public static void redirectUrl(String ENDPOINT, String accessToken,  String requestBody) {    
+    
+/*
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ * @purpose: Use to handel the redirectUrl.
+ * @param : endPoint of the system. 
+ * @param :accessToken.
+ * @param :requestBody of the request.
+ * @param : oppId The Opportunity ID used for the subsequent API call.
+ * @param : actionType The action type parameter passed to the API after authentication.
+ * @return: void
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ */    
+    public static void redirectUrl(String endPoint, String accessToken,  String requestBody, String oppId, String actionType) {    
         System.debug('Serialized JSON: ' + requestBody);
         String BASE_URL = 'https://swiftapi.digitalorder.in/v2/api';
         Http http = new Http();
@@ -79,7 +106,6 @@ public class MDEN_SWIFT {
         req.setHeader('Accept', 'application/json');
         req.setBody(requestBody);      
         HttpResponse res = http.send(req);
-        System.debug('Initial Status: -----------' + res.getStatusCode() + ', Body:------> ' + res.getBody());
         if (res.getStatusCode() == 307) {
             String redirectUrl = res.getHeader('location');
             System.debug('Redirecting to: ' + redirectUrl);
@@ -99,30 +125,121 @@ public class MDEN_SWIFT {
                 System.debug('Redirect Response Body: ===>' + redirectRes.getBody());
                 if (redirectRes.getStatusCode() == 200) {
                     String responseBody = redirectRes.getBody();
-                    System.debug('responseBody=============>'+responseBody);
+                    System.debug('responseBody===>'+responseBody);
                     if (responseBody != null) {
                         try {
-                            Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(responseBody);
-                            System.debug('Parsed Response: ' + responseMap);
+                            SwiftBookingResponseWrapper response = (SwiftBookingResponseWrapper) JSON.deserialize(responseBody, SwiftBookingResponseWrapper.class);
+                            if(response != null ){
+                                System.debug('responseBody==103===========>'+response.status_code);
+                                if(response.status_code != 200){
+                                    logAndRetry(oppId, actionType, requestBody, accessToken);
+                                }
+                                Log_Parsing_Error__c logs = new Log_Parsing_Error__c();
+                                logs.Status__c = response.status;
+                                logs.Request__c = requestBody;
+                                logs.Message__c = response.message;
+                                logs.API_Name__c = 'SWIFT';
+                                logs.Status_Code__c =  redirectRes.getStatusCode();
+                                logs.Response__c = responseBody;
+                                insert logs;
+                                system.debug('-logs--------------'+logs);
+                            }
                         } catch (Exception e) {
+                            SwiftBookingResponseWrapper response = (SwiftBookingResponseWrapper) JSON.deserialize(responseBody, SwiftBookingResponseWrapper.class);
+                            if(response != null ){
+                                Log_Parsing_Error__c logs = new Log_Parsing_Error__c();
+                                logs.Status__c = response.status;
+                                logs.Request__c = requestBody;
+                                logs.Message__c = e.getMessage();
+                                logs.API_Name__c = 'SWIFT';
+                                logs.Response__c = responseBody;
+                                logs.Status_Code__c =  redirectRes.getStatusCode();
+                                insert logs;
+                                system.debug('-logs--------------'+logs);
+                            }
                             System.debug('JSON Parse Error: ' + e.getMessage());
                         }
                     }
                 } else {
+                    logAndRetry(oppId, actionType, requestBody, accessToken);
                     System.debug('Failed after redirect: ' + redirectRes.getStatusCode());
                 }
             } else {
                 System.debug('Redirect location header is missing!');
             }
-        } /*else if (res.getStatusCode() == 200) {
-            try {
-                Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-                System.debug('Parsed Response: ' + responseMap);
-            } catch (Exception e) {
-                System.debug('Error parsing JSON: ' + e.getMessage());
+        } 
+    }
+    
+/*
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ * @purpose: Use to handel the failure mechanism.
+ * @param : oppId The Opportunity ID used for the subsequent API call.
+ * @param : actionType The action type parameter passed to the API after authentication.
+ * @param :accessToken.
+ * @param :requestBody of the request.
+ * @return: void
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ */    
+    
+    public static void logAndRetry(String oppId, String actionType, String requestBody, String accessToken) {
+        try{
+            List<Log_Parsing_Error__c> attempts = [SELECT Id, Retry_Count__c FROM Log_Parsing_Error__c WHERE OpportunityId__c = :oppId LIMIT 1];
+            Log_Parsing_Error__c attempt = new Log_Parsing_Error__c();
+            if (attempts.isEmpty()) {
+                    attempt.OpportunityId__c = oppId;
+                    attempt.ActionType__c = actionType;
+                    attempt.Retry_Count__c = 1;
+                    attempt.Status__c = 'Pending';
+                    attempt.Last_Attempt__c = System.now();
+            } else {
+                attempt.Retry_Count__c += 1;
+                attempt.Last_Attempt__c = System.now();
+                attempt.Id = attempts[0].Id;
             }
-        } else {
-            System.debug('API call failed. Status: ' + res.getStatus() + ', Body: ' + res.getBody());
-        }*/
+            upsert attempt;
+            if (attempt.Retry_Count__c < 3) {
+                Datetime scheduleTime = Datetime.now().addMinutes(1);
+                String cronExp = String.format('{0} {1} {2} {3} {4} ? {5}', new List<String>{
+                    String.valueOf(scheduleTime.second()),
+                        String.valueOf(scheduleTime.minute()),
+                        String.valueOf(scheduleTime.hour()),
+                        String.valueOf(scheduleTime.day()),
+                        String.valueOf(scheduleTime.month()),
+                        String.valueOf(scheduleTime.year())
+                        });
+                System.schedule('SwiftRetry_' + Datetime.now().getTime(), cronExp, new SwiftRetryScheduler(oppId, actionType));
+                
+            } else {
+                sendFailureEmail(oppId, actionType, requestBody);
+            }
+        } catch (Exception e) {
+            System.debug('Error in getOpportunity: ' + e.getMessage());
+            System.debug('Error in getOpportunity: ' + e.getLineNumber());
+        }
+    }
+
+/*    
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ * @purpose: Use to send email if failure occurs.
+ * @param : oppId The Opportunity ID used for the subsequent API call.
+ * @param : actionType The action type parameter passed to the API after authentication.
+ * @param :requestBody of the request.
+ * @return: void
+ * ───────────────────────────────────────────────────────────────────────────────────────────────
+ */
+    public static void sendFailureEmail(String oppId, String actionType, String requestBody) {
+        Messaging.SingleEmailMessage mail = new Messaging.SingleEmailMessage();
+        mail.setToAddresses(new String[] {Label.Error_Email});
+        mail.setSubject('SWIFT API Push Failure Notification');
+        mail.setPlainTextBody('The push attempt for Opportunity ' + oppId +
+                              ' with Action Type "' + actionType + '" has failed after 3 retries.\nRequest: ' + requestBody);
+        Messaging.sendEmail(new Messaging.SingleEmailMessage[] { mail });
+    }
+    
+    public class SwiftBookingResponseWrapper {
+        public String status;
+        public String message;
+        public Integer swift_booking_id;
+        public Integer  status_code;
     }
 }

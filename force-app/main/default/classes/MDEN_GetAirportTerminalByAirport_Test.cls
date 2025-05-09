@@ -11,14 +11,14 @@ private class MDEN_GetAirportTerminalByAirport_Test {
         Terminal__c terminal1 = new Terminal__c(
             Name = 'T1', 
             Airport__c = airport.id, 
-            Code__c = 'Terminal 1'
+            Code__c = 'Terminal 1I'
         );
         insert terminal1;
 
         Terminal__c terminal2 = new Terminal__c(
             Name = 'T2', 
             Airport__c = airport.id, 
-            Code__c = 'Terminal 1'
+            Code__c = 'Terminal 1I'
         );
         insert terminal2;
     }

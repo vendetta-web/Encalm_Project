@@ -14,9 +14,9 @@ public class AmendmentBookingController {
                 LIMIT 1
             ];
 
-            for (opportunitylineitem oli: opp.opportunitylineitems) {
+            for (opportunitylineitem oli: opp.opportunitylineitems) { 
                 if (oli.Product2.Family != 'Add Ons' && oli.Product2.Family != 'Surcharge') {
-                    packageName = oli.Product2.Family;
+                    packageName = oli.Product2.Family;               
                     bookingAmount += oli.UnitPrice;
                 }
             }
@@ -52,6 +52,7 @@ public class AmendmentBookingController {
             AND (Status__c = 'Active' OR Status__c = 'Rescheduled')
             AND Product2.Family != 'Add Ons'
             ];
+            delete oliListToDelete;
         Map<String, List<OpportunityLineItem>> oliMap = new Map<String, List<OpportunityLineItem>>();
         List<Passenger_Details__c> passengersToUpdate = [SELECT Id,Individual_Booking_Details__c,Passenger_Type__c
             FROM Passenger_Details__c
@@ -89,26 +90,29 @@ public class AmendmentBookingController {
         }
         // Update the Opportunity Line Items
         try {
-
-            delete oliListToDelete;
             insert opportunityLineItemsToInsert;
             for (Passenger_Details__c pass: passengersToUpdate) {
+                System.debug('oliMap--->>> ' + oliMap);
                 if(oliMap.containsKey(pass.Passenger_Type__c)) {
                     List<OpportunityLineItem> oliIds = oliMap.get(pass.Passenger_Type__c);
+                    System.debug('oliIds--->>> ' + oliIds);
                      if (!oliIds.isEmpty()) {
                         // Get the first record from the list
                         OpportunityLineItem oliId = oliIds[0];                    
                         pass.Individual_Booking_Details__c = oliId.Id;
+                        System.debug('pass.Individual_Booking_Details__c--->>> ' + pass.Individual_Booking_Details__c);
                         // Remove the used record from the list
                         oliIds.remove(0);
-                        
+                        System.debug('oliIds--->>> ' + oliIds);
                         // If the list is now empty, remove the key from the map to avoid future checks
                         if (oliIds.isEmpty()) {
                             oliMap.remove(pass.Passenger_Type__c);
+                            System.debug('oliMap--->>> ' + oliMap);
                         }
                     }
                 }
             }
+            System.debug('passengersToUpdate--->>> ' + passengersToUpdate);
             update passengersToUpdate;
         } catch (Exception e) {
             System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
@@ -329,5 +333,83 @@ public class AmendmentBookingController {
         oli.SGST__c = sgstAmount;
         oli.CGST__c = cgstAmount;
         oli.IGST__c = igstAmount;        
+    }
+
+    @AuraEnabled
+    public static void savePassengerDetails(List<Map<String, Object>> passengerData, Id opportunityId) {
+
+
+        List<Passenger_Details__c> passengerDetailsList = new List<Passenger_Details__c>();
+        // Create a Map directly from the query result
+        Map<Id, String> opportunityMap = new Map<Id, String>();// Initialize a Map to store Record_Id__c as key and Description__c as value
+        List<OpportunityLineItem> oliList = [SELECT Id,Product2.Package_Is_For__c 
+            FROM OpportunityLineItem
+            WHERE OpportunityId =:opportunityId
+            AND Status__c = 'Active'
+            AND Id NOT IN (
+                SELECT Individual_Booking_Details__c
+                FROM Passenger_Details__c
+            )
+            ORDER BY CreatedDate DESC];
+        Map<String, String> typeToOliIdMap = new Map<String, String>();
+        // Create a map to store lists of passengers by their 'Valid_For' field value
+        Map<String, List<Id>> oliMap = new Map<String, List<Id>>();
+        // Iterate over the OpportunityLineItem object records and populate the map
+        for (OpportunityLineItem oli : oliList) {
+            //typeToOliIdMap.put(oli.Product2.Package_Is_For__c, oli.Id);
+            if (!oliMap.containsKey(oli.Product2.Package_Is_For__c)) {
+            	oliMap.put(oli.Product2.Package_Is_For__c, new List<Id>());
+        	}
+        	oliMap.get(oli.Product2.Package_Is_For__c).add(oli.Id);
+        }
+        for (Map<String, Object> guest : passengerData) {
+            Passenger_Details__c passenger = new Passenger_Details__c();
+            passenger.Name = (String) guest.get('firstname') + ' ' + (String) guest.get('lastname');
+            passenger.Opportunity_ID__c = opportunityId;
+            passenger.Title__c = (String) guest.get('title');
+            passenger.First_Name__c = (String) guest.get('firstname');
+            passenger.Last_Name__c = (String) guest.get('lastname');
+            passenger.Gender__c = (String) guest.get('gender');
+            String ageStr = (String) guest.get('age');
+    		Integer age =  ageStr != null ? Integer.valueOf(ageStr) : null;  // Convert the String to Integer
+   			passenger.Age__c = age;
+            passenger.Designation__c = (String) guest.get('designation');
+            passenger.Travel_Class__c = (String) guest.get('travelclass');
+            passenger.Travel_PNR_No__c = (String) guest.get('travelpnrno');
+            passenger.Designation__c = (String) guest.get('designation');
+            passenger.Nationalities__c = (String) guest.get('nationality');
+            passenger.Passport_Govt_Id__c = (String) guest.get('passportnumber');
+            passenger.Mobile__c = (String) guest.get('phone');
+            passenger.Show_as_Placard__c = false;
+            passenger.Unique_Id__c = (String) guest.get('id');
+
+            passenger.Passenger_Type__c = (String) guest.get('type');
+            if(oliMap.containsKey((String) guest.get('type'))) {
+               List<Id> oliIds = oliMap.get((String) guest.get('type'));
+                if (!oliIds.isEmpty()) {
+                // Get the first Id from the list
+                Id oliId = oliIds[0];
+                
+                // Now, link this Passenger_Details__c record to the OpportunityLineItem
+                passenger.Individual_Booking_Details__c = oliId;
+                
+                // Remove the used Id from the list
+                oliIds.remove(0);
+                
+                // If the list is now empty, remove the key from the map to avoid future checks
+                if (oliIds.isEmpty()) {
+                    oliMap.remove((String) guest.get('type'));
+                }
+            }
+            }
+            passengerDetailsList.add(passenger);
+        }
+        // Insert the Opportunity Line Items
+        try { 
+            insert passengerDetailsList;
+        } catch (Exception e) {
+            System.debug('Error inserting Passenger_Details__c records: ' + e.getMessage());
+            throw new AuraHandledException('Error in creating guest data, please show this message to admin');
+        }
     }
 }

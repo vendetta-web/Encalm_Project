@@ -3,16 +3,24 @@ public class LeadStatusHelper {
     // Handle before update logic
     public static void handleBeforeUpdate(List<Lead> newLeads, Map<Id, Lead> oldLeadMap) {
         try {
-            List<Group> reservationQueue = [SELECT Id FROM Group WHERE Type = 'Queue' AND Name = 'Reservation Queue' LIMIT 1];
-            Id queueId = reservationQueue.isEmpty() ? null : reservationQueue[0].Id;
+            List<Group> queues = [SELECT Id,Name FROM Group WHERE Type = 'Queue' AND Name IN ('Reservation Queue', 'Sales Team')];
+            //Id queueId = reservationQueue.isEmpty() ? null : reservationQueue[0].Id;
             
+            Map<String, Id> queueNameToIdMap = new Map<String, Id>();
+            for (Group g : queues) {
+                queueNameToIdMap.put(g.Name, g.Id);
+            }
             for (Lead newLead : newLeads) {
                 System.debug('NEwLEead>>beforeUpdate>>1'+ newLead.Id);
                 Lead oldLead = oldLeadMap.get(newLead.Id);
                 
-                if (oldLead != null && newLead.Status == 'Awaiting Customer response' && oldLead.Status != 'Awaiting Customer response') {
-                    if (queueId != null) {
-                        newLead.OwnerId = queueId;  
+                if (oldLead != null && newLead.Status == 'Awaiting Customer response' && oldLead.Status != 'Awaiting Customer response' && newLead.Department__c != null) {
+                    if (newLead.Department__c == 'Reservations' && queueNameToIdMap.containsKey('Reservation Queue')) {
+                    newLead.OwnerId = queueNameToIdMap.get('Reservation Queue');
+                    System.debug('Assigned to Reservation Queue');
+                    } else if (newLead.Department__c == 'Sales' && queueNameToIdMap.containsKey('Sales Team')) {
+                        newLead.OwnerId = queueNameToIdMap.get('Sales Team');
+                        System.debug('Assigned to Sales Team');
                     }
                 }
                 
@@ -33,7 +41,7 @@ public class LeadStatusHelper {
     public static void handleBeforeInsert(List<Lead> newLeadList) {
         try {
             for (Lead leadRec : newLeadList) {
-               System.debug('NEwLEead>>beforeUpdate>>2'+ leadRec);
+                System.debug('NEwLEead>>beforeUpdate>>2'+ leadRec);
                 if (leadRec.Case__c != null && leadRec.LeadSource == null) {
                     // Query the related Case and set LeadSource based on Case's Origin field
                     Case caseRecord = [SELECT Origin FROM Case WHERE Id = :leadRec.Case__c LIMIT 1];
@@ -47,50 +55,74 @@ public class LeadStatusHelper {
         }
     }
     public static void beforeUpdateLeadEscalation(List<Lead> newLeads, Map<Id, Lead> oldLeadsMap) { // Added by Sidhant
-    System.debug('beforeUpdateLeadEscalation');
+        System.debug('beforeUpdateLeadEscalation');
         for (Lead newLead : newLeads) {
             Lead oldLead = oldLeadsMap != null ? oldLeadsMap.get(newLead.Id) : null;
             if (oldLead == null) {
-                if (isReservationProfile(newLead.OwnerId) && newLead.Status == 'Open') {
+                if (isTargettedProfile(newLead.OwnerId) && newLead.Status == 'Open') {
                     startTimer(newLead, 2, 1);
                 }
             } else {
-                if (newLead.OwnerId != oldLead.OwnerId && isReservationProfile(newLead.OwnerId) && newLead.Status == 'Open') {
+                if (newLead.OwnerId != oldLead.OwnerId && isTargettedProfile(newLead.OwnerId) && newLead.Status == 'Open') {
                     startTimer(newLead, 2, 1); // First timer after 30 minutes
                 }
-                if ((oldLead.Status != 'Open' && newLead.Status == 'Open') && isReservationProfile(newLead.OwnerId)) {
+                if ((oldLead.Status != 'Open' && newLead.Status == 'Open') && isTargettedProfile(newLead.OwnerId)) {
                     System.debug('In beforeUpdate: Lead Status changed to Open and assigned to Reservation profile.');
                     startTimer(newLead, 2, 1); // First timer after 30 minutes
                 }
-                
+                if ((newLead.Status == 'Customer Responded' && isTargettedProfile(newLead.OwnerId))) {
+                    System.debug('In beforeUpdate: Lead Status changed to Customer Responded and assigned to Reservation profile.');
+                    abortLeadEscationScheduledJob(newLead.Id);
+                    startTimer(newLead, 2, 1);
+                }
+                /*if ((newLead.Status == 'Awaiting Customer response')) {
+                    System.debug('In beforeUpdate: Lead Status changed to Open and assigned to Reservation profile.');
+                    abortLeadEscationScheduledJob(newLead.Id);
+                }  */              
             }
         }
     }
-    
+    //added by Abhishek
+    private static void abortLeadEscationScheduledJob(string LeadId){
+        String cronName = 'Lead Timer First Check' + leadId;
+        String cronName2 = 'Lead Timer Second Check' + leadId;
+            List<String> cronNameList = new List<String>{cronName,cronName2};
+        system.debug('cronName>>>'+cronName);        
+        List<CronTrigger> cronJobs = [SELECT Id, CronJobDetail.Name, State FROM CronTrigger WHERE CronJobDetail.Name IN :cronNameList AND State = 'WAITING' LIMIT 1];
+        
+        if (!cronJobs.isEmpty()) {
+            System.abortJob(cronJobs[0].Id);
+            System.debug('Aborted job: ' + cronJobs[0].CronJobDetail.Name);
+        } else {
+            System.debug('No scheduled job found for lead: ' + leadId);
+        }
+        
+    }
     
     private static void startTimer(Lead lead, Integer minutes, Integer level) {  
         // Lead ldList = [SELECT Id, Name, TAT_deadline__c, Escalation_Level__c FROM Lead Where Id = : leadId];
         System.debug('Start timeer');
-      lead.TAT_deadline__c = System.now().addMinutes(30);
-      lead.Escalation_Level__c = 'Level 1';
-     //   update ldList;
+        lead.TAT_deadline__c = System.now().addMinutes(30);
+        lead.Escalation_Level__c = 'Level 1';
+        //   update ldList;
         System.debug('TAT_deadline__c'+ lead.TAT_deadline__c);
         System.debug('Escalation_Level__c'+ lead.Escalation_Level__c);
-        Datetime futureTime = System.now().addMinutes(2);
+        Datetime futureTime = System.now().addMinutes(30);
         
         // Extract the components for the cron expression
         String cronExp = '0 ' + futureTime.minute() + ' ' + futureTime.hour() + ' ' + futureTime.day() + ' ' + (futureTime.month()) + ' ? ' + futureTime.year();
         System.debug('Scheduled time: ' + futureTime + ' with cron expression: ' + cronExp);
+        
         LeadEscalationTimer scheduler = new LeadEscalationTimer(lead.Id, level);
         if(!Test.isRunningTest()){
             System.schedule('Lead Timer First Check' +lead.Id, cronExp, scheduler);
         }
     }
     
-    private static Boolean isReservationProfile(Id ownerId) {
+    private static Boolean isTargettedProfile(Id ownerId) {
         if(String.valueOf(ownerId).startsWith('005')){
             User owner = [SELECT Profile.Name FROM User WHERE Id = :ownerId LIMIT 1];
-            return owner.Profile.Name == 'Reservation'; // Adjust profile name if necessary
+            return owner.Profile.Name == 'Reservation' || owner.Profile.Name == 'Sales'; // Adjust profile name if necessary
         }else{
             return false;
         }
@@ -99,25 +131,25 @@ public class LeadStatusHelper {
     
     // Handle before insert logic
     /* public static void handleAfterUpdateLeadLogic(List<Lead> newLeads, Map<Id, Lead> oldLeadsMap) { // Added by Saurabh
-        Map<Lead,DateTime> mapLeadFollowDTtime = new Map<Lead,DateTime>();
-        for (Lead newLead : newLeads) {
-        System.debug('NEwLEead>>beforeUpdate>>3'+ newLead.Id);
-            if(oldLeadsMap!= null  && oldLeadsMap.get(newLead.Id).Set_Follow_up_Date_and_Time__c != newLead.Set_Follow_up_Date_and_Time__c){
-                 scheduleReplyCheck(newLead);
-            }
-        }
-    }
-  
-    private static void scheduleReplyCheck(Lead leadRecd ) {
-            if (leadRecd.Set_Follow_up_Date_and_Time__c > System.now()) {  // Only schedule if future time is valid
-                String cronExp = '0 ' + leadRecd.Set_Follow_up_Date_and_Time__c.minute() + ' ' + leadRecd.Set_Follow_up_Date_and_Time__c.hour() + ' ' +leadRecd.Set_Follow_up_Date_and_Time__c.day() + ' ' +leadRecd.Set_Follow_up_Date_and_Time__c.month() + ' ? ' +leadRecd.Set_Follow_up_Date_and_Time__c.year();
-                System.debug('ConExp'+cronExp);
-                System.schedule('Track Replies Job ' + leadRecd.Id, cronExp, new TrackRepliesAndReassign(leadRecd));
-            } else {
-                System.debug('Follow-up time has already passed. No scheduling needed.');
-            }
-    
-    } */
-    
+Map<Lead,DateTime> mapLeadFollowDTtime = new Map<Lead,DateTime>();
+for (Lead newLead : newLeads) {
+System.debug('NEwLEead>>beforeUpdate>>3'+ newLead.Id);
+if(oldLeadsMap!= null  && oldLeadsMap.get(newLead.Id).Set_Follow_up_Date_and_Time__c != newLead.Set_Follow_up_Date_and_Time__c){
+scheduleReplyCheck(newLead);
+}
+}
+}
 
+private static void scheduleReplyCheck(Lead leadRecd ) {
+if (leadRecd.Set_Follow_up_Date_and_Time__c > System.now()) {  // Only schedule if future time is valid
+String cronExp = '0 ' + leadRecd.Set_Follow_up_Date_and_Time__c.minute() + ' ' + leadRecd.Set_Follow_up_Date_and_Time__c.hour() + ' ' +leadRecd.Set_Follow_up_Date_and_Time__c.day() + ' ' +leadRecd.Set_Follow_up_Date_and_Time__c.month() + ' ? ' +leadRecd.Set_Follow_up_Date_and_Time__c.year();
+System.debug('ConExp'+cronExp);
+System.schedule('Track Replies Job ' + leadRecd.Id, cronExp, new TrackRepliesAndReassign(leadRecd));
+} else {
+System.debug('Follow-up time has already passed. No scheduling needed.');
+}
+
+} */
+    
+    
 }

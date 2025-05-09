@@ -6,21 +6,69 @@
         </template>
     </div>
     <!-- Account Search -->
-    <lightning-layout multiple-rows="true">
-        <lightning-layout-item size="6" class="slds-p-around_small">
+    <lightning-layout multiple-rows="false">
+
+        <!-- Account Search -->
+        <template if:false={showFields}>
+            <lightning-layout-item size="6" class="slds-p-around_small">
+                <lightning-card title="Account Search">
+                    <div class="slds-p-horizontal_medium">
+                        <template if:true={selectedAccount}>
+                            <c-test-custom-lookups selected-account={selectedAccount} onaccountselect={handleAccountRecord}></c-test-custom-lookups>
+                        </template>
+                        <template if:false={selectedAccount}>
+                            <c-test-custom-lookups onaccountselect={handleAccountRecord}></c-test-custom-lookups>
+                        </template>
+                    </div>
+                </lightning-card>
+            </lightning-layout-item>
+        </template>
+        <!-- Added by Abhishek-->
+        <template if:true={showFields}>
+             <lightning-layout-item size="4" class="slds-p-around_small">
             <lightning-card title="Account Search">
                 <div class="slds-p-horizontal_medium">
-                    <!-- Conditionally render the child component only when selectedAccount is populated -->
-            <template if:true={selectedAccount}>
-                <c-test-custom-lookups selected-account={selectedAccount} onaccountselect={handleAccountRecord}></c-test-custom-lookups>
-            </template>
-            <template if:false={selectedAccount}>
-                <c-test-custom-lookups onaccountselect={handleAccountRecord}></c-test-custom-lookups>
-            </template>
+                    <template if:true={selectedAccount}>
+                        <c-test-custom-lookups selected-account={selectedAccount} onaccountselect={handleAccountRecord}></c-test-custom-lookups>
+                    </template>
+                    <template if:false={selectedAccount}>
+                        <c-test-custom-lookups onaccountselect={handleAccountRecord}></c-test-custom-lookups>
+                    </template>
                 </div>
             </lightning-card>
         </lightning-layout-item>
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <lightning-card title="Location">
+                    <div class="slds-p-horizontal_medium">
+                        <lightning-combobox
+                            name="location"
+                            value={value}
+                            placeholder="Select Location"
+                            options={options}
+                            onchange={handleChange}>
+                        </lightning-combobox>
+                    </div>
+                </lightning-card>
+            </lightning-layout-item>
+
+            <lightning-layout-item size="4" class="slds-p-around_small">
+                <lightning-card title="Booker">
+                    <div class="slds-p-horizontal_medium">
+                        <lightning-combobox
+                            name="booker"
+                            value={value2}
+                            placeholder="Select Contact"
+                            options={bookers}
+                            onchange={handleBookerChange}
+                            disabled = {disableBooker}>
+                        </lightning-combobox>
+                    </div>
+                </lightning-card>
+            </lightning-layout-item>
+        </template>
+
     </lightning-layout>
+
 
     <!-- Flight Details Form -->
     <lightning-card title="Flight Details Form">

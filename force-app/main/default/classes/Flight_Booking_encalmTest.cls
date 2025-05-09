@@ -11,7 +11,7 @@ public class Flight_Booking_encalmTest {
     public static void testMethod1(){
         
         // Creating Test data
-        Terminal__c terminal = new Terminal__c(Name='T1', Code__c='Terminal 1');
+        Terminal__c terminal = new Terminal__c(Name='T1', Code__c='Terminal 1I');
         insert terminal;
         
         Airline__c airline = new Airline__c(Airline_Name__c	='Air India', Airline_Code__c = '001');

@@ -410,4 +410,8 @@
         <!-- Backdrop for Modal -->
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
+     <!-- Conditionally display the spinner -->
+     <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
 </template>

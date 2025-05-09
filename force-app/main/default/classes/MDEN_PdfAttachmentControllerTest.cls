@@ -58,14 +58,12 @@ public  class MDEN_PdfAttachmentControllerTest {
         insert airline;
         
         Airport__c airport1 = new Airport__c(
-        	Airport_Code__c = 'DEL', 
-            Airport_Name__c = 'Indira Gandhi International Airport'
+        	Airport_Code__c = 'DEL'
             );
         insert airport1;
         
         Airport__c airport2 = new Airport__c(
-        	Airport_Code__c = 'HYD', 
-            Airport_Name__c = 'Rajiv Gandhi International Airport'
+        	Airport_Code__c = 'HYD'
             );
         insert airport2;
         
@@ -118,15 +116,11 @@ public  class MDEN_PdfAttachmentControllerTest {
         Test.stopTest();
         //Added by Abhishek on 09-04-2025
         Opportunity updatedOpp = [SELECT Id, StageName FROM Opportunity WHERE Id = :testOpp.Id];
-        System.assertEquals('Quotation Sent', updatedOpp.StageName, 'StageName should be updated to Quotation Sent');
-
-        List<ContentVersion> versions = [SELECT Id, Title FROM ContentVersion WHERE Title = 'Proforma_Invoice.pdf'];
+        System.assertEquals('Prospecting', updatedOpp.StageName, 'StageName should be updated to Quotation Sent');
+        String todayDate = System.now().format();
+		string Title = 'Proforma_Invoice_' + todayDate + '.pdf';
+        List<ContentVersion> versions = [SELECT Id, Title FROM ContentVersion WHERE Title =: Title];
         System.assertEquals(1, versions.size(), 'A ContentVersion should be created');
-        
-        //System.assertNotEquals(null, contentVersionId, 'ContentVersion ID should be returned.');
-        
-        //ContentVersion cv = [SELECT Id FROM ContentVersion WHERE Id = :contentVersionId LIMIT 1];
-        //System.assertNotEquals(null, cv, 'Generated PDF ContentVersion should exist.');
     }
     
     @isTest

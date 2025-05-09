@@ -1,6 +1,6 @@
 /**
-* @File Name : TrackRepliesAndReassignTest.cls
-* @Description : Test Class for TrackRepliesAndReassign.cls
+* @File Name : CustomPicklistControllerTest.cls
+* @Description : Test Class for CustomPicklistController.cls
 * @Author : Maxify Development Team
 * @Created Date : April 17, 2025
 **/
