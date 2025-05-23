@@ -130,7 +130,7 @@ public class MDEN_SWIFT {
                         try {
                             SwiftBookingResponseWrapper response = (SwiftBookingResponseWrapper) JSON.deserialize(responseBody, SwiftBookingResponseWrapper.class);
                             if(response != null ){
-                                System.debug('responseBody==103===========>'+response.status_code);
+                                System.debug('responseBody===>'+response.status_code);
                                 if(response.status_code != 200){
                                     logAndRetry(oppId, actionType, requestBody, accessToken);
                                 }
@@ -142,7 +142,7 @@ public class MDEN_SWIFT {
                                 logs.Status_Code__c =  redirectRes.getStatusCode();
                                 logs.Response__c = responseBody;
                                 insert logs;
-                                system.debug('-logs--------------'+logs);
+                                system.debug('-logs-->'+logs);
                             }
                         } catch (Exception e) {
                             SwiftBookingResponseWrapper response = (SwiftBookingResponseWrapper) JSON.deserialize(responseBody, SwiftBookingResponseWrapper.class);
@@ -155,7 +155,7 @@ public class MDEN_SWIFT {
                                 logs.Response__c = responseBody;
                                 logs.Status_Code__c =  redirectRes.getStatusCode();
                                 insert logs;
-                                system.debug('-logs--------------'+logs);
+                                system.debug('-logs--->'+logs);
                             }
                             System.debug('JSON Parse Error: ' + e.getMessage());
                         }

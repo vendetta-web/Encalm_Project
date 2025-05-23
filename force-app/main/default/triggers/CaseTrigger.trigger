@@ -18,6 +18,8 @@ trigger CaseTrigger on Case (before insert, before update, after insert, after u
             }
             if(trigger.isUpdate){
                 CaseTriggerHandler.afterUpdateReopenMilestone(Trigger.new, Trigger.oldMap);
+                //CaseTriggerHandler.handlePostEscalationDML(Trigger.new, Trigger.oldMap); 
+
             }
             
         }

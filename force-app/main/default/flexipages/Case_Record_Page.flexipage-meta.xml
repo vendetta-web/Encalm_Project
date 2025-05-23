@@ -43,75 +43,66 @@
                         <valueListItems>
                             <value>Case.Assign_to_Operations_SPOC</value>
                             <visibilityRule>
-                                <booleanFilter>(8 AND 1 AND (10 OR 2)) OR (9 AND 1 AND 2) OR (1 AND 3 AND (4 OR 5 OR 6 OR 7))</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.Inquiry_Sub_Type__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>Operations</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.Status}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Customer Responded</rightValue>
+                                    <leftValue>{!Record.Operations_Query__c}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Atithya</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.Status}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Assigned to the Department</rightValue>
+                                    <leftValue>{!Record.Owner_s_Role__c}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Operations_SPOC</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
+                                    <leftValue>{!Record.Is_Owner_Current_User__c}</leftValue>
                                     <operator>EQUAL</operator>
-                                    <rightValue>Nap_Shower_Manager</rightValue>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                            </visibilityRule>
+                        </valueListItems>
+                        <valueListItems>
+                            <value>Case.Assign_to_Manager_Queue</value>
+                            <visibilityRule>
+                                <booleanFilter>1 AND 2 AND 3 AND 4</booleanFilter>
+                                <criteria>
+                                    <leftValue>{!Record.Inquiry_Sub_Type__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>Operations</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Lounge_Manager</rightValue>
+                                    <leftValue>{!Record.Operations_Query__c}</leftValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Atithya</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
+                                    <leftValue>{!Record.Owner_s_Role__c}</leftValue>
                                     <operator>EQUAL</operator>
-                                    <rightValue>Atithya_Manager</rightValue>
+                                    <rightValue>Operations_SPOC</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
+                                    <leftValue>{!Record.Is_Owner_Current_User__c}</leftValue>
                                     <operator>EQUAL</operator>
-                                    <rightValue>Spa_Manager</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.Inquiry_Type__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Query</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.Inquiry_Type__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Feedback</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.Status}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>New</rightValue>
+                                    <rightValue>true</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Assign_to_CS_Team</value>
                             <visibilityRule>
-                                <booleanFilter>(1 AND 2 AND 3) OR (2 AND 4 AND 5 AND 6)</booleanFilter>
+                                <booleanFilter>(1 AND 2 AND 8) OR ( 3 AND 4 AND 5 AND 8) OR (6 AND 7 AND 8 )</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.Inquiry_Sub_Type__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>Operations</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!Record.Status}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Assigned to the Department</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
+                                    <leftValue>{!Record.Owner_s_Role__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>Operations_SPOC</rightValue>
                                 </criteria>
@@ -126,16 +117,31 @@
                                     <rightValue>Reservations</rightValue>
                                 </criteria>
                                 <criteria>
-                                    <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
+                                    <leftValue>{!Record.Owner_s_Role__c}</leftValue>
                                     <operator>EQUAL</operator>
-                                    <rightValue>Executive</rightValue>
+                                    <rightValue>Executive_CS_Reservations</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Operations_Query__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>Atithya</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Owner_s_Role__c}</leftValue>
+                                    <operator>CONTAINS</operator>
+                                    <rightValue>Atithya</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Is_Owner_Current_User__c}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
                             <value>Case.Create_Child_Case</value>
                             <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3</booleanFilter>
+                                <booleanFilter>1 AND 2 AND 3 AND 4</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.is_Refund_Required__c}</leftValue>
                                     <operator>EQUAL</operator>
@@ -148,6 +154,11 @@
                                 </criteria>
                                 <criteria>
                                     <leftValue>{!$Permission.CustomPermission.Create_Child_Case_Access}</leftValue>
+                                    <operator>EQUAL</operator>
+                                    <rightValue>true</rightValue>
+                                </criteria>
+                                <criteria>
+                                    <leftValue>{!Record.Is_Owner_Current_User__c}</leftValue>
                                     <operator>EQUAL</operator>
                                     <rightValue>true</rightValue>
                                 </criteria>
@@ -429,17 +440,6 @@
                 <fieldItem>Record.Operations_Query__c</fieldItem>
                 <identifier>RecordOperations_Query_cField</identifier>
                 <visibilityRule>
-                    <booleanFilter>(1 OR 2)  AND 3</booleanFilter>
-                    <criteria>
-                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Query</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Feedback</rightValue>
-                    </criteria>
                     <criteria>
                         <leftValue>{!Record.Inquiry_Sub_Type__c}</leftValue>
                         <operator>EQUAL</operator>
@@ -503,10 +503,39 @@
                 <fieldItem>Record.is_Refund_Required__c</fieldItem>
                 <identifier>Recordis_Refund_Required_cField</identifier>
                 <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!Record.Inquiry_Type__c}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Feedback</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Operations_SPOC</rightValue>
+                    </criteria>
+                </visibilityRule>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>readonly</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.is_Refund_Required__c</fieldItem>
+                <identifier>Recordis_Refund_Required_cField2</identifier>
+                <visibilityRule>
+                    <booleanFilter>1 AND 2</booleanFilter>
+                    <criteria>
+                        <leftValue>{!Record.Inquiry_Type__c}</leftValue>
+                        <operator>EQUAL</operator>
+                        <rightValue>Feedback</rightValue>
+                    </criteria>
+                    <criteria>
+                        <leftValue>{!$User.UserRole.DeveloperName}</leftValue>
+                        <operator>NE</operator>
+                        <rightValue>Operations_SPOC</rightValue>
                     </criteria>
                 </visibilityRule>
             </fieldInstance>

@@ -18,8 +18,8 @@ const CASE_FIELDS = ['Case.AccountId', 'Case.Account.Name'];
 
 export default class FlightBooking extends NavigationMixin(LightningElement) {
     @api recordId;
-    @track value;
-    @track value2;
+    @track value = null;
+    @track value2 = null;
     @track recordTypeName;
     @track disableBooker = true;
     @track showFields = false;
@@ -79,7 +79,8 @@ sectorOption = [
     {label: 'Domestic to Domestic', value : 'Domestic to Domestic'},
     {label: 'International to Domestic', value : 'International to Domestic'},
     {label: 'International to International', value : 'International to International'},
-]   
+]  
+
 
     // Use wire to get the record dynamically based on the record type (Lead or Case)
     @wire(getRecord, { recordId: '$recordId', fields: '$fields' })
@@ -124,7 +125,7 @@ sectorOption = [
                 // Added by Abhishek
                 if(this.accountId != null){
                     this.checkAccountType();
-                    this.fetchAccountLocation();
+                    //this.fetchAccountLocation();
                 }
             } else {
                 this.selectedAccount = null;
@@ -143,8 +144,9 @@ sectorOption = [
         console.log('Location >>>',this.location);
         if(this.location != null && this.location != undefined){
             this.disableBooker = false;
+            this.fetchAccountRelatedContacts(selectedState);
         }
-        this.fetchAccountRelatedContacts(selectedState);        
+                
     }
     
     handleBookerChange(event) {
@@ -158,6 +160,7 @@ sectorOption = [
                 console.log()
                 this.showFields = result; // true if Business Account, false otherwise
                 console.log('Is Business Account:', result);
+                this.fetchAccountLocation();
             })
             .catch(error => {
                 this.error = error.body ? error.body.message : error.message;
@@ -177,10 +180,9 @@ sectorOption = [
                  this.location = this.options[0].label;
                  if(this.location != null && this.location != undefined){
                     this.disableBooker = false;
+                    console.log('this.location+++++++',this.location);
+                    this.fetchAccountRelatedContacts(this.value);
                  }
-                 console.log('this.location+++++++',this.location);
-
-                 this.fetchAccountRelatedContacts(this.value);
                 }
                 this.error = undefined;
             })
@@ -208,7 +210,10 @@ sectorOption = [
                 this.bookers = [];
             });
     }
-
+     
+    get layoutSize() {
+        return this.showFields ? 4 : 6;
+    }
     // Dynamically assign the fields based on whether the record is Lead or Case
     get fields() {
         return this.recordId && this.recordId.startsWith('00Q') // If it's a Lead (Lead records have a '00Q' prefix)
@@ -955,6 +960,15 @@ resetOnTabChange() {
 }
 handleAccountRecord(event){
     this.accountId = event.detail['Id'];
+    if(this.accountId != null){
+                    this.value = '';         // Clear selected location
+                    this.options = [];       // Clear location options
+                    this.value2 = '';        // Clear selected booker
+                    this.bookers = [];   
+                    this.disableBooker = true;
+                    this.checkAccountType();
+                    this.fetchAccountLocation();
+                }
 }
 
 handleBooking() {

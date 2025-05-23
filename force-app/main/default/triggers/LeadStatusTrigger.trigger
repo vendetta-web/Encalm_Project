@@ -3,6 +3,7 @@ trigger LeadStatusTrigger on Lead (before update, before insert, after insert,af
         if (Trigger.isUpdate) {
             LeadStatusHelper.handleBeforeUpdate(Trigger.new, Trigger.oldMap);
             LeadStatusHelper.beforeUpdateLeadEscalation(Trigger.new, Trigger.oldMap); // Sidhant
+            LeadStatusHelper.updateOwnerChangedDate(Trigger.new, Trigger.oldMap);
         }
         if (Trigger.isInsert) {
            LeadStatusHelper.handleBeforeInsert(Trigger.new);
@@ -12,6 +13,7 @@ trigger LeadStatusTrigger on Lead (before update, before insert, after insert,af
     if(trigger.isAfter){
         if (Trigger.isInsert) {
             LeadStatusHelper.beforeUpdateLeadEscalation(Trigger.new, Trigger.oldMap); // Sidhant
+            LeadStatusHelper.updateEmailMessageRecords(Trigger.new);//Added by Abhishek
         }
         if(Trigger.isUpdate){
             //LeadStatusHelper.handleAfterUpdateLeadLogic(Trigger.new, Trigger.oldMap); //Saurabh

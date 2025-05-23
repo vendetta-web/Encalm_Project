@@ -3,6 +3,9 @@ import { CloseActionScreenEvent } from 'lightning/actions';
 import getpassengerDetails from '@salesforce/apex/CancellationPolicyService.getBookingToCancel';
 import cancelledSummaryPreview from '@salesforce/apex/CancellationPolicyService.showCancellationCharges';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import sendEmailWithAttachment from '@salesforce/apex/BookingEmailHandler.sendEmailWithAttachment';
+import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
+import { RefreshEvent } from 'lightning/refresh';
 import { NavigationMixin } from 'lightning/navigation';
 
 const COLUMNS = [
@@ -44,7 +47,6 @@ const COLUMNS = [
 
 export default class CancelBooking extends NavigationMixin(LightningElement) {
     @api recordId; // Record ID for the Opportunity page
-    isLoading = false;
     isModalOpen = true;
     showNoBooking=false;
     selectedRows = [];
@@ -169,12 +171,16 @@ export default class CancelBooking extends NavigationMixin(LightningElement) {
             opportunityId: this.recordId,
             numberOfPax: this.selectedPassengers,
             submit: true})
-            .then(result => {
+            .then(result => {                
+                console.log('175>>>');  
                 this.cancellationOrder = result;
-                
+                this.generatePdf(); 
+                console.log('179>>>');  
+                this.isLoading = false;             
             })
             .catch(error => {
                 console.error('Apex Error:', error);
+                this.isLoading = false;
         });
         
         this.showToast('Success', 'Booking cancelled successfully!', 'success');
@@ -188,7 +194,29 @@ export default class CancelBooking extends NavigationMixin(LightningElement) {
             },
         });
     }
-
+    generatePdf() {
+        // Call Apex method to generate and save PDF with the current record
+        generateAndSavePDF({ recordId: this.recordId})
+            .then((result) => {
+                this.showToast('Success', 'Booking Voucher updated successfully', 'success');
+                this.dispatchEvent(new RefreshEvent());
+				this.handleSendEmail();
+            })
+            .catch((error) => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+            });
+    }
+    handleSendEmail() {
+        sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Modified/Rescheduled'  })
+            .then(() => {
+                this.showToast('Success', 'Email sent successfully!', 'success');
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+            });
+    }
 
     handleBookingCancellation() {
         if(this.selectedCancelOption == 'partialCancel' && this.selectedPassengers<1) {

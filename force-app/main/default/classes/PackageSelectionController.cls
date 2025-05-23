@@ -12,11 +12,12 @@ public with sharing class PackageSelectionController {
         Opportunity opp = [
             SELECT Id,Service_Airport__c,Sector__c,Service_Type__c,Flight_Type__c,AccountId,
             Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,
-            Account.GST_Registration_Type__c,Departure_Service_Time__c
+            Account.GST_Registration_Type__c,Departure_Service_Time__c,Service_Date_Time__c,CreatedDate
             FROM Opportunity
             WHERE Id=:oppId
             LIMIT 1
         ];
+        
         //check if discount applicable
         if (opp.AccountId !=null) {
             List<Discount__c> discountList = [SELECT Id, Discount_Applicable__c, Is_Discount_In_Percentage__c 
@@ -65,7 +66,7 @@ public with sharing class PackageSelectionController {
                                 FROM PricebookEntry
                                 WHERE Pricebook2.IsActive = true
                                 AND Pricebook2.IsStandard = true
-                                AND Product2.Family IN ('Gold', 'Silver', 'Elite','Transit')
+                                AND Product2.Family IN ('Gold', 'Silver', 'Elite','Transit','Surcharge')
                                 AND product2.Airport__r.Airport_Code__c =:opp.Service_Airport__c
                                 AND product2.Flight_Type__c =:opp.Flight_Type__c
                                 AND Product2.Service_Type__c =:opp.Service_Type__c
@@ -110,7 +111,9 @@ public with sharing class PackageSelectionController {
                     wrp.price = pbEntry.UnitPrice;
                     adultToInfantPriceBookMap.put(pbEntry.Product2.Family,wrp);
                 }
-            }
+            } 
+            
+            
             pckg.services = combineService; 
             pckg.childPackageWrapper = adultToChildPriceBookMap;
             pckg.infantPackageWrapper = adultToInfantPriceBookMap;            
@@ -119,6 +122,46 @@ public with sharing class PackageSelectionController {
             packageColumns.add(pckg);
         }     
         return packageColumns;
+    }
+
+    @AuraEnabled
+    public static SurchargeWrapper loadSurcharge(String opportunityId){
+        Opportunity opp = [
+            SELECT Id,Service_Airport__c,Sector__c,Service_Type__c,Flight_Type__c,AccountId,
+            Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,
+            Account.GST_Registration_Type__c,Departure_Service_Time__c,Service_Date_Time__c,CreatedDate
+            FROM Opportunity
+            WHERE Id=:opportunityId
+            LIMIT 1
+        ];
+        Boolean isWithin12Hours = false;
+
+        if (opp.Service_Date_Time__c != null && opp.CreatedDate != null) {
+            Long diffInMillis = Datetime.valueOf(opp.Service_Date_Time__c).getTime() - opp.CreatedDate.getTime();
+            Long twelveHoursInMillis = 12 * 60 * 60 * 1000;
+
+            if(diffInMillis <= twelveHoursInMillis)
+            isWithin12Hours = true;
+        }
+        
+       // Map<String, SurchargeWrapper> surchargeApplicablePriceBookMap = new Map<String, SurchargeWrapper>();
+        PriceBookEntry pricebookEntry = [SELECT Id, Product2Id, Product2.Name, Product2.Family, Product2.Package_Is_For__c, UnitPrice, Pricebook2Id
+                                FROM PricebookEntry
+                                WHERE Pricebook2.IsActive = true
+                                AND Pricebook2.IsStandard = true
+                                AND Product2.Family = 'Surcharge' limit 1];
+        SurchargeWrapper wrpp = new SurchargeWrapper();
+            if(isWithin12Hours){
+               
+                wrpp.priceBookEntryId = pricebookEntry.Id;
+                wrpp.price = pricebookEntry.UnitPrice;
+                wrpp.packageName = pricebookEntry.Product2.Name;
+                wrpp.productId =  pricebookEntry.Product2Id;
+                wrpp.pricebookId = pricebookEntry.Pricebook2Id;
+                wrpp.surchargeApplicable = isWithin12Hours;
+                calculateGst(opp, wrpp, pricebookEntry.UnitPrice);
+            }
+            return wrpp;
     }
 
     @AuraEnabled
@@ -239,9 +282,9 @@ public with sharing class PackageSelectionController {
                        Date_of_Departure__c,
                        Service_Airport__c,
                        Flight_Number_Arrival__c,
-                       Service_Type__c,
-                       Flight_Type__c,
-                       StageName,Booker__r.Name,Location__c,
+                       Service_Type__c,Surcharge_Waive_Off__c,
+                       Flight_Type__c,Service_Date_Time__c,CreatedDate,
+                       StageName,Booker__r.Name,Location__c,Surcharge_WaiveOff_Request__c,
                        Flight_Number_Departure__c,(SELECT Id FROM OpportunityLineItems)
                 FROM Opportunity 
                 WHERE Id = :opportunityId 
@@ -263,6 +306,10 @@ public with sharing class PackageSelectionController {
                                 opp.Date_of_Departure__c : '';
         pasWrp.booker = opp.Booker__r.Name != null ? opp.Booker__r.Name : '';
         pasWrp.location = opp.Location__c != null  ? opp.Location__c : '';
+        pasWrp.createDate = opp.CreatedDate;
+        pasWrp.serviceDateTime = opp.Service_Date_Time__c != null ? opp.Service_Date_Time__c : '';
+        pasWrp.checkSurcharge = opp.Surcharge_Waive_Off__c;
+        pasWrp.surchargeRequestStatus = opp.Surcharge_WaiveOff_Request__c;
                                 
         return pasWrp;
     }
@@ -406,9 +453,9 @@ public with sharing class PackageSelectionController {
     // Method to create Opportunity Line Items
     @AuraEnabled
     public static void createOpportunityLineItems(Id opportunityId, List<Map<String, Object>> productDetails, Decimal amount) {
-
+        system.debug('productDetails>>>>'+productDetails);
         //delete existing oli if any
-        List<OpportunityLineItem> oliToDelete = [SELECT Id FROM OpportunityLineItem WHERE opportunityId=: opportunityId];
+        List<OpportunityLineItem> oliToDelete = [SELECT Id FROM OpportunityLineItem WHERE opportunityId=: opportunityId AND UnitPrice > 0];
         Delete oliToDelete;
         //delete existing transactions if any
         List<Transaction_History__c > TransactionsToDelete = [SELECT Id FROM Transaction_History__c WHERE Booking_Id__c =: opportunityId];
@@ -466,10 +513,14 @@ public with sharing class PackageSelectionController {
         ];
 
         for (Map<String, Object> productDetail : productDetails) {
+            Boolean isSurcharge = productDetail.containsKey('isSurcharge') && productDetail.get('isSurcharge') != null
+                                    ? (Boolean) productDetail.get('isSurcharge')  : false;
             // Extract the values from the map
+            if(!isSurcharge){
+            system.debug('productDetail>>>'+ productDetail);
             Id productId = (Id) productDetail.get('productId');
             Id pricebookEntry = (Id) productDetail.get('pricebookEntryId');
-            Decimal quantity = (Boolean) productDetail.get('isChild') ? (Decimal) productDetail.get('childCount') : (Decimal) productDetail.get('count');
+            Decimal quantity = (Boolean) productDetail.get('isChild') ? (Decimal) productDetail.get('childCount') : (Boolean) productDetail.get('isInfant') ? (Decimal) productDetail.get('infantCount') : (Decimal) productDetail.get('count');
             Decimal unitPrice = (Decimal) productDetail.get('unitPrice');
             Decimal discountAmount = (Decimal) productDetail.get('discountValue');
 
@@ -550,6 +601,7 @@ public with sharing class PackageSelectionController {
                     // Add the OLI to the list
                     opportunityLineItemsToInsert.add(oli);
                 }
+            }
 
         }
 
@@ -566,6 +618,8 @@ public with sharing class PackageSelectionController {
                     oli.UnitPrice = pbEntry[0].UnitPrice;
                     oli.PricebookEntryId = pbEntry[0].Id; // Link PricebookEntry to OLI
                     oli.Status__c = 'Active';
+                    
+                    calculateGstApplicable(opp, oli);//added by Abhishek 
                     opportunityLineItemsToInsert.add(oli);
                 }
             }
@@ -629,6 +683,28 @@ public with sharing class PackageSelectionController {
         }        
     }
 
+    @AuraEnabled
+    public static void submitForSurchargeApproval(Boolean surcharge, Id opportunityId) {
+        Opportunity opp = [SELECT Id, Surcharge_Waive_Off__c  FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+        opp.Surcharge_Waive_Off__c  = surcharge;
+        try{
+            update opp;
+            Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
+            req.setObjectId(opportunityId);
+            req.setComments('Surcharge Waiveoff Approval Request');
+
+            req.setSubmitterId(UserInfo.getUserId());
+
+            Approval.ProcessResult result = Approval.process(req);
+
+            if (!result.isSuccess()) {
+                throw new AuraHandledException('Submission failed: ' + result.getInstanceStatus());
+            }
+        } catch (Exception ex) {
+            System.debug('Error updating state: '+ex.getMessage());
+        }        
+    }
+
     // Method to update the process state
     @AuraEnabled
     public static void updateAddonsOrderSummaryState(Id opportunityId, String processAddons, String processOrderSummary) {
@@ -652,12 +728,15 @@ public with sharing class PackageSelectionController {
     //Method to show the saved list of passengers
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getSavedPassengerDetails(Id opportunityId) {
+        List<String> statusList = new List<String>{'Partially Cancelled','Cancellation','Fully Cancelled'};
         List<Passenger_Details__c> passengers = [
             SELECT Id, Title__c, First_Name__c, Last_Name__c, Gender__c, Age__c, Designation__c, 
                    Travel_Class__c, Travel_PNR_No__c, Nationalities__c, Passport_Govt_Id__c, Mobile__c, 
                    Passenger_Type__c, Individual_Booking_Details__c,Show_as_Placard__c,Unique_Id__c
             FROM Passenger_Details__c
             WHERE Opportunity_ID__c = :opportunityId
+            //WHERE Opportunity_ID__c = :opportunityId AND Individual_Booking_Details__r.Status__c NOT IN : statusList
+            
         ];
 
         // Convert to a List of Maps to return the data in a format suitable for LWC
@@ -768,7 +847,16 @@ public with sharing class PackageSelectionController {
             addOn.cgst = cgstAmount;
             addOn.igst = igstAmount;
             system.debug(addOn);
-        } else {
+        }   
+        else if(wrapper instanceof SurchargeWrapper){
+            SurchargeWrapper surchargeWrp = (SurchargeWrapper)wrapper;
+            // Set the calculated GST values on the child package
+            surchargeWrp.priceTagBeforeTax = invoiceAmount;
+            surchargeWrp.sgst = sgstAmount;
+            surchargeWrp.cgst = cgstAmount;
+            surchargeWrp.igst = igstAmount;
+            system.debug(surchargeWrp);
+        }  else {
             ChildWrapper childWrp = (ChildWrapper)wrapper;
             // Set the calculated GST values on the child package
             childWrp.priceTagBeforeTax = invoiceAmount;
@@ -776,7 +864,7 @@ public with sharing class PackageSelectionController {
             childWrp.cgst = cgstAmount;
             childWrp.igst = igstAmount;
             system.debug(childWrp);
-        }       
+        }   
     }
 
     public class PackageWrapper {
@@ -803,6 +891,8 @@ public with sharing class PackageSelectionController {
         @AuraEnabled
         public Map<String, InfantWrapper> infantPackageWrapper;
         @AuraEnabled
+        public Map<String, SurchargeWrapper> surchargePackageWrapper;
+        @AuraEnabled
         public Boolean showPackage;
         @AuraEnabled
         public List<String> services {get;set;}
@@ -812,6 +902,8 @@ public with sharing class PackageSelectionController {
         public Decimal discountValue;
         @AuraEnabled
         public Boolean isDiscountInPercent;
+        @AuraEnabled
+        public Boolean surchargeApplicable;
 
 
     }
@@ -834,6 +926,28 @@ public with sharing class PackageSelectionController {
         public String priceBookEntryId;
         @AuraEnabled
         public Decimal price;
+    }
+    public class SurchargeWrapper {
+        @AuraEnabled
+        public String priceBookEntryId;
+        @AuraEnabled
+        public String packageName;
+        @AuraEnabled
+        public String productId;
+        @AuraEnabled
+        public String pricebookId;
+        @AuraEnabled
+        public Decimal priceTagBeforeTax;
+        @AuraEnabled
+        public Decimal sgst;
+        @AuraEnabled
+        public Decimal cgst;
+        @AuraEnabled
+        public Decimal igst;
+        @AuraEnabled
+        public Decimal price;
+        @AuraEnabled
+        public Boolean surchargeApplicable;
     }
     public class AddonWrapper {
         @AuraEnabled
@@ -882,5 +996,14 @@ public with sharing class PackageSelectionController {
         public String location;
         @AuraEnabled
         public String booker;
+        @AuraEnabled
+        public String serviceDateTime;
+        @AuraEnabled
+        public Datetime createDate;
+        @AuraEnabled
+        public Boolean checkSurcharge;
+        @AuraEnabled
+        public String surchargeRequestStatus;
+
     }
 }

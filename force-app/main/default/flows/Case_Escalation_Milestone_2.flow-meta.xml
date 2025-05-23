@@ -4,9 +4,12 @@
         <name>send_escalation_email</name>
         <label>send escalation email</label>
         <locationX>50</locationX>
-        <locationY>458</locationY>
+        <locationY>350</locationY>
         <actionName>emailSimple</actionName>
         <actionType>emailSimple</actionType>
+        <connector>
+            <targetReference>update_status</targetReference>
+        </connector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
             <name>emailAddresses</name>
@@ -60,7 +63,7 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>update_status</targetReference>
+                <targetReference>send_escalation_email</targetReference>
             </connector>
             <label>Case status still new</label>
         </rules>
@@ -113,10 +116,7 @@
         <name>update_status</name>
         <label>update status</label>
         <locationX>50</locationX>
-        <locationY>350</locationY>
-        <connector>
-            <targetReference>send_escalation_email</targetReference>
-        </connector>
+        <locationY>458</locationY>
         <filterLogic>1 AND (2 OR 3)</filterLogic>
         <filters>
             <field>Id</field>

@@ -3,6 +3,11 @@
         <div class="slds-p-around_medium">
             <lightning-input type="file" label="Upload CSV File" accept=".csv" onchange={handleFileChange}></lightning-input> </br>
             <lightning-button label="Import" variant="brand" onclick={handleImport} class="slds-m-top_medium" disabled={disableButton}></lightning-button>
+
+            <template if:true={showSpinner}>
+                <lightning-spinner alternative-text="Processing..." size="medium"></lightning-spinner>
+            </template>
         </div>
     </lightning-card>
+    
 </template>

@@ -75,7 +75,37 @@ public class EmailMessageHandler {
             casesToUpdate.put(c.Id, c);
         }
     }
-    
+    public static void updateLeadRelatedEmailMessageRecord(List<EmailMessage> emailMessageList){
+        List<EmailMessage> updates = new List<EmailMessage>();
+        Set<Id> activityIds = new Set<Id>();
+        Set<Id> emailMessageIds = new Set<Id>();
+        
+        for (EmailMessage em : emailMessageList) {
+            if (em.ActivityId != null) {
+                activityIds.add(em.ActivityId);
+            }
+            emailMessageIds.add(em.Id);
+        }
+       
+        Map<Id, Task> taskMap = new Map<Id, Task>([SELECT Id, WhoId FROM Task WHERE Id IN :activityIds]);
+        
+        List<EmailMessage> emailMessageRecords = [SELECT Id, ActivityId FROM EmailMessage WHERE Id IN :emailMessageIds];
+        
+        for (EmailMessage em : emailMessageRecords) {
+            Task relatedTask = taskMap.get(em.ActivityId);
+            if (relatedTask != null && relatedTask.WhoId != null && relatedTask.WhoId.getSObjectType() == Lead.SObjectType) {
+                updates.add(new EmailMessage(
+                    Id = em.Id,
+                    LeadId__c = relatedTask.WhoId 
+                ));
+            }
+        }
+        
+        if (!updates.isEmpty()) {
+            update updates;
+        }
+    }
+
     private static void updateCases(Map<Id, Case> casesToUpdate) {
         try {
             update casesToUpdate.values();

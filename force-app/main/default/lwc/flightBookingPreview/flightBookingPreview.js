@@ -5,14 +5,19 @@ import saveData from '@salesforce/apex/FlightPreview.saveData';
 
 export default class FlightBookingPreview extends NavigationMixin(LightningElement) {
     @api opp;
+    @api editing;
     @track adultCount = 1;
     @track childCount = 0;
     @track infantCount = 0;
+    @track previousAdultCount = 1;
+    @track previousChildCount = 0;
+    @track previousInfantCount = 0;
     @track opportunityFieldValues = {};
     bookingData;
     isArrival=false;
     isDeparture=false;
     isTransit=false;
+    isModalOpen = false;
 
     connectedCallback() {
         window.scrollTo({top: 0, behavior:'smooth'});
@@ -27,9 +32,9 @@ export default class FlightBookingPreview extends NavigationMixin(LightningEleme
         getOpportunityDetails({opportunityId: this.opp})
         .then((result) => {
             this.bookingData = result;
-            this.adultCount = result.NoOfAdult;
-            this.childCount = result.NoOfChild;
-            this.infantCount = result.NoOfInfant;
+            this.adultCount = this.previousAdultCount = result.NoOfAdult;
+            this.childCount = this.previousChildCount = result.NoOfChild;
+            this.infantCount = this.previousInfantCount = result.NoOfInfant;
             if(this.bookingData.serviceType == 'Arrival') {
                 this.isArrival = true;
             } else if(this.bookingData.serviceType == 'Departure') {
@@ -74,23 +79,49 @@ export default class FlightBookingPreview extends NavigationMixin(LightningEleme
     }
 
     handleSave() {
-        this.opportunityFieldValues['Number_of_Adults__c'] = this.adultCount;
-        this.opportunityFieldValues['Number_of_Children__c'] = this.childCount;
-        this.opportunityFieldValues['Number_of_Infants__c'] = this.infantCount;
-        saveData({ oppId: this.opp, opportunityFieldValues: this.opportunityFieldValues })
-        .then((opportunityId) => {
+        if(!this.hasDataChanged()) {
+            const event = new CustomEvent('nochange', {
+                detail: { message: 'No changes done' }
+            });
+            this.dispatchEvent(event);
+        } else {            
+                const guestUpdateEvent = new CustomEvent('buttonclick', {
+                detail: {
+                    adultCount: this.adultCount,
+                    childCount: this.childCount,
+                    infantCount: this.infantCount
+                },
+                bubbles: true,
+                composed: true
+            });
+        
+            this.dispatchEvent(guestUpdateEvent);
             
+        }
+    }
 
-            const messageEvent = new CustomEvent('buttonclick', {
-                detail: this.opp,  // The message sent to the parent
-                bubbles: true,    // Allow the event to propagate up to the parent
-                composed: true    // Allow the event to cross the shadow DOM boundary
-            });            
-            // Dispatch the custom event
-            this.dispatchEvent(messageEvent);
-        })
-        .catch((error) => {
-            console.log('error->>>>>>>'+JSON.stringify(error));
-        });
+    hasDataChanged() {
+        return (
+            this.adultCount !== this.previousAdultCount ||
+            this.childCount !== this.previousChildCount ||
+            this.infantCount !== this.previousInfantCount
+        );
+    }
+
+    // Open the modal
+    openModal() {
+        this.isModalOpen = true;
+    }
+
+    // Close the modal
+    closePopupModal() {
+        this.isModalOpen = false;
+    }
+    // Handle the redirection to the list view
+    handleRedirect() {
+        // Close the modal first
+        this.closePopupModal();
+        window.location.reload();
+        window.scrollTo({top: 0, behavior:'smooth'});
     }
 }

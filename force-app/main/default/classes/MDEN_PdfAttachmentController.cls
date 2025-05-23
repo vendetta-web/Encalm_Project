@@ -126,13 +126,14 @@ public with sharing class MDEN_PdfAttachmentController {
         if (String.isNotBlank(recordId)) {
             try {
                 // 🔹 Fetch Opportunity Record
+				List<String> statusList = new List<String>{'Partially Cancelled','Cancellation','Fully Cancelled'};
                 opp = [SELECT Id, Name, CreatedDate, Service_Type__c, Service_Airport__c, Flight_Type__c, 
                        Flight_Number_Arrival__c, Flight_Number_Departure__c,Departure_Airport__c, Arriving_Airport__c, Date_of_Arrival__c, 
                        Date_of_Departure__c, STA_Time__c, STD_Time__c, Departure_Service_Time__c, Arrival_Service_Time__c,
                        Departure_Flight_Schedule__c, Arriving_Flight_Schedule__c,
                        Account.Name, Account.BillingState, Account.BillingCountry, Account.GST__c,
-                       (SELECT Id, Name, Age__c, Travel_Class__c,Travel_PNR_No__c, Airline_PNR__c FROM Passenger_Details__r),
-                       (SELECT Id, Product2.Name, Quantity, UnitPrice, TotalPrice, HSN_HAC__c, Discount_Amount__c,Invoice_Amount__c,SGST__c,CGST__c,IGST__c FROM OpportunityLineItems)
+                       //(SELECT Id, Name, Age__c, Travel_Class__c,Travel_PNR_No__c, Airline_PNR__c FROM Passenger_Details__r),
+                       (SELECT Id, Product2.Name, Quantity, UnitPrice, TotalPrice, HSN_HAC__c, Discount_Amount__c,Invoice_Amount__c,SGST__c,CGST__c,IGST__c FROM OpportunityLineItems WHERE Status__c NOT IN : statusList )
                        FROM Opportunity WHERE Id = :recordId];
                 
                 System.debug('Successfully fetched Opportunity record.');
@@ -146,15 +147,15 @@ public with sharing class MDEN_PdfAttachmentController {
                 }
                 System.debug('hasDiscount-->'+hasDiscount); 
                 //Process totalAmount
-                AggregateResult[] totalResult = [SELECT SUM(TotalPrice) totalAmount FROM OpportunityLineItem WHERE OpportunityId = :recordId];
+                AggregateResult[] totalResult = [SELECT SUM(TotalPrice) totalAmount FROM OpportunityLineItem WHERE OpportunityId = :recordId AND Status__c NOT IN : statusList];
                 totalAmount = (totalResult.isEmpty() || totalResult[0].get('totalAmount') == null) ? 0 : (Decimal) totalResult[0].get('totalAmount');
                 totalAmountInWords = NumberToWordsUtil.convertNumberToWords(totalAmount);
                 
-                
+                List<Passenger_Details__c> passengerRecords  = [SELECT Id, Name, Age__c, Travel_Class__c,Travel_PNR_No__c, Airline_PNR__c FROM Passenger_Details__c WHERE Opportunity_ID__c = :recordId AND Individual_Booking_Details__r.Status__c NOT IN : statusList];
                 //Process Passenger Details
                 passengers = new List<PassengerWrapper>();
                 Integer counter = 1;
-                for (Passenger_Details__c p : opp.Passenger_Details__r) {
+                for (Passenger_Details__c p : passengerRecords) {
                     passengers.add(new PassengerWrapper(counter, p));
                     counter++;
                 }
@@ -168,10 +169,10 @@ public with sharing class MDEN_PdfAttachmentController {
                 taxableAmount = 0;
                 for (OpportunityLineItem o : opp.OpportunityLineItems) {
                     oppLineItems.add(new OppLineItemWrapper(counter, o));
-                    totalSGST += o.SGST__c != null && o.SGST__c >0 ? o.SGST__c : 0;
-                    totalCGST += o.CGST__c != null && o.CGST__c >0 ? o.CGST__c : 0;
-                    totalIGST += o.IGST__c != null && o.IGST__c >0 ? o.IGST__c : 0;
-                    taxableAmount += o.Invoice_Amount__c != null && o.Invoice_Amount__c > 0 ? o.Invoice_Amount__c : 0;
+                    totalSGST += o.SGST__c != null  ? o.SGST__c : 0;
+                    totalCGST += o.CGST__c != null  ? o.CGST__c : 0;
+                    totalIGST += o.IGST__c != null  ? o.IGST__c : 0;
+                    taxableAmount += o.Invoice_Amount__c != null  ? o.Invoice_Amount__c : 0;
                     counter++;
                 }
                 

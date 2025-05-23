@@ -129,13 +129,13 @@
                         <tr>
                             <!--<td>{!opp.Name}</td>-->
                             <td>{!item.SrNo}</td>
-                            <td>{!opp.Service_Type__c} ({!item.oppLineItem.Product2.Name})</td>
+                            <td>{!opp.Service_Type__c} (<apex:outputText value="{!IF(item.oppLineItem.UnitPrice < 0, 'Surcharge Waive Off', item.oppLineItem.Product2.Name)}" />)</td>
                             <td>{!item.oppLineItem.HSN_HAC__c}</td>
                             <td>{!item.oppLineItem.Quantity}</td>
-                            <td>{!item.oppLineItem.UnitPrice}</td>
+                            <td>{!item.oppLineItem.Invoice_Amount__c}</td>
                             <td>GST 18%</td>
                             <td style="{!discountColumnStyle}">{!item.oppLineItem.Discount_Amount__c}</td>
-                            <td>{!item.oppLineItem.Invoice_Amount__c}</td>
+                            <td>{!item.oppLineItem.UnitPrice}</td>
                         </tr>
                     </apex:repeat>
                 </table>

@@ -1,11 +1,123 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>63.0</apiVersion>
+    <assignments>
+        <name>Assign_Booking_Lead_Record_Type</name>
+        <label>Assign Booking/Lead Record Type</label>
+        <locationX>50</locationX>
+        <locationY>719</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.RecordTypeId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Booking_Lead_Record_Type.Id</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Assign_Query_Feedback_Record_Type</name>
+        <label>Assign Query/Feedback Record Type</label>
+        <locationX>314</locationX>
+        <locationY>719</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.RecordTypeId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Query_Feedback_Record_Type.Id</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Owner_to_Atithya_DEL</name>
+        <label>Owner to Atithya DEL</label>
+        <locationX>2338</locationX>
+        <locationY>935</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Atithya_DEL_Queue.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Status</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Owner_to_Atithya_GOA</name>
+        <label>Owner to Atithya GOA</label>
+        <locationX>2866</locationX>
+        <locationY>935</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Atithya_GOA_Queue.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Status</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Owner_to_Atithya_HYD</name>
+        <label>Owner to Atithya HYD</label>
+        <locationX>2602</locationX>
+        <locationY>935</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Atithya_HYD_Queue.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Status</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Update_RecordType_to_Booking_Lead</name>
+        <label>Update RecordType to Booking/Lead</label>
+        <locationX>754</locationX>
+        <locationY>827</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.RecordTypeId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Booking_Lead_Record_Type.Id</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Update_RecordType_to_Query_Feedback</name>
+        <label>Update RecordType to Query/Feedback</label>
+        <locationX>1018</locationX>
+        <locationY>827</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.RecordTypeId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Query_Feedback_Record_Type.Id</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
     <customErrors>
         <name>Show_Error</name>
         <label>Show Error</label>
-        <locationX>220</locationX>
-        <locationY>827</locationY>
+        <locationX>1898</locationX>
+        <locationY>1043</locationY>
         <customErrorMessages>
             <errorMessage>Cannot close the case until all child cases are closed.</errorMessage>
             <isFieldError>false</isFieldError>
@@ -14,8 +126,8 @@
     <customErrors>
         <name>Show_Reservation_Operation_Query_error</name>
         <label>Show Reservation/Operation Query error</label>
-        <locationX>396</locationX>
-        <locationY>503</locationY>
+        <locationX>2074</locationX>
+        <locationY>719</locationY>
         <customErrorMessages>
             <errorMessage>As status is &apos;Resolved by Department&apos; you cannot update Reservations Query/ Operations Query/Feedback fields</errorMessage>
             <isFieldError>false</isFieldError>
@@ -24,8 +136,8 @@
     <decisions>
         <name>Check_child_case_status</name>
         <label>Check child case status</label>
-        <locationX>352</locationX>
-        <locationY>719</locationY>
+        <locationX>2030</locationX>
+        <locationY>935</locationY>
         <defaultConnector>
             <targetReference>loop_through_child_cases</targetReference>
         </defaultConnector>
@@ -49,9 +161,24 @@
     <decisions>
         <name>Check_field_updates</name>
         <label>Check field updates</label>
-        <locationX>396</locationX>
-        <locationY>395</locationY>
+        <locationX>2206</locationX>
+        <locationY>611</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Has_Inquiry_Type_Changed</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Check_Updated_Inquiry_Type</targetReference>
+            </connector>
+            <label>Has Inquiry Type Changed ?</label>
+        </rules>
         <rules>
             <name>Case_is_closed</name>
             <conditionLogic>and</conditionLogic>
@@ -124,12 +251,181 @@
             </connector>
             <label>Updated Reservation/Operation query?</label>
         </rules>
+        <rules>
+            <name>Is_Atithya_Operations</name>
+            <conditionLogic>(1 AND 2) OR (2 AND 3)</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record__Prior.Operations_Query__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Atithya</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Operations_Query__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Atithya</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>check_location</targetReference>
+            </connector>
+            <label>Is Atithya Operations?</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_Inquiry_Type</name>
+        <label>Check Inquiry Type</label>
+        <locationX>314</locationX>
+        <locationY>611</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Booking_Lead_Case</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Booking</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Booking_Lead_Record_Type</targetReference>
+            </connector>
+            <label>Booking/Lead Case</label>
+        </rules>
+        <rules>
+            <name>Query_Feedback_Case</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Query</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Feedback</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Query_Feedback_Record_Type</targetReference>
+            </connector>
+            <label>Query/Feedback Case</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>check_location</name>
+        <label>check location</label>
+        <locationX>2734</locationX>
+        <locationY>719</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>DEL</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Delhi</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Atithya_DEL_Queue</targetReference>
+            </connector>
+            <label>DEL</label>
+        </rules>
+        <rules>
+            <name>HYD</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Hyderabad</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Atithya_HYD_Queue</targetReference>
+            </connector>
+            <label>HYD</label>
+        </rules>
+        <rules>
+            <name>GOA</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Goa</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Atithya_GOA_Queue</targetReference>
+            </connector>
+            <label>GOA</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Check_Updated_Inquiry_Type</name>
+        <label>Check Updated Inquiry Type</label>
+        <locationX>1018</locationX>
+        <locationY>719</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Booking_Lead</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Booking</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_RecordType_to_Booking_Lead</targetReference>
+            </connector>
+            <label>Booking/Lead</label>
+        </rules>
+        <rules>
+            <name>Query_Feedback</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Query</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Inquiry_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Feedback</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Update_RecordType_to_Query_Feedback</targetReference>
+            </connector>
+            <label>Query/Feedback</label>
+        </rules>
     </decisions>
     <decisions>
         <name>Is_New_Record</name>
         <label>Is New Record ?</label>
-        <locationX>176</locationX>
-        <locationY>287</locationY>
+        <locationX>1986</locationX>
+        <locationY>503</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>Yes</name>
@@ -141,6 +437,9 @@
                     <booleanValue>true</booleanValue>
                 </rightValue>
             </conditions>
+            <connector>
+                <targetReference>Check_Inquiry_Type</targetReference>
+            </connector>
             <label>Yes</label>
         </rules>
         <rules>
@@ -170,8 +469,8 @@
     <loops>
         <name>loop_through_child_cases</name>
         <label>loop through child cases</label>
-        <locationX>132</locationX>
-        <locationY>611</locationY>
+        <locationX>1810</locationX>
+        <locationY>827</locationY>
         <collectionReference>Get_Child_Cases</collectionReference>
         <iterationOrder>Asc</iterationOrder>
         <nextValueConnector>
@@ -198,10 +497,122 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordLookups>
+        <name>Get_Atithya_DEL_Queue</name>
+        <label>Get Atithya DEL Queue</label>
+        <locationX>2338</locationX>
+        <locationY>827</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Owner_to_Atithya_DEL</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Atithya_Manager_Queue_DEL</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Atithya_GOA_Queue</name>
+        <label>Get Atithya GOA Queue</label>
+        <locationX>2866</locationX>
+        <locationY>827</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Owner_to_Atithya_GOA</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Atithya_Manager_Queue_GOA</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Atithya_HYD_Queue</name>
+        <label>Get Atithya HYD Queue</label>
+        <locationX>2602</locationX>
+        <locationY>827</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Owner_to_Atithya_HYD</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Atithya_Manager_Queue_HYD</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_Booking_Lead_Record_Type</name>
+        <label>Get Booking/Lead Record Type</label>
+        <locationX>1986</locationX>
+        <locationY>287</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Get_Query_Feedback_Record_Type</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>SobjectType</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Case</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Booking_Lead</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>RecordType</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
         <name>Get_Child_Cases</name>
         <label>Get Child Cases</label>
-        <locationX>132</locationX>
-        <locationY>503</locationY>
+        <locationX>1810</locationX>
+        <locationY>719</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>loop_through_child_cases</targetReference>
@@ -218,11 +629,39 @@
         <object>Case</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
-    <start>
-        <locationX>50</locationX>
-        <locationY>0</locationY>
+    <recordLookups>
+        <name>Get_Query_Feedback_Record_Type</name>
+        <label>Get Query/Feedback Record Type</label>
+        <locationX>1986</locationX>
+        <locationY>395</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Is_New_Record</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>SobjectType</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Case</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Query_Feedback</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>RecordType</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <start>
+        <locationX>1860</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Get_Booking_Lead_Record_Type</targetReference>
         </connector>
         <object>Case</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>

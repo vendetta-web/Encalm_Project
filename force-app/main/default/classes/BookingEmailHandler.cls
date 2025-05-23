@@ -115,7 +115,9 @@ public with sharing class BookingEmailHandler {
 
             // Send the email
             Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
-            getSWIFTTokenFuture(opportunityId, actionType); //MDEN_SWIFT.getAccessToken(opportunityId,actionType);
+            if(!Test.IsRunningTest()){
+            	getSWIFTTokenFuture(opportunityId, actionType); //MDEN_SWIFT.getAccessToken(opportunityId,actionType);
+            }
         }  catch (Exception e) {
             system.debug('Exception in BookingEmailHandler===>'+ e.getMessage());
             throw new AuraHandledException('Error while sending email to contact with attachment. ' + e.getMessage());

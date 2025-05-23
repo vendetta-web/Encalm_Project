@@ -126,7 +126,23 @@ public class CaseTriggerHandler {
             return null;
         }
     }
-    
+    public static void handlePostEscalationDML(List<Case> newCases, Map<Id, Case> oldCasesMap) {
+        List<Case> casesToUpdate = new List<Case>();
+
+        for (Case c : newCases) {
+            Case oldCase = oldCasesMap.get(c.Id);
+
+            if (oldCase != null && c.Status == 'Escalated') {
+                // DML-safe dummy update
+                c.Description = c.Description;
+                casesToUpdate.add(c);
+            }
+        }
+
+        if (!casesToUpdate.isEmpty()) {
+            update casesToUpdate;
+        }
+    }
     
     // Method to send and process service emails
     /* public static void processCaseInsert(List<Case> newCases) {

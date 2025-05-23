@@ -23,9 +23,13 @@ import { loadScript } from 'lightning/platformResourceLoader';
 import { RefreshEvent } from 'lightning/refresh';
 import getPicklistValues from '@salesforce/apex/CustomPicklistController.getNationalityPicklistValues';
 import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
+import submitForSurchargeApproval from '@salesforce/apex/PackageSelectionController.submitForSurchargeApproval';
+import loadSurcharge from '@salesforce/apex/PackageSelectionController.loadSurcharge';
+import saveData from '@salesforce/apex/FlightPreview.saveData';
 
 export default class FlightBookingDetails extends NavigationMixin(LightningElement) {
     @api recordId; // Opportunity record ID
+    @track editSurcharge = ''
     showModal = false;
     showHeader = true;
     showChild = false;
@@ -40,6 +44,9 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     isPaxIncreased = false;
     getPackage;
     isQuotationSent=false;
+    isEditing = false;
+    @track surchargeApplicable = false;
+    @track bookerApplicable = false;
     bookingStage='';
     processState = '';
     showPayment
@@ -55,6 +62,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     orderSummaryPackage=[];
     orderSummaryAddon=[];
     orderSummary=[];
+    orderSummaryBeforeEdit=[];
     pickupTerminalOptions = [];
     dropTerminalOptions = [];
     totalAmount=0;
@@ -70,6 +78,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     flightNumber;
     flightDate;
     selectedPassenger;
+    selectedPassengerBeforeEdit;
     nationalityOptions = [];
     filteredNationalityOptions = [];
     selectedNationality;
@@ -84,12 +93,14 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
 
     //Individual Passenger Details
     @track guestRows = [];
+    @track guestRowsBeforeEdit=[];
     //Passenger Details for adults
     @track guestRowsAdults = [];
     //Passenger details for childs
     @track guestRowsChilds = [];
     //Passenger details for Infants
     @track guestRowsInfants = [];
+    newGuestType = 'Adult';
     genderOptions = [
         { label: 'Male', value: 'Male' },
         { label: 'Female', value: 'Female' },
@@ -110,10 +121,19 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         { label: 'Prof.', value: 'Prof.' },
         { label: 'Other', value: 'Other' }
     ];
+    //to add new row on passenger page
+    guestTypeOptions = [
+        { label: 'Adult', value: 'Adult' },
+        { label: 'Child', value: 'Child' },
+        { label: 'Infant', value: 'Infant' }
+    ];
 
     @track numberOfAdults = 0;
     @track numberOfChildren = 0;
     @track numberOfInfants = 0;
+    @track numberOfAdultsBeforeUpdate = 0;
+    @track numberOfChildrenBeforeUpdate = 0;
+    @track numberOfInfantsBeforeUpdate = 0;
     firstName='';
     lastName='';
     mobile;
@@ -121,7 +141,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     @track opportunityFieldValues = {};
     @track location;
     @track booker;
-
+    @track surcharge = false;
+    bookerBeforeEdit;
+    locationBeforeEdit;
+    @track disableSurchargeWaiveOffInput = false;
+    @track checkSurcharge = false;
     connectedCallback() {        
         this.loadPackageData();
         this.loadAddonData();
@@ -168,6 +192,12 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             });
     }
 
+    showPackageSelectionScreen() {
+        this.showModal = true;
+        this.showHeader = true;
+        this.showChild = false;
+    }
+
     // Handle the UI elements based on the current state
     handleUIBasedOnState() {
         if (this.processState === '') {            
@@ -178,21 +208,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showModal = true;
             this.showHeader = true;
             this.showChild = false;
-            this.showGst = false;
-            this.showCgst =false;
-            this.showIgst =false;
-            this.orderSummaryPackage=[];
-            this.orderSummaryAddon=[];
-            this.orderSummary=[];
-            this.totalAmount=0;
-            this.totalDiscountAmount = 0;
-            this.totalAmountAfterDiscount = 0;
-            this.totalNetAmount = 0;
-            this.totalCgstAmount = 0;
-            this.totalSgstAmount = 0;
-            this.totalIgstAmount = 0;
-            this.selectedPassenger = undefined;
-            this.getAddonDetail = undefined;
+            this.showPackageSelection();  
+            this.calculateTotalPackage(); 
+            this.getSavedPassengerData();
+            this.getSavedPlacardData();
+            this.showSavedDiscountAndGst();
         }else if (this.processState === 'Package Selection') {
             // package selection was completed
             this.showPackageSelection(); 
@@ -242,8 +262,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         }            
     }
 
-    loadDetailsAfterUpdate() {
+    loadDetailsAfterUpdate(event) {
         this.isPaxIncreased =true;
+        this.numberOfAdults = event.detail.adultCount;
+        this.numberOfChildren = event.detail.childCount;
+        this.numberOfInfants = event.detail.infantCount;
         this.loadPackageData();
         this.loadAddonData();
         this.loadPassengerData();
@@ -437,11 +460,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         name: wrapper.packageName + ' (' + this.numberOfChildren + ' child)', // Copy the 'name' value for child
                         amount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, // Calculate the amount
                         totalAmount: wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren,
-                        netAmount: wrapper.priceTagBeforeTax * this.numberOfChildren,
-                        cgstAmount: wrapper.cgst * this.numberOfChildren,
-                        sgstAmount: wrapper.sgst * this.numberOfChildren,
-                        igstAmount: wrapper.igst * this.numberOfChildren,
-                        productId: wrapper.productId,
+                        netAmount: wrapper.childPackageWrapper[wrapper.packageFamily].priceTagBeforeTax * this.numberOfChildren,
+                        cgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].cgst * this.numberOfChildren,
+                        sgstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].sgst * this.numberOfChildren,
+                        igstAmount: wrapper.childPackageWrapper[wrapper.packageFamily].igst * this.numberOfChildren,
+                        productId: wrapper.childPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.childPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.childPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
@@ -459,7 +482,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         cgstAmount: 0,
                         sgstAmount: 0,
                         igstAmount: 0,
-                        productId: wrapper.productId,
+                        productId: wrapper.infantPackageWrapper[wrapper.packageFamily].productId,
                         pricebookEntryId: wrapper.infantPackageWrapper[wrapper.packageFamily].priceBookEntryId,
                         unitPrice: wrapper.infantPackageWrapper[wrapper.packageFamily].price,
                         count: 1, // Set the count, potentially modify later based on children
@@ -474,8 +497,30 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         })
         .flat(); // Flatten the array to combine all the records into a single array
 
+            const surcharge = this.surchargePackage;
+            console.log('>>>surcharge',surcharge);
+            if (surcharge.surchargeApplicable) {
+                this.orderSummaryPackage.push({
+                    name: surcharge.packageName || 'Surcharge',
+                    amount: surcharge.price,
+                    totalAmount: surcharge.price,
+                    netAmount: surcharge.priceTagBeforeTax,
+                    cgstAmount: surcharge.cgst,
+                    sgstAmount: surcharge.sgst,
+                    igstAmount: surcharge.igst,
+                    productId: surcharge.productId,
+                    pricebookEntryId: surcharge.priceBookEntryId,
+                    unitPrice: surcharge.price,
+                    isChild : false, 
+                    isInfant : false,
+                    count: 1,
+                    discountValue: 0,
+                    isSurcharge: true // Optional flag for clarity
+                });
+            }
             this.orderSummary = [...this.orderSummaryPackage, ...this.orderSummaryAddon];
             this.calculateTotalPackage();
+            console.log('orderSummary inside --->>> ',JSON.stringify(this.orderSummary));
         //this.orderSummary = [...this.orderSummary, (this.selectedPackage + ' '+ this.selectedAmount)];
         
     }
@@ -662,7 +707,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showIgst = true;
         }
     }
-    openPassengerPage() {
+    async openPassengerPage() {
         let matchFound = false;
         let buttonLabel = 'buttonLabel';
         for (let item of this.getPackage) {
@@ -672,13 +717,18 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 break;  // Exit loop after finding the match
             }
         }
-        if(matchFound) {            
-            this.createOLIs();
+        if (matchFound && this.processState != 'Preview') {            
+            await this.createOLIs();
             this.showModal=false;
             this.passengerDetailPage = true;
             this.updateBookingCurrentState('Package Selection');
             window.scrollTo({top: 0, behavior:'smooth'});            
             this.updateProcesses();
+        } else if (matchFound && this.processState == 'Preview') { //scenario for edit button
+            this.showModal=false;
+            this.passengerDetailPage = true;            
+            this.addnewPassengerOnUpdate();
+            window.scrollTo({top: 0, behavior:'smooth'});
         } else {
             this.showToast('Error', 'Please select a package: !', 'error');
         }
@@ -695,8 +745,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     // Method to call Apex and create Opportunity Line Items
-    createOLIs() {
-        createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount })
+    async createOLIs() {
+        await createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount })
             .then(result => {
             })
             .catch(error => {
@@ -713,18 +763,35 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.flightType = result.flightType;
             this.flightNumber = result.flightNumber;
             this.flightDate = result.flightDate;
-            this.numberOfAdults = result.NoOfAdult; 
-            this.numberOfChildren = result.NoOfChild;
-            this.numberOfInfants = result.NoOfInfant;
+            this.numberOfAdults = this.numberOfAdults != 0 ? this.numberOfAdults : result.NoOfAdult; 
+            this.numberOfChildren = this.numberOfChildren != 0 ? this.numberOfChildren : result.NoOfChild;
+            this.numberOfInfants = this.numberOfInfants !=0 ? this.numberOfInfants : result.NoOfInfant;
             this.bookingStage = result.bookingStage;
+            this.checkSurcharge = result.checkSurcharge;
+            this.surcharge = result.checkSurcharge;
+            this.editSurcharge = result.surchargeRequestStatus;
+            if(this.surcharge)
+            this.disableSurchargeWaiveOffInput = true;
             //Added by Abhishek
             this.booker = result.booker;
             this.location = result.location;
+            if(result.booker != null && result.booker != undefined && result.booker != ''){
+                this.bookerApplicable = true;
+            }
             this.guestRows = []; 
             this.addGuestRows('Adult', this.numberOfAdults);
             this.addGuestRows('Child', this.numberOfChildren);
             this.addGuestRows('Infant', this.numberOfInfants);
             this.fetchProcessState();
+
+            /*const created = new Date(result.createdDate);
+            const service = new Date(result.serviceDateTime);
+            const diffMs = service.getTime() - created.getTime(); // difference in milliseconds
+            const twelveHoursInMs = 12 * 60 * 60 * 1000;
+            if (diffMs < twelveHoursInMs) {
+                this.surchargeApplicable = true;
+            }*/
+            this.surchargeDataLoad();
             this.isLoading = false;
         })
         .catch((error) => {
@@ -732,7 +799,63 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.isLoading = false;
         });
     }
+    surchargeDataLoad() {
+    loadSurcharge({opportunityId: this.recordId})
+    .then((result) => {
+            this.surchargePackage = result;
+            console.log('this.surchargePackage>>>',this.surchargePackage);
+            const surcharge = this.surchargePackage;
+            console.log('>>>surcharge',surcharge);
+            
 
+        }).catch((error) => {
+            console.error(error);
+            this.isLoading = false;
+        });
+    }
+    //check if passenger row is not a last row
+    get canDelete() {
+        return this.guestRows.length > 1; // Only show delete button if there's more than one row
+    }
+    //handle guest row delete
+    handleDelete(event) {
+        if (this.guestRows.length > 1) {
+            const index = event.target.dataset.index;
+            this.guestRows.splice(index, 1);
+            this.guestRows = [...this.guestRows]; // Ensures reactivity
+        }        
+        // Recalculate counts based on the updated guestRows array
+        this.updateGuestCounts();
+    }
+    //to select new row for passenger
+    handleGuestTypeChange(event) {
+        this.newGuestType = event.target.value;
+    }
+
+    handleAddGuest() {
+        // Add new guest row dynamically based on selected type
+        this.guestRows.push({
+            id: `${this.newGuestType}-${this.guestRows.length}`,
+            pass: this.newGuestType,
+            type: this.newGuestType,
+            title: '',
+            firstname: '',
+            lastname: '',
+            gender: '',
+            age: null,
+            designation: '',
+            travelclass: '',
+            travelpnrno: '',
+            nationality: '',
+            passportnumber: '',
+            phone: '',
+            showDropdown: false,
+            isPlacard: this.guestRows.length === 0 && this.newGuestType === 'Adult' ? true : false
+        });
+
+        this.guestRows = [...this.guestRows]; // Ensuring reactivity
+        this.updateGuestCounts(); // Update the guest counts
+    }
      // Add rows for a specific type of guest (Adult/Child/Infant)
     addGuestRows(type, count) {
         for (let i = 0; i < count; i++) {
@@ -764,16 +887,49 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         }
     }
     
+    @track minAgeValaue
+    @track maxAgeValaue
+    @track minimumAgeError
+    @track maxAgeError
 
     handleChange(event) {
+        debugger;
         const field = event.target.label.toLowerCase().replace(/ /g, '');
         const value = event.target.value;
         const index = event.target.dataset.index;  // Use data attribute for index
-        
+        console.log('value',value);
         // Ensure the index exists and is valid
         if (this.guestRows[index]) {
             this.guestRows[index][field] = value;
         }
+        const guestType = this.guestRows[index]['pass'];
+        const ageInput = event.target;
+        const numericValue = parseFloat(value);
+        // Clear any previous error
+        ageInput.setCustomValidity('');
+
+        // --- Validation Logic ---
+        if (field === 'age') {
+            if (guestType === 'Adult' && numericValue < 12) {
+                ageInput.setCustomValidity('Age must be 12 or more for Adults.');
+            } else if (guestType === 'Child' && (numericValue < 2 || numericValue > 11)) {
+                ageInput.setCustomValidity('Age for Children must be between 2 and 11.');
+            } else if (guestType === 'Infant' && numericValue > 1) {
+                ageInput.setCustomValidity('Age for Infants must be less Than 2.');
+            }
+            ageInput.reportValidity();
+        }
+        if(field == 'phone'){
+            const phoneValue = value.trim();
+            // Check if phone is made up of only zeros (e.g., '0000000000')
+            if (/^0+$/.test(phoneValue)) {
+                event.target.setCustomValidity('Phone number cannot contain only zeros.');
+            } else {
+                event.target.setCustomValidity('');
+            }
+            ageInput.reportValidity();
+        }
+        
         // Find the selected passenger with isPlacard === true
         const selectedGuest = this.guestRows.find(guest => guest.isPlacard);
         if (selectedGuest) {
@@ -869,6 +1025,30 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
          // Find the new selected guest and update placard details
         this.selectedPassenger = { ...this.guestRows.find(guest => guest.isPlacard) };
     }
+    @track showConfirmationPopup = false
+    handleSurcharge(event) {
+        //this.surcharge = event.target.checked; // This will be true when selected
+        //this.updateSurchargeOnBooking();
+        if( event.target.checked){
+        this.showConfirmationPopup = event.target.checked;
+        event.target.checked = false;
+        }
+    }
+    confirmSurcharge(){
+        /*const checkbox = this.template.querySelector('lightning-input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = true;
+        }*/
+        this.surcharge = true; 
+        this.updateSurchargeOnBooking();
+        this.disableSurchargeWaiveOffInput = true;
+        this.showConfirmationPopup = false;
+        this.showToast('Success', 'Surcharge Waive off request submitted successfully', 'success');
+    }
+    closePopup(){
+        //this.surcharge = false;
+        this.showConfirmationPopup = false;
+    }
 
     handleTerminalChange(event) {
         const id = event.target.dataset.id.split('-')[0];  // Extract the unique id from the data-id
@@ -919,39 +1099,77 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
 
      // Handle the Save action
      handleSave() {
-        const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
+        if (!this.hasDataChanged()) {
+            this.showPreview = true;
+            this.passengerDetailPage = false;
+            this.isQuotationSent = true;
+            this.disableSurchargeWaiveOffInput = true;
+        } else {
+            this.showPackageSelection();   
+            this.disableSurchargeWaiveOffInput = this.editSurcharge == 'Approved' ? true :false;
+            this.surcharge = this.editSurcharge == 'Approved' ? true :false; 
+            const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
+                .reduce((validSoFar, input_Field_Reference) => {
+                    input_Field_Reference.reportValidity();
+                    return validSoFar && input_Field_Reference.checkValidity();
+                }, true);
+            const All_Compobox_Valid = [...this.template.querySelectorAll('lightning-combobox')]
             .reduce((validSoFar, input_Field_Reference) => {
                 input_Field_Reference.reportValidity();
                 return validSoFar && input_Field_Reference.checkValidity();
             }, true);
-        const All_Compobox_Valid = [...this.template.querySelectorAll('lightning-combobox')]
-        .reduce((validSoFar, input_Field_Reference) => {
-            input_Field_Reference.reportValidity();
-            return validSoFar && input_Field_Reference.checkValidity();
-        }, true);
-        var errorMessage = 'Please resolve all the required checks.'
-        //var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter phone number of minimum 1 adult passenger';
-        
-        if(All_Input_Valid && All_Compobox_Valid && !this.showPhoneErrorMessage) {
-            savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
-            .then(() => {
-                this.showPreview = true;
-                this.passengerDetailPage = false;
-                this.updateBookingCurrentState('Passenger Details');
-                this.handlePlacardDetails();// save placard details
-            })
-            .catch(error => {
-                // Handle error
-                console.error('Error saving passenger details:', error);
-                this.showToast('Error', 'Error saving Passenger details', 'error');
-            });            
-        }
-        else {
-            this.showToast('Error', errorMessage, 'error');
+            var errorMessage = 'Please resolve all the required checks.'
+            //var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter phone number of minimum 1 adult passenger';
+            
+            if(All_Input_Valid && All_Compobox_Valid && !this.showPhoneErrorMessage) {
+                // if (this.processState == 'Preview') {
+                //     this.createOLIs();
+                // }
+                
+                this.handleUpdatedGUestRows();
+                console.log('guests->>> ',JSON.stringify(this.guestRows));
+                setTimeout(() => {
+                    console.log('orderSummary->>> ',JSON.stringify(this.orderSummary));
+                createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount })
+                .then(result => {
+                })
+                .catch(error => {
+                    console.error('Error creating Opportunity Line Items: ', error);
+                    this.showToast('Error', error, 'error');
+                });
+                savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
+                .then(() => {
+                    this.showPreview = true;
+                    this.passengerDetailPage = false;
+                    this.updateBookingCurrentState('Passenger Details');
+                    //this.updateSurchargeOnBooking();
+                    this.handlePlacardDetails();// save placard details
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error saving passenger details:', error);
+                    this.showToast('Error', 'Error saving Passenger details', 'error');
+                });  
+                }, 2000); // Simulate processing delay
+                          
+            }
+            else {
+                this.showToast('Error', errorMessage, 'error');
+            }
         }
         
     }
-
+    updateSurchargeOnBooking(){
+            submitForSurchargeApproval({ surcharge : this.surcharge, opportunityId: this.recordId })
+                .then(() => {
+                    
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error saving surcharge details:', error);
+                    this.showToast('Error', 'Error saving surcharge details', 'error');
+                }); 
+    }
     checkPhoneNumber() {
         // Check if at least one adult has a filled phone
         let isValid = false;
@@ -1024,6 +1242,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     
             savePlacardDetails({ placardData: serializedPassenger, opportunityId: this.recordId })
                 .then(() => {
+                    
                 })
                 .catch(error => {
                     // Handle error
@@ -1044,6 +1263,22 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     openModal() {
         this.isModalOpen = true;
     }
+
+    handleUpdatedGUestRows() {
+        this.updateGuestCounts(); // Ensure the latest counts before saving
+    
+        this.opportunityFieldValues['Number_of_Adults__c'] = this.numberOfAdults;
+        this.opportunityFieldValues['Number_of_Children__c'] = this.numberOfChildren;
+        this.opportunityFieldValues['Number_of_Infants__c'] = this.numberOfInfants;
+    
+        saveData({ oppId: this.recordId, opportunityFieldValues: this.opportunityFieldValues })
+            .then(() => {
+            })
+            .catch((error) => {
+                console.log('error->>>>>>>' + JSON.stringify(error));
+            });
+    }
+    
 
     // Close the modal
     closePopupModal() {
@@ -1068,6 +1303,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 this.dispatchEvent(new RefreshEvent());
 				this.handleSendEmail();
                 this.updateBookingCurrentState('Preview');
+                this.disableSurchargeWaiveOffInput = true;
             })
             .catch((error) => {
                 this.showToast('Error', 'Error while generating Voucher', 'error');
@@ -1084,16 +1320,9 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     // Handle the redirection to the list view
     handleRedirect() {
         // Close the modal first
-        this.closeModal();
-
-        // Redirect to the list view page
-        this[NavigationMixin.Navigate]({
-            type: 'standard__objectPage',
-            attributes: {
-                objectApiName: 'Opportunity',  
-                actionName: 'list'
-            }
-        });
+        this.closePopupModal();
+        window.location.reload();
+        window.scrollTo({top: 0, behavior:'smooth'});
     }
 	
 	handleSendEmail() {
@@ -1219,13 +1448,49 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
     //edit booking 
     editBooking() {
+        this.copyDataBeforeEdit();
         this.showModal = true;
         this.showHeader = true;
         this.showChild = false;
         this.showPreview = false;
         this.passengerDetailPage = false;
         this.isQuotationSent = false;
+        this.isEditing = true;
+        this.disableSurchargeWaiveOffInput = false;
         window.scrollTo({top: 0, behavior:'smooth'});
+    }
+
+    copyDataBeforeEdit() {
+        this.orderSummaryBeforeEdit = [...this.orderSummary];
+        this.guestRowsBeforeEdit=[...this.guestRows];
+        this.selectedPassengerBeforeEdit = { ...this.selectedPassenger };
+        this.locationBeforeEdit = this.location;
+        this.bookerBeforeEdit = this.booker;
+        this.numberOfAdultsBeforeUpdate = this.numberOfAdults;
+        this.numberOfChildrenBeforeUpdate = this.numberOfChildren;
+        this.numberOfInfantsBeforeUpdate = this.numberOfInfants;
+    }
+
+    hasDataChanged() {
+        return (
+            JSON.stringify(this.orderSummaryBeforeEdit) !== JSON.stringify(this.orderSummary) ||
+            JSON.stringify(this.guestRowsBeforeEdit) !== JSON.stringify(this.guestRows) ||
+            JSON.stringify(this.selectedPassengerBeforeEdit) !== JSON.stringify(this.selectedPassenger) ||
+            this.locationBeforeEdit !== this.location ||
+            this.bookerBeforeEdit !== this.booker
+        );
+    }
+
+    addnewPassengerOnUpdate() {
+        this.addGuestRows('Adult', this.numberOfAdults- this.numberOfAdultsBeforeUpdate);
+        this.addGuestRows('Child', this.numberOfChildren- this.numberOfChildrenBeforeUpdate);
+        this.addGuestRows('Infant', this.numberOfInfants - this.numberOfInfantsBeforeUpdate);
+    }
+
+    updateGuestCounts() {
+        this.numberOfAdults = this.guestRows.filter(guest => guest.type === 'Adult').length;
+        this.numberOfChildren = this.guestRows.filter(guest => guest.type === 'Child').length;
+        this.numberOfInfants = this.guestRows.filter(guest => guest.type === 'Infant').length;
     }
     
 }

@@ -210,6 +210,16 @@
                 <identifier>RecordOwnerIdField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Case__c</fieldItem>
+                <identifier>RecordCase_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-5a102b83-dab3-4cde-b2e2-f97d4ad6d7f9</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -280,8 +290,18 @@
                     <name>uiBehavior</name>
                     <value>none</value>
                 </fieldInstanceProperties>
-                <fieldItem>Record.Case__c</fieldItem>
-                <identifier>RecordCase_cField</identifier>
+                <fieldItem>Record.Target_Closure_Time__c</fieldItem>
+                <identifier>RecordTarget_Closure_Time_cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Target_Closure_DateTime__c</fieldItem>
+                <identifier>RecordTarget_Closure_DateTime_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-01745e22-41a1-4938-910d-8f70590954d6</name>

@@ -311,7 +311,9 @@ public class CancellationPolicyService {
             //Decimal refundAmountWithoutGeneralCharges = 0;  
             Decimal generalDeduction = 0;
             Integer count = 0;  
-            String paxNames = '';  
+            String paxNames = ''; 
+            Decimal partialBookingAmount=0;
+            Decimal partialRefundAmount=0; 
             for (Map<String, Object> row : selectedOrders) {      
                 String pckName = (String) row.get('packageName');
                 Decimal perUnitPrice = (Decimal) row.get('unitPrice');               
@@ -359,20 +361,21 @@ public class CancellationPolicyService {
                     oli.IGST__c = igstAmount;
                     oliList.add(oli);
                 }  
-                
-                //to show preview of partial cancellation
-                wrp.bookingAmount = wrp.bookingAmount != null ? wrp.bookingAmount : 0;
-                wrp.refundAmount = wrp.refundAmount != null ? wrp.refundAmount : 0;
-                wrp.bookingAmount += perUnitPrice; 
-                wrp.refundAmount = refundAmountPerOli;
-                wrp.deductedAmount = wrp.bookingAmount - wrp.refundAmount;
-                wrp.refundMethod = 'Original Payment Mode';
-                wrp.numberOfPaxCancelled = numberOfPax;
-                wrp.refundPolicyApplicable = refundPolicy != '' ? refundPolicy : 'N/A';
-                wrp.paxNames = paxNames != '' ? paxNames : null;
-
                 count++;
+                partialBookingAmount += perUnitPrice;
+                partialRefundAmount += refundAmountPerOli;
             }
+            //to show preview of partial cancellation
+
+            wrp.bookingAmount = partialBookingAmount;
+            wrp.refundAmount = partialRefundAmount;
+            
+            wrp.deductedAmount = wrp.bookingAmount - wrp.refundAmount;
+            wrp.refundMethod = 'Original Payment Mode';
+            wrp.numberOfPaxCancelled = numberOfPax;
+            wrp.refundPolicyApplicable = refundPolicy != '' ? refundPolicy : 'N/A';
+            wrp.paxNames = paxNames != '' ? paxNames : '';
+
             if (submit) {
                 update oliList;  
                 //creation of transaction record if any refund is done for partial cancellation
@@ -388,6 +391,15 @@ public class CancellationPolicyService {
                 } 
                 insert transactionList;
                 
+                /*if (!cancelledOli.isEmpty()) {
+                    List<Passenger_Details__c> deletePassenger = [ SELECT Id FROM Passenger_Details__c WHERE Opportunity_ID__c =:opportunityId 
+                                                                    AND Individual_Booking_Details__c IN: cancelledOli];                
+
+                    if(!deletePassenger.IsEmpty()){
+                        delete deletePassenger;
+                    }
+                }*/
+
                 List<Passenger_Details__c> updatePaxList = [
                 SELECT Id,Passenger_Type__c FROM Passenger_Details__c 
                 WHERE Opportunity_ID__c =:opportunityId 

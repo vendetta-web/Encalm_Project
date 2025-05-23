@@ -7,6 +7,7 @@ export default class FlightDetailsDataImport extends LightningElement {
     @track fileName;
     @track airportCode;
     @track disableButton = true;
+    @track showSpinner = false; 
     
     handleFileChange(event) {
         const file = event.target.files[0];
@@ -33,7 +34,7 @@ export default class FlightDetailsDataImport extends LightningElement {
         }
     }
 
-    handleImport() {
+    /*handleImport() {
         if (this.fileData) {
             
             //importCSVFile({ csvString: this.fileData, airportCodeFromFileName:  this.airportCode})
@@ -50,8 +51,54 @@ export default class FlightDetailsDataImport extends LightningElement {
             this.showToast('Error', 'Please select a file first', 'error');
             this.disableButton = true;
         }
+    }*/
 
+    handleImport() 
+    {
+        if (this.fileData) {
+            const rows = this.fileData.split('\n');
+            const header = rows[0];
+            const dataRows = rows.slice(1); // exclude header
+
+            const batchSize = 50;
+            const totalBatches = Math.ceil(dataRows.length / batchSize);
+            let currentBatch = 0;
+            this.disableButton = true;
+            this.showSpinner = true;
+            const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+            const processBatch = () => {
+                if (currentBatch < totalBatches) {
+                    const batchRows = dataRows.slice(currentBatch * batchSize, (currentBatch + 1) * batchSize);
+                    const csvChunk = [header, ...batchRows].join('\n');
+
+                    delay(1500).then(() => {
+                        importCSVFile({ csvString: csvChunk })
+                            .then(() => {
+                                currentBatch++;
+                                processBatch(); // process next batch
+                            })
+                            .catch(error => {
+                                this.showToast('Error', error.body.message, 'error');
+                                // this.disableButton = false;
+                                this.showSpinner = false;
+                            });
+                    });
+                } else {
+                    // All batches completed
+                    this.showToast('Success', 'All rows processed successfully.', 'success');
+                    // this.disableButton = false;
+                    this.showSpinner = false;
+                }
+            };
+
+            processBatch(); // start the first batch
+        } else {
+            this.showToast('Error', 'Please select a file first', 'error');
+            this.disableButton = true;
+        }
     }
+
 
     showToast(title, message, variant) {
         const event = new ShowToastEvent({

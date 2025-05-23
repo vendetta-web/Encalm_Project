@@ -229,6 +229,9 @@ span {
     margin-bottom: 15px; /* Adds     space between rows */
     margin-left: 10px; /* Adds space from first rows */
     margin-right: 10px; /* Adds space from   last rows */
+    position: relative; /* Required for z-index and dropdown alignment */
+    overflow: visible;  /* Prevent dropdowns from getting clipped */
+    z-index: 1;          /* Helps ensure proper stacking context */
 }
 
 .guest-rows {
@@ -238,6 +241,9 @@ span {
     margin-bottom: 15px; /* Adds     space between rows */
     margin-left: 10px; /* Adds space from first rows */
     margin-right: 10px; /* Adds space from   last rows */
+    position: relative; /* Required for z-index and dropdown alignment */
+    overflow: visible;  /* Prevent dropdowns from getting clipped */
+    z-index: 1;          /* Helps ensure proper stacking context */
 }
 
 .input-field {
@@ -278,7 +284,7 @@ span {
     position: absolute;
     width: 180px;
     z-index: 10; /* Bring the dropdown above other elements */
-    max-height: 200px; /* Set the maximum height */
+    max-height: 80px; /* Set the maximum height */
     overflow-y: auto; /* Add vertical scrolling */
 }
 
@@ -613,7 +619,7 @@ lightning-combobox {
 .quantity-section {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 10px;
 }
 
 /* Quantity buttons styling */
@@ -677,7 +683,7 @@ lightning-combobox {
     color: white;
     border: none;
     border-radius: 4px;
-    padding: 8px 16px;
+    padding: 8px 12px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -702,6 +708,8 @@ lightning-combobox {
 @media (max-width: 768px) {
     .service-card {
         flex-direction: column;
+        position: relative;
+        z-index: 1;
     }
     
     .service-icon-container {
@@ -745,7 +753,18 @@ lightning-combobox {
         z-index: 1000; /* Ensures dropdown appears above other elements */
     }
 }
+    .service-card.focused-card {
+        z-index: 9999; /* Bring this card above adjacent ones */
+    }
 
+    .combobox-wrapper {
+        position: relative;
+        z-index: 1;
+    }
+
+    .combobox-wrapper.focused-combobox {
+        z-index: 99999; /* Boost combobox even further */
+    }
 
     /* for packages */
 
@@ -808,8 +827,15 @@ lightning-combobox {
         padding: 5px 0;
         transform: rotate(-2deg); /* Slight rotation for a more handwritten appearance */
     }
+    .surcharge-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* spacing between label and checkbox */
+    margin-top: 5px; /* space from the content above */
+}
 
-    .small-input {
-        max-width: 250px; /* Adjust as needed */
-        margin-right: 1rem;
-    }
+.custom-surcharge-label {
+    font-weight: 500;
+    color: white;
+    font-size: 14px;
+}

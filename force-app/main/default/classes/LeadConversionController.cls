@@ -78,7 +78,7 @@ public with sharing class LeadConversionController {
         return statuses[0].MasterLabel;
     }
 
-    private static String getServiceCode(String serviceTypeCode) {
+    public static String getServiceCode(String serviceTypeCode) {
         // Check if the string is not null or empty
         if (String.isNotEmpty(serviceTypeCode)) {
             // Get the first two letters and convert them to uppercase

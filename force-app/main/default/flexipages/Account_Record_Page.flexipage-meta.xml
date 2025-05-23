@@ -433,7 +433,7 @@
                             <value>CASES.CASE_NUMBER</value>
                         </valueListItems>
                         <valueListItems>
-                            <value>NAME</value>
+                            <value>Inquiry_Type__c</value>
                         </valueListItems>
                         <valueListItems>
                             <value>CASES.SUBJECT</value>
