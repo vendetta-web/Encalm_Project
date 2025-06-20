@@ -118,7 +118,24 @@ public class EmailParser {
             } 
             System.debug('Final Location Values: ' + locationValues);
             if (!locationValues.isEmpty()) {
-                caseRecord.Location__c = String.join(locationValues, ';');
+                //caseRecord.Location__c = String.join(locationValues, ';');
+                Schema.DescribeFieldResult fieldDesc = Schema.getGlobalDescribe().get('Case').getDescribe().fields.getMap().get('NewLocation__c').getDescribe();
+                List<String> validPicklistValues = new List<String>();
+                
+                for (Schema.PicklistEntry entry : fieldDesc.getPicklistValues()) {
+                    validPicklistValues.add(entry.getValue());
+                }                
+                system.debug('Valid picklist values: ' + validPicklistValues);
+                for (String location : locationValues) {
+                    String normalizedLocation = location.substring(0,1).toUpperCase() + location.substring(1).toLowerCase(); // Convert to Title Case
+                    system.debug('Checking location: ' + normalizedLocation);
+                    
+                    if (validPicklistValues.contains(normalizedLocation)) {
+                        caseRecord.NewLocation__c = normalizedLocation;  // Assign valid picklist value
+                        system.debug('Assigned NewLocation__c: ' + normalizedLocation);
+                        break; // Exit loop after assigning the first valid value
+                    }
+                }
             }
             
             // Extract phone number from email content

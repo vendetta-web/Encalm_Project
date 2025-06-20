@@ -19,6 +19,7 @@ public class LeadStatusHelper {
                         newLead.OwnerId = queueNameToIdMap.get('Reservation Queue');
                     } else if (newLead.Department__c == 'Sales' && queueNameToIdMap.containsKey('Sales Team')) {
                         newLead.OwnerId = queueNameToIdMap.get('Sales Team');
+                        newLead.Previous_Owner__c = oldLead.OwnerId;
                     }
                 }
                 
@@ -75,9 +76,10 @@ public class LeadStatusHelper {
                     startTimer(newLead, 2, 1, recordTypeIdToDevName, salesBHId); // First timer after 30 minutes
                 }
                 if ((oldLead.Status != 'Open' && newLead.Status == 'Open') && isTargettedProfile(newLead.OwnerId)) {
+                    abortLeadEscationScheduledJob(newLead.Id);
                     startTimer(newLead, 2, 1, recordTypeIdToDevName, salesBHId); // First timer after 30 minutes
                 }
-                if (newLead.Status == 'Customer Responded' && isTargettedProfile(newLead.OwnerId) && recordTypeIdToDevName.get(newLead.RecordTypeId) != 'Sales') {
+                if (newLead.Status == 'Customer Responded' && oldLead.Status != newLead.Status && isTargettedProfile(newLead.OwnerId) && recordTypeIdToDevName.get(newLead.RecordTypeId) != 'Sales') {
                     abortLeadEscationScheduledJob(newLead.Id);
                     startTimer(newLead, 2, 1, null, null);
                 }
@@ -191,6 +193,55 @@ public class LeadStatusHelper {
             }
         }
     }
+    @AuraEnabled(cacheable=true)
+public static List<ContentDocument> getFiles(String recordId) {
+    // Step 1: Get ContentDocument IDs linked to the record
+    List<ContentDocumentLink> links = [
+        SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId = :recordId
+    ];
+    
+    if (links.isEmpty()) {
+        return new List<ContentDocument>(); // Return an empty list if no files exist
+    }
+
+    // Step 2: Extract ContentDocument IDs
+    List<String> contentDocumentIds = new List<String>();
+    for (ContentDocumentLink link : links) {
+        contentDocumentIds.add(link.ContentDocumentId);
+    }
+
+    // Step 3: Fetch ContentDocument records using retrieved IDs
+    return [
+        SELECT Id, Title, CreatedDate FROM ContentDocument WHERE Id IN :contentDocumentIds
+    ];
+}
+    public static void handleOmniChannelAssignment(Map<Id, Lead> oldMap, List<Lead> newList) {
+        Set<Id> newOwnerIds = new Set<Id>();
+
+        for (Lead ld : newList) {
+            Lead oldLead = oldMap.get(ld.Id);
+            if (ld.OwnerId != oldLead.OwnerId) {
+                newOwnerIds.add(ld.OwnerId);
+            }
+        }
+
+        Map<Id, Boolean> eligibilityMap = new Map<Id, Boolean>();
+        for (Id userId : newOwnerIds) {
+            eligibilityMap.put(userId, OmniChannelAssignmentEnforcer.isAgentEligibleLead(userId));
+        }
+
+        for (Lead ld : newList) {
+            Lead oldLead = oldMap.get(ld.Id);
+            if (ld.OwnerId != oldLead.OwnerId && !eligibilityMap.get(ld.OwnerId)) {
+                ld.OwnerId = oldLead.OwnerId;
+                ld.addError('Agent already has 10 open Leads. Assignment not allowed.');
+            }
+        }
+    }
+
+
+
+
     
     // Handle before insert logic
     /* public static void handleAfterUpdateLeadLogic(List<Lead> newLeads, Map<Id, Lead> oldLeadsMap) { // Added by Saurabh

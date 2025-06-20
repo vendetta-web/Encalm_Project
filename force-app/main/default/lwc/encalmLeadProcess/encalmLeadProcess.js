@@ -7,6 +7,7 @@ import RECORD_TYPE_ID from "@salesforce/schema/Lead.RecordTypeId";
 import FOLLOWUP_FIELD from "@salesforce/schema/Lead.Set_Follow_up_Date_and_Time__c"; 
 import UPDATED_BY_FLOW from "@salesforce/schema/Lead.Updated_By_Flow__c";
 import LEAD_OWNER from "@salesforce/schema/Lead.OwnerId"; 
+import LEAD_OWNER_USER from "@salesforce/schema/Lead.IsOwnerUser__c"; 
 import REASON_FOR_CLOSE from "@salesforce/schema/Lead.Reason_For_Close__c"; 
 import convertLead from '@salesforce/apex/LeadConversionController.convertLead';
 import { NavigationMixin } from 'lightning/navigation'; 
@@ -16,7 +17,7 @@ import LEAD_OBJECT from '@salesforce/schema/Lead';
 import LEAD_DISPOSITION from "@salesforce/schema/Lead.Disposition__c"; 
 import LEAD_SUB_DISPOSITION from "@salesforce/schema/Lead.Sub_Disposition__c"; 
 
-const fields = [STAGE_NAME, RECORD_TYPE_ID,UPDATED_BY_FLOW, FOLLOWUP_FIELD, LEAD_OWNER, REASON_FOR_CLOSE, LEAD_DISPOSITION, LEAD_SUB_DISPOSITION]; 
+const fields = [STAGE_NAME, RECORD_TYPE_ID,UPDATED_BY_FLOW, FOLLOWUP_FIELD, LEAD_OWNER,LEAD_OWNER_USER, REASON_FOR_CLOSE, LEAD_DISPOSITION, LEAD_SUB_DISPOSITION]; 
 
 export default class EncalmLeadProcess extends NavigationMixin(LightningElement) {
     @track reservationStages = ['Open', 'Awaiting Customer response','Customer Responded','Escalated', 'Closed/Converted'];
@@ -31,6 +32,7 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
     @track isStageClosed = false; 
     @track isStageFollowup = false; 
     @track leadOwnerId; 
+    @track isOwnerUser = false;
     @track isLeadClose = false; 
     @track reasonForClose = ''; 
     @track isModalOpen = false; 
@@ -53,7 +55,8 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
             this.recordTypeId = result.fields.RecordTypeId.value;
             this.followUpFieldValue = result.fields.Set_Follow_up_Date_and_Time__c.value;
             this.updateFlag = result.fields.Updated_By_Flow__c.value; 
-            this.leadOwnerId = result.fields.OwnerId.value; 
+            this.leadOwnerId = result.fields.OwnerId.value;
+            this.isOwnerUser = result.fields.IsOwnerUser__c.value; 
             this.showcustompath = true;
             this.pathValues = [];
 
@@ -148,10 +151,11 @@ export default class EncalmLeadProcess extends NavigationMixin(LightningElement)
 
 
     handleMarkStatus() {
-        // if (this.RecordType === 'Sales' && !this.isLeadOwnerUser()) { 
-        //     this.showToast('info', 'Lead Owner must be a User to update the stage in Sales record.');
-        //     return;
-        // }
+         //if (!this.isLeadOwnerUser()) { 
+        if(!this.isOwnerUser){
+             this.showToast('info', 'Lead Owner must be a User to update the stage in Sales record.');
+             return;
+         }
 
         let newStage = this.getActiveStage();
         

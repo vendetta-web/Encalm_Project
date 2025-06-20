@@ -66,7 +66,7 @@ public with sharing class PackageSelectionController {
                                 FROM PricebookEntry
                                 WHERE Pricebook2.IsActive = true
                                 AND Pricebook2.IsStandard = true
-                                AND Product2.Family IN ('Gold', 'Silver', 'Elite','Transit','Surcharge')
+                                AND Product2.Family IN ('Gold', 'Silver', 'Elite','Transit')
                                 AND product2.Airport__r.Airport_Code__c =:opp.Service_Airport__c
                                 AND product2.Flight_Type__c =:opp.Flight_Type__c
                                 AND Product2.Service_Type__c =:opp.Service_Type__c
@@ -99,6 +99,7 @@ public with sharing class PackageSelectionController {
             } else if(pbEntry.Product2.Package_Is_For__c == 'Child') {
                 if(adultToChildPriceBookMap.containsKey(pbEntry.Product2.Family)) {
                     ChildWrapper wrp = new ChildWrapper();
+                    wrp.productId =  pbEntry.Product2Id;
                     wrp.priceBookEntryId = pbEntry.Id;
                     wrp.price = pbEntry.UnitPrice;
                     adultToChildPriceBookMap.put(pbEntry.Product2.Family,wrp);
@@ -107,6 +108,7 @@ public with sharing class PackageSelectionController {
             } else if(pbEntry.Product2.Package_Is_For__c == 'Infant') {
                 if(adultToInfantPriceBookMap.containsKey(pbEntry.Product2.Family)) {
                     InfantWrapper wrp = new InfantWrapper();
+                    wrp.productId =  pbEntry.Product2Id;
                     wrp.priceBookEntryId = pbEntry.Id;
                     wrp.price = pbEntry.UnitPrice;
                     adultToInfantPriceBookMap.put(pbEntry.Product2.Family,wrp);
@@ -149,7 +151,7 @@ public with sharing class PackageSelectionController {
                                 FROM PricebookEntry
                                 WHERE Pricebook2.IsActive = true
                                 AND Pricebook2.IsStandard = true
-                                AND Product2.Family = 'Surcharge' limit 1];
+                                AND Product2.Family = 'Surcharge' AND UnitPrice >= 0 limit 1];
         SurchargeWrapper wrpp = new SurchargeWrapper();
             if(isWithin12Hours){
                
@@ -281,7 +283,7 @@ public with sharing class PackageSelectionController {
                        Date_of_Arrival__c,
                        Date_of_Departure__c,
                        Service_Airport__c,
-                       Flight_Number_Arrival__c,
+                       Flight_Number_Arrival__c,Comments__c,
                        Service_Type__c,Surcharge_Waive_Off__c,
                        Flight_Type__c,Service_Date_Time__c,CreatedDate,
                        StageName,Booker__r.Name,Location__c,Surcharge_WaiveOff_Request__c,
@@ -310,6 +312,8 @@ public with sharing class PackageSelectionController {
         pasWrp.serviceDateTime = opp.Service_Date_Time__c != null ? opp.Service_Date_Time__c : '';
         pasWrp.checkSurcharge = opp.Surcharge_Waive_Off__c;
         pasWrp.surchargeRequestStatus = opp.Surcharge_WaiveOff_Request__c;
+        pasWrp.isServiceType = opp.Service_Type__c =='Transit'? true : false;
+        pasWrp.comment = opp.Comments__c;
                                 
         return pasWrp;
     }
@@ -452,10 +456,11 @@ public with sharing class PackageSelectionController {
 
     // Method to create Opportunity Line Items
     @AuraEnabled
-    public static void createOpportunityLineItems(Id opportunityId, List<Map<String, Object>> productDetails, Decimal amount) {
+    public static void createOpportunityLineItems(Id opportunityId, List<Map<String, Object>> productDetails, Decimal amount, String primaryPackage) {
+        system.debug('primaryPackage>>>' + primaryPackage);
         system.debug('productDetails>>>>'+productDetails);
         //delete existing oli if any
-        List<OpportunityLineItem> oliToDelete = [SELECT Id FROM OpportunityLineItem WHERE opportunityId=: opportunityId AND UnitPrice > 0];
+        List<OpportunityLineItem> oliToDelete = [SELECT Id FROM OpportunityLineItem WHERE opportunityId=: opportunityId];
         Delete oliToDelete;
         //delete existing transactions if any
         List<Transaction_History__c > TransactionsToDelete = [SELECT Id FROM Transaction_History__c WHERE Booking_Id__c =: opportunityId];
@@ -474,7 +479,7 @@ public with sharing class PackageSelectionController {
         Opportunity opp = [
             SELECT Name,STA_Time__c,STD_Time__c,Date_of_Arrival__c,Date_of_Departure__c,Account.Surcharge_waived_off__c,
             Account.BillingState, Service_Airport_Id__r.State__c,Service_Airport_Id__c,Account.GST_Registration_Type__c,Departure_Service_Time__c,
-            Saved_State_Addons__c, Saved_State_OrderSummary__c
+            Saved_State_Addons__c, Saved_State_OrderSummary__c,Surcharge_WaiveOff_Request__c
             FROM Opportunity
             WHERE Id = :opportunityId
             LIMIT 1
@@ -482,7 +487,7 @@ public with sharing class PackageSelectionController {
 
         opp.Saved_State_Addons__c=null;
         opp.Saved_State_OrderSummary__c = null;
-
+        opp.Primary_Product__c = primaryPackage.split('-')[0] != null ? primaryPackage.split('-')[0] : '';
 
         if (opp.STA_Time__c != null) {
             dateText=opp.Date_of_Arrival__c;
@@ -513,16 +518,18 @@ public with sharing class PackageSelectionController {
         ];
 
         for (Map<String, Object> productDetail : productDetails) {
+            system.debug('productDetail========>>>'+JSON.serialize(productDetail));
             Boolean isSurcharge = productDetail.containsKey('isSurcharge') && productDetail.get('isSurcharge') != null
                                     ? (Boolean) productDetail.get('isSurcharge')  : false;
             // Extract the values from the map
-            if(!isSurcharge){
+            //if(!isSurcharge){
             system.debug('productDetail>>>'+ productDetail);
             Id productId = (Id) productDetail.get('productId');
             Id pricebookEntry = (Id) productDetail.get('pricebookEntryId');
             Decimal quantity = (Boolean) productDetail.get('isChild') ? (Decimal) productDetail.get('childCount') : (Boolean) productDetail.get('isInfant') ? (Decimal) productDetail.get('infantCount') : (Decimal) productDetail.get('count');
             Decimal unitPrice = (Decimal) productDetail.get('unitPrice');
             Decimal discountAmount = (Decimal) productDetail.get('discountValue');
+            String packageFamily = (String) productDetail.get('family');
 
             // Safely extract pickup and drop terminals
             List<String> pickupTerminals = new List<String>();
@@ -564,7 +571,7 @@ public with sharing class PackageSelectionController {
                         oli.PricebookEntryId = pricebookEntry; // Link PricebookEntry to OLI
                         oli.Discount_Amount__c = discountAmount/quantity;
                         oli.Status__c = 'Active';
-
+                        oli.Package__c = packageFamily;
                         totalListPrice += unitPrice; 
                         
                         // GST Calculation Logic
@@ -601,7 +608,7 @@ public with sharing class PackageSelectionController {
                     // Add the OLI to the list
                     opportunityLineItemsToInsert.add(oli);
                 }
-            }
+           // }
 
         }
 
@@ -644,6 +651,9 @@ public with sharing class PackageSelectionController {
             insert transactionList;
             //update opportunity for state
             update opp;
+            if(opp.Surcharge_WaiveOff_Request__c == 'Approved'){
+                SurchargeWaiveoffHandler.createOpportunityLineItemSurchargeWaiveOff(new List<Opportunity>{opp});
+            }
         } catch (Exception e) {
             System.debug('Error inserting Opportunity Line Items: ' + e.getMessage());
             throw new AuraHandledException('Error in creating order summary, please show this message to admin');
@@ -684,9 +694,10 @@ public with sharing class PackageSelectionController {
     }
 
     @AuraEnabled
-    public static void submitForSurchargeApproval(Boolean surcharge, Id opportunityId) {
+    public static String submitForSurchargeApproval(Boolean surcharge, Id opportunityId) {
         Opportunity opp = [SELECT Id, Surcharge_Waive_Off__c  FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
         opp.Surcharge_Waive_Off__c  = surcharge;
+        opp.Surcharge_WaiveOff_Request__c = 'Pending';
         try{
             update opp;
             Approval.ProcessSubmitRequest req = new Approval.ProcessSubmitRequest();
@@ -697,13 +708,37 @@ public with sharing class PackageSelectionController {
 
             Approval.ProcessResult result = Approval.process(req);
 
+            //return instances[0].Status;
+
             if (!result.isSuccess()) {
                 throw new AuraHandledException('Submission failed: ' + result.getInstanceStatus());
+            } 
+            List<ProcessInstance> instances = [SELECT Id, Status, TargetObjectId FROM ProcessInstance WHERE TargetObjectId = :opportunityId ORDER BY CreatedDate DESC LIMIT 1];
+
+
+            if (!instances.isEmpty()) {
+                return instances[0].Status; 
+            } else {
+                return 'No Approval Instance Found';
             }
         } catch (Exception ex) {
             System.debug('Error updating state: '+ex.getMessage());
+            return 'Error during submission: ' + ex.getMessage();
         }        
     }
+    
+    @AuraEnabled
+    public static String isApprovalPending(Id opportunityId) {
+        List<ProcessInstance> instances = [SELECT Id, Status, TargetObjectId FROM ProcessInstance 
+                                           WHERE TargetObjectId = :opportunityId order by createdDate DESC LIMIT 1 ];
+        
+        if(!instances.IsEmpty()){    
+            return instances[0].Status; 
+        }else{
+            return 'No instance Found';
+        }
+    }
+
 
     // Method to update the process state
     @AuraEnabled
@@ -765,18 +800,30 @@ public with sharing class PackageSelectionController {
 
     public static void calculateGstApplicable(Opportunity opp, OpportunityLineItem oli) {
 
-        Decimal gstRate = 0.18;  // 18% GST
+        Decimal gstRate = 18;  // 18% GST
         String billingState = opp.Account.BillingState;
         String serviceAirportState = opp.Service_Airport_Id__c !=null ? opp.Service_Airport_Id__r.State__c : '';
         Boolean isNotIgst =false;
-        if (opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
+        String normalizedGSTType = opp.Account.GST_Registration_Type__c != null? (opp.Account.GST_Registration_Type__c).replaceAll('[^a-zA-Z0-9]', '') : '';
+        List<GST_Registation_Type__mdt> regTypeRecord = [SELECT DeveloperName, MasterLabel FROM GST_Registation_Type__mdt];
+        Set<String> gstRegType = new Set<String>();
+        for(GST_Registation_Type__mdt regType : regTypeRecord){
+            String normalizedDevName = regType.DeveloperName.replaceAll('_', '');
+             gstRegType.add(normalizedDevName);
+        }
+        if(opp.Account.GST_Registration_Type__c != null && !gstRegType.contains(normalizedGSTType)){
+            isNotIgst = true;
+        }
+        /*if (opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
             opp.Account.GST_Registration_Type__c != 'Special Economic Zone (SEZ) developer/unit') {
                 isNotIgst = true;
-            }
+         }*/
 
         //Logic for GST calculation
-        Decimal totalGST = oli.UnitPrice * gstRate; // Total GST
-        Decimal invoiceAmount = oli.UnitPrice - totalGST; // Invoice amount (after GST)
+        //Decimal invoiceAmount = oli.UnitPrice / (1 + (gstRate / 100)); // Invoice amount (after GST)
+        //Decimal totalGST = oli.UnitPrice - invoiceAmount; // Total GST
+        Decimal invoiceAmount = (oli.UnitPrice / (1 + (gstRate / 100))).setScale(2, RoundingMode.HALF_UP); // Invoice amount (after GST)
+        Decimal totalGST = (oli.UnitPrice - invoiceAmount).setScale(2, RoundingMode.HALF_UP); // Total GST
 
         // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
         Decimal sgstAmount = 0;
@@ -793,6 +840,11 @@ public with sharing class PackageSelectionController {
                 igstAmount = totalGST;
             }
         }
+        else if (billingState == null && serviceAirportState != null){
+            sgstAmount = totalGST / 2;
+            cgstAmount = totalGST / 2;
+        }
+        
         // Set the calculated GST values on the Opportunity Line Item
         oli.Invoice_Amount__c = invoiceAmount;
         oli.SGST__c = sgstAmount;
@@ -802,18 +854,32 @@ public with sharing class PackageSelectionController {
 
     public static void calculateGst(Opportunity opp, Object wrapper, Decimal unitPrice) {
         
-        Decimal gstRate = 0.18;  // 18% GST
+        Decimal gstRate = 18;  // 18% GST
         String billingState = opp.Account.BillingState;
         String serviceAirportState = opp.Service_Airport_Id__c !=null ? opp.Service_Airport_Id__r.State__c : '';
         Boolean isNotIgst =false;
-        if (opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
+        system.debug('opp.Account.GST_Registration_Type__c>>'+opp.Account.GST_Registration_Type__c);
+        String normalizedGSTType = opp.Account.GST_Registration_Type__c != null? (opp.Account.GST_Registration_Type__c).replaceAll('[^a-zA-Z0-9]', '') : '';
+        system.debug('normalizedGSTType??'+normalizedGSTType);
+        List<GST_Registation_Type__mdt> regTypeRecord = [SELECT DeveloperName, MasterLabel FROM GST_Registation_Type__mdt];
+        Set<String> gstRegType = new Set<String>();
+        for(GST_Registation_Type__mdt regType : regTypeRecord){
+            String normalizedDevName = regType.DeveloperName.replaceAll('_', '');
+             gstRegType.add(normalizedDevName);
+        }
+        if(opp.Account.GST_Registration_Type__c != null && !gstRegType.contains(normalizedGSTType)){
+            isNotIgst = true;
+        }
+        /*if (opp.Account.GST_Registration_Type__c != 'Non-Resident taxable person' &&
             opp.Account.GST_Registration_Type__c != 'Special Economic Zone (SEZ) developer/unit') {
                 isNotIgst = true;
-            }
+            }*/
 
         //Logic for GST calculation
-        Decimal totalGST = unitPrice * gstRate; // Total GST
-        Decimal invoiceAmount = unitPrice - totalGST; // Invoice amount (after GST)
+        //Decimal invoiceAmount = unitPrice / (1 + (gstRate / 100)); // Invoice amount (after GST)
+        //Decimal totalGST = unitPrice - invoiceAmount; // Total GST
+        Decimal invoiceAmount = (unitPrice / (1 + (gstRate / 100))).setScale(2, RoundingMode.HALF_UP); // Invoice amount (after GST)
+        Decimal totalGST = (unitPrice - invoiceAmount).setScale(2, RoundingMode.HALF_UP); // Total GST
 
         // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
         Decimal sgstAmount = 0;
@@ -866,6 +932,26 @@ public with sharing class PackageSelectionController {
             system.debug(childWrp);
         }   
     }
+    @AuraEnabled
+    public static String updateOpportunityStageName(String recordId) {
+            Opportunity opp = [SELECT Id, StageName FROM Opportunity WHERE Id = :recordId LIMIT 1];
+            if (opp.StageName == 'Quotation' || opp.StageName == null || opp.StageName == '') {                
+                opp.StageName = 'Quotation Sent';     
+            }            
+            update opp;
+
+            return opp.StageName;
+
+    }
+    @AuraEnabled
+    public static void updateCommentsOnOpportunity(Id opportunityId, String comments){
+        system.debug('opportunityId>>>'+opportunityId);
+         Opportunity opp = [SELECT Id,Comments__c,StageName FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
+            if (String.IsNotBlank(comments)) {                
+                opp.Comments__c = comments;     
+            }            
+            update opp;
+    }
 
     public class PackageWrapper {
         @AuraEnabled
@@ -909,6 +995,8 @@ public with sharing class PackageSelectionController {
     }
     public class ChildWrapper {
         @AuraEnabled
+        public String productId;
+        @AuraEnabled
         public String priceBookEntryId;
         @AuraEnabled
         public Decimal priceTagBeforeTax;
@@ -922,6 +1010,8 @@ public with sharing class PackageSelectionController {
         public Decimal price;
     }
     public class InfantWrapper {
+        @AuraEnabled
+        public String productId;
         @AuraEnabled
         public String priceBookEntryId;
         @AuraEnabled
@@ -1004,6 +1094,10 @@ public with sharing class PackageSelectionController {
         public Boolean checkSurcharge;
         @AuraEnabled
         public String surchargeRequestStatus;
+        @AuraEnabled
+        public Boolean isServiceType;
+        @AuraEnabled
+        public String comment;
 
     }
 }

@@ -6,7 +6,10 @@ import saveData from '@salesforce/apex/RescheduleBooking.saveData';
 import getFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getFlightDetails';
 import getTransitFlightDetails from '@salesforce/apex/Encalm_BookingEngine.getTransitFlightDetails';
 import sendEmailWithAttachment from '@salesforce/apex/BookingEmailHandler.sendEmailWithAttachment';
-import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
+import generatePaymentLink from '@salesforce/apex/OrderRequestController.generatePaymentLink';
+import generateAndSavePDF from '@salesforce/apex/RescheduleBookingPIController.generateAndSavePDF';
+import getRescheduleOrderRequest from '@salesforce/apex/OrderRequestController.getLatestPendingRescheduleOrderRequest';
+import updateDataFromOrderRequest from '@salesforce/apex/OrderRequestController.updateDataFromOrderRequest';
 import { RefreshEvent } from 'lightning/refresh';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
@@ -14,6 +17,11 @@ import { CloseActionScreenEvent } from 'lightning/actions';
 export default class RescheduleBookings extends NavigationMixin(LightningElement) {
     @api recordId;
     @track opportunityFieldValues = {};
+    @track orderRequestFieldValues = {};
+    @api orderId;
+    @api oppId;
+    @api mode; // 'preview' or 'clone'
+    todayDate= new Date().toISOString().split('T')[0];
     bookingData;
     isArrival=false;
     isDeparture=false;
@@ -42,6 +50,10 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
     noBookingFound='';
     confirmRescheduling = false;
     newReschedulingCount = 0;
+    hasPendingReq=false;
+
+    orderRequest;
+    error;
     
     showToast(title, message, variant) {
         const event = new ShowToastEvent({
@@ -58,7 +70,9 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
         if (data) {
             console.log('Data-> ', JSON.stringify(data));
             this.bookingData = data;
-            if(this.bookingData.serviceType == 'Arrival') {
+            if (this.bookingData.hasPendingRequest) {
+                this.hasPendingReq=true;
+            } else if(this.bookingData.serviceType == 'Arrival') {
                 this.isArrival = true;
                 this.flightNumber = data.flightNumberArrival;
                 this.arrivalDate= data.arrivalDate;
@@ -72,6 +86,7 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
                 this.serviceTime = data.stdServiceTime;
             }else if(this.bookingData.serviceType == 'Transit') {
                 this.isTransit = true;
+                this.transitAirport = data.serviceAirport;
                 this.flightNumberArrival = data.flightNumberArrival;
                 this.flightNumberDeparture = data.flightNumberDeparture;
                 this.arrivalDate= data.arrivalDate;
@@ -84,8 +99,7 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
             console.error('Error fetching line items', JSON.stringify(error));
         }
     }
-
-    loadReschedulingSummaryData(isSubmit) {
+    /*loadReschedulingSummaryData(isSubmit) {
         showReschedulingCharges({opportunityId: this.recordId, submit: isSubmit})
         .then((result) => {
             this.RescheduleSummary = result;
@@ -100,13 +114,51 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
             this.isLoading = false;
             this.closeModal();
         });
+    }*/ 
+    // Above code commented and belo code added by Abhishek
+    async loadReschedulingSummaryData(isSubmit, orderSummaryChanges) {        
+       try { 
+        const recId =  this.oppId != undefined ? this.oppId : this.recordId;
+            const result  = await showReschedulingCharges({opportunityId: recId, submit: isSubmit, OrderChangeRequest: orderSummaryChanges}); 
+            this.isLoading = false;       
+            this.RescheduleSummary = result;
+            this.newReschedulingCount = result.countOfRescheduling + 1;
+            //Generate pdf and send email
+            if(isSubmit) {
+                ///this.generatePdf();
+                if (this.orderRequest) {
+                    this.closeReschedule();
+                } else {
+                    this.dispatchEvent(new RefreshEvent());
+                    this.closeModal();
+                    this.handleCloseComponent();
+                }
+            }
+        }catch (error) {
+            console.error(error);
+            this.isLoading = false;
+            this.closeModal();
+        };
+    }
+
+    closeReschedule() {
+        const closeEvt = new CustomEvent('close');
+        this.dispatchEvent(closeEvt);
     }
 
     checkArrivalChanges() {
-        if (this.bookingData.arrivalDate != this.arrivalDate || this.bookingData.flightNumberArrival != this.flightNumber){
-            return true;
+        if (this.orderRequest) {
+            if (this.orderRequest.Date_of_Arrival__c != this.arrivalDate || this.orderRequest.Flight_Number_Arrival__c != this.flightNumber){
+                return true;
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            if (this.bookingData.arrivalDate != this.arrivalDate || this.bookingData.flightNumberArrival != this.flightNumber){
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -127,6 +179,7 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
     }
 
     handleNext() {
+        debugger;
         const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
             .reduce((validSoFar, input_Field_Reference) => {
                 input_Field_Reference.reportValidity();
@@ -138,6 +191,33 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
             // If any of the fields are invalid, don't proceed with submission
             this.showToast('Error', errorMessage, 'error');
             return;
+        } else if (this.orderRequest){
+            if (this.isArrival && this.checkArrivalChanges()) {
+                this.isArrival = false;
+                this.showSummary = true;
+                this.loadReschedulingSummaryData(false);
+            } else if (this.orderRequest.serviceType == 'Departure' && this.checkDepartureChanges()) {
+                this.isDeparture = false;
+                this.showSummary = true;
+                this.loadReschedulingSummaryData(false);
+            } else if (this.orderRequest.serviceType == 'Transit' && this.checkTransitChanges()) {                
+                //this.isTransit = false;
+                this.showSummary = true;
+                const departureDateTime = this.combineDateTime(this.departureDate, this.serviceTime);
+                const arrivalDateTime = this.combineDateTime(this.arrivalDate, this.staTime);
+
+                const differenceMs = Math.abs(arrivalDateTime - departureDateTime);
+                const differenceHours = differenceMs / (1000 * 60 * 60);
+                if (differenceHours > 8) {
+                    this.showSummary = false;
+                    this.showToast('Error', 'Difference should be less than 8 hours', 'error');
+                }else{ 
+                    this.isTransit = false;
+                this.loadReschedulingSummaryData(false);
+                }
+            }else {
+                this.showToast('Error', 'No changes found for rescheduling!', 'error');
+            }
         } else {
             if (this.bookingData.serviceType == 'Arrival' && this.checkArrivalChanges()) {
                 this.isArrival = false;
@@ -148,37 +228,90 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
                 this.showSummary = true;
                 this.loadReschedulingSummaryData(false);
             } else if (this.bookingData.serviceType == 'Transit' && this.checkTransitChanges()) {
-                this.isDeparture = false;
+                //this.isTransit = false;
                 this.showSummary = true;
+                const departureDateTime = this.combineDateTime(this.departureDate, this.serviceTime);
+                const arrivalDateTime = this.combineDateTime(this.arrivalDate, this.staTime);
+
+                const differenceMs = Math.abs(arrivalDateTime - departureDateTime);
+                const differenceHours = differenceMs / (1000 * 60 * 60);
+                if (differenceHours > 8) {
+                    this.showSummary = false;
+                    this.showToast('Error', 'Difference should be less than 8 hours', 'error');
+                }else{ 
+                    this.isTransit = false;
                 this.loadReschedulingSummaryData(false);
+                }
             }else {
                 this.showToast('Error', 'No changes found for rescheduling!', 'error');
             }
         }
     }
+    combineDateTime(dateStr, timeStr) {
+    try {
+        // Check format of timeStr: should be HH:mm
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        if (isNaN(hours) || isNaN(minutes)) {
+            throw new Error('Invalid time format');
+        }
 
+        const date = new Date(dateStr);
+        date.setHours(hours);
+        date.setMinutes(minutes);
+        date.setSeconds(0);
+        date.setMilliseconds(0);
+        return date;
+    } catch (e) {
+        console.error('Invalid time format:', timeStr);
+        return new Date(); // Fallback to current date/time (NOT recommended for production)
+    }
+}
     showFirstScreen() {
         if (this.bookingData.serviceType == 'Arrival') {
             this.isArrival = true;
         } else if (this.bookingData.serviceType == 'Departure') {
             this.isDeparture = true;
         }
+        else if (this.bookingData.serviceType == 'Transit') {
+            this.isTransit = true;
+        }
         this.showSummary = false;
     }
 
-    handleSave() {
+    async handleSave() {
         this.isLoading = true;
+        //await this.loadReschedulingSummaryData(true); // added by Abhishek
         this.opportunityFieldValues['Number_of_Rescheduling_Done__c'] = this.newReschedulingCount;
+        
+        //order summary changes
+        let serializedData = JSON.stringify(this.opportunityFieldValues); // Safe even if unknown keys
+        const recId =  this.oppId != undefined ? this.oppId : this.recordId;
+        this.orderRequestFieldValues['Booking__c'] = recId;
+        this.orderRequestFieldValues['Serialized_Data__c'] = serializedData;
+        this.orderRequestFieldValues['Change_Type__c'] = 'Reschedule';
+        this.orderRequestFieldValues['Status__c'] = 'Pending';
+        this.orderRequestFieldValues['Service_Type__c'] = this.bookingData != undefined ? this.bookingData.serviceType : this.orderRequest.Service_Type__c;
+        await this.loadReschedulingSummaryData(true, this.orderRequestFieldValues);
+        await this.generatePdf();
+        if (this.RescheduleSummary.reschedulingAmount > 0){
+            await this.paymentLinkHandler();
+        } else {
+            await this.completeOrderRequestHandler();
+            await this.handleSendEmail();
+        }
+        ///add the method for pdf
+        /*
         saveData({ oppId: this.recordId, opportunityFieldValues: this.opportunityFieldValues })
         .then((opportunityId) => {
             //Save the data on OLI
-            this.loadReschedulingSummaryData(true);
+            this.loadReschedulingSummaryData(true, orderSummaryChanges);
         })
         .catch((error) => {
             console.log('error->>>>>>>'+JSON.stringify(error));
             this.closeModal();
             this.isLoading = false;
         });
+        */
     }
 
     //to get field values to save in opp record
@@ -193,6 +326,7 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
         const fieldValue = event.target.value;
 
         this.opportunityFieldValues[fieldName] = fieldValue;
+        this.orderRequestFieldValues[fieldName] = fieldValue;
     }
     //logic to search flight number by typing
     handleFlightNumberChange(event) { 
@@ -271,15 +405,16 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
     setStaTime(){
         if (this.flightNumber !='' && this.flightStaMap.has(this.flightNumber)) {
             this.staTime = this.formatTime(this.flightStaMap.get(this.flightNumber),0,0);
-            this.serviceTime = this.staTime;
+            //this.serviceTime = this.staTime;
         }
         if (this.flightNumberArrival !='' && this.flightStaMap.has(this.flightNumberArrival)) {
             this.staTime = this.formatTime(this.flightStaMap.get(this.flightNumberArrival),0,0); 
-            this.serviceTime = this.staTime;
+            //this.serviceTime = this.staTime;
         }
         this.opportunityFieldValues['STA_Time__c'] = this.staTime;
-        this.opportunityFieldValues['Arrival_Service_Time__c'] = this.serviceTime;       
-        this.serviceDateTime = this.arrivalDate +' ' + this.serviceTime;
+        this.opportunityFieldValues['Arrival_Service_Time__c'] = this.staTime;//this.serviceTime;  
+        this.orderRequestFieldValues['Arrival_Service_Time__c'] = this.staTime;//this.serviceTime;     
+        this.serviceDateTime = this.arrivalDate +' ' + this.staTime;//this.serviceTime;
     }
     setStdTime(){
         if (this.flightNumber !='' && this.flightDtaMap.has(this.flightNumber)) {
@@ -288,10 +423,11 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
         }
         if (this.flightNumberDeparture !='' && this.flightDtaMap.has(this.flightNumberDeparture)) {
             this.stdTime = this.formatTime(this.flightDtaMap.get(this.flightNumberDeparture),0,0);
-            this.serviceTime = this.formatTime(this.flightDtaMap.get(this.flightNumber),1,30);
+            this.serviceTime = this.formatTime(this.flightDtaMap.get(this.flightNumberDeparture),1,30);
         }
         this.opportunityFieldValues['STD_Time__c'] = this.stdTime;
         this.opportunityFieldValues['Departure_Service_Time__c'] = this.serviceTime;
+        this.orderRequestFieldValues['Departure_Service_Time__c'] = this.serviceTime;
         this.serviceDateTime = this.departureDate +' ' + this.serviceTime;
     }
     formatTime(milliseconds,hrs,mns) {
@@ -370,24 +506,35 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
     //this is called when Arrival date is changed
     handleArrivalDateChange(event) { 
         this.arrivalDate = event.target.value;
-        if(this.isArrival){
+        if(this.orderRequest && this.isArrival) {
+            this.loadFlightData(this.arrivalDate, this.orderRequest.Booking__r.Departure_Airport__c, this.orderRequest.Booking__r.Service_Airport__c);
+        }
+        else if(this.bookingData && this.isArrival){
              this.loadFlightData(this.arrivalDate, this.bookingData.departureAirport, this.bookingData.serviceAirport);
-         }
+        }
     }
 
     handleDepartureDateChange(event){
         this.departureDate = event.target.value;
-        if(this.isDeparture){
+        if(this.orderRequest && this.isDeparture) {
+            this.loadFlightData(this.departureDate, this.orderRequest.Booking__r.Service_Airport__c, this.orderRequest.Booking__r.Arriving_Airport__c);
+        }
+        else if(this.bookingData && this.isDeparture){
             this.loadFlightData(this.departureDate, this.bookingData.serviceAirport, this.bookingData.arrivingAirport);
         }
     }
 
     handleTransitArrivalDateChange(event){
         this.arrivalDate = event.target.value;
+        this.flightNumberArrival = '';
+        this.staTime = '';
             this.loadTransitFlightData(this.arrivalDate, this.bookingData.departureAirport, '');
     }
     handleTransitDepartureDateChange(event){
+        debugger;
         this.departureDate = event.target.value;
+        this.flightNumberDeparture = '';
+        this.stdTime  = '';
             this.loadTransitFlightData(this.departureDate, '', this.bookingData.arrivingAirport);
     }
 
@@ -410,13 +557,12 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
         this.dispatchEvent(new CloseActionScreenEvent());
     }
 
-    generatePdf() {
+    async generatePdf() {
         // Call Apex method to generate and save PDF with the current record
-        generateAndSavePDF({ recordId: this.recordId})
+        await generateAndSavePDF({ recordId: this.recordId})
             .then((result) => {
-                this.showToast('Success', 'Booking Voucher updated successfully', 'success');
-                this.dispatchEvent(new RefreshEvent());
-				this.handleSendEmail();
+                this.isLoading = false;                
+                this.showToast('Success', 'Booking Voucher created successfully', 'success');
             })
             .catch((error) => {
                 this.showToast('Error', 'Error while generating Voucher', 'error');
@@ -426,8 +572,8 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
             });
     }
     
-    handleSendEmail() {
-        sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Modified/Rescheduled'  })
+    async handleSendEmail() {
+        await sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Rescheduled',   })
             .then(() => {
                 this.showToast('Success', 'Email sent successfully!', 'success');
                 this.isLoading = false;
@@ -441,6 +587,33 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
             });
     }
 
+    async paymentLinkHandler() {
+        await generatePaymentLink({ oppId: this.recordId})
+            .then(() => {
+                this.showToast('Success', 'Email sent successfully!', 'success');
+                this.isLoading = false;
+                this.closeModal();
+                this.handleCloseComponent();
+                this.dispatchEvent(new RefreshEvent());
+				//this.handleSendEmail();
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+                this.closeModal();
+            });
+    }
+
+    async completeOrderRequestHandler() {
+        await updateDataFromOrderRequest({ opportunityIds: [this.recordId]})
+            .then(() => {
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+            });
+    }
+
     handleCloseComponent() {
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
@@ -450,4 +623,45 @@ export default class RescheduleBookings extends NavigationMixin(LightningElement
             }
         });
     }
+
+    get isPreviewMode() {
+        return this.mode === 'preview';
+    }
+    get isCloneMode() {
+        return this.mode === 'clone';
+    }
+
+    @wire(getRescheduleOrderRequest, { orderRecId: '$orderId' })
+    wiredOrderRequest({ data, error }) {
+        if (data) {
+            this.orderRequest = data;
+            if(this.orderRequest.Service_Type__c == 'Arrival') {
+                this.isArrival = true;
+                this.flightNumber = this.orderRequest.Flight_Number_Arrival__c;
+                this.arrivalDate= this.orderRequest.Date_of_Arrival__c;
+                this.staTime = this.orderRequest.Arrival_Service_Time__c;
+                this.serviceTime = this.orderRequest.Arrival_Service_Time__c;
+            } else if(this.orderRequest.Service_Type__c == 'Departure') {
+                this.isDeparture = true;
+                this.flightNumber = this.orderRequest.Flight_Number_Departure__c;
+                this.departureDate= this.orderRequest.Date_of_Departure__c;
+                this.stdTime = this.orderRequest.Departure_Service_Time__c;
+                this.serviceTime = this.orderRequest.Departure_Service_Time__c;
+            }else if(this.orderRequest.Service_Type__c == 'Transit') {
+                this.isTransit = true;
+                this.flightNumberArrival = this.orderRequest.Flight_Number_Arrival__c;
+                this.flightNumberDeparture = this.orderRequest.Flight_Number_Departure__c;
+                this.arrivalDate= this.orderRequest.Date_of_Arrival__c;
+                this.staTime = this.orderRequest.Arrival_Service_Time__c;
+                this.departureDate= this.orderRequest.Date_of_Departure__c;
+                this.stdTime = this.orderRequest.Departure_Service_Time__c;
+                this.serviceTime = this.orderRequest.Departure_Service_Time__c;
+            }
+            this.error = undefined;
+        } else if (error) {
+            this.error = 'Error fetching order request';
+            this.orderRequest = undefined;
+        }
+    }
+    
 }

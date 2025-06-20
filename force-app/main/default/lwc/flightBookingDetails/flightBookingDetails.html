@@ -31,7 +31,7 @@
     </template>
     <!-- previous button click show first page details in disabled mode -->
     <template if:true={showChild}>
-    <c-flight-booking-preview onbuttonclick={loadDetailsAfterUpdate} onnochange={showPackageSelectionScreen} opp={recordId} editing={isEditing}></c-flight-booking-preview>
+    <c-flight-booking-preview onbuttonclick={loadDetailsAfterUpdate} onnochange={showPackageSelectionScreen} opp={recordId} editing={isEditing} adultcounts={numberOfAdults} childcounts={numberOfChildren} infantcounts={numberOfInfants} ></c-flight-booking-preview>
     </template>
 
     <template if:true={showModal}>    
@@ -129,6 +129,8 @@
                                                             data-index={index}
                                                             data-id={pack.addOnName}
                                                             onchange={handleTerminalChange}
+                                                            onfocus={handleFocusDropdown}
+                                                            onblur={handleBlurDropdown}
                                                             required
                                                             message-when-value-missing="Please select a Drop Terminal"
                                                             class={pack.dropErrorClass} 
@@ -276,7 +278,7 @@
                                 </lightning-layout-item>
                                 <!-- Last Name field -->
                                 <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
-                                <lightning-input class="input-field" type="text" required onblur={handleBlur} data-index={index} label="Last Name" pattern="[a-zA-Z\s]*" value={guest.lastname} onchange={handleChange}></lightning-input>
+                                <lightning-input class="input-field" type="text" required onblur={handleBlur} data-index={index} label="Last Name" pattern="[a-zA-Z\s.]*" value={guest.lastname} onchange={handleChange}></lightning-input>
                                 </lightning-layout-item>
                                 <!-- Gender field (Picklist) -->
                                 <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
@@ -347,41 +349,48 @@
                                     data-index={index}>
                                     </lightning-input>
                                 </lightning-layout-item>
-                                <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
-                                    <template if:true={canDelete}>
-                                        <lightning-button-icon icon-name="utility:delete" alternative-text="Delete" 
-                                            data-index={index} onclick={handleDelete}>
-                                        </lightning-button-icon>
-                                    </template>
-                                </lightning-layout-item>
-                                <!--<lightning-layout-item padding="around-small" size="auto"  class="fixed-width">
-                                    <lightning-input type="radio" label="Surcharge Waive Off" value={guest.id} 
-                                    checked={guest.surcharge}
-                                    onchange={handleSurcharge}
-                                    data-index={index}>
-                                    </lightning-input>
-                                </lightning-layout-item>-->
+                                <template if:true={isEditing}>
+                                    <lightning-layout-item padding="around-small" size="auto" class="fixed-width">
+                                        <template if:true={canDelete}>
+                                            <lightning-button-icon icon-name="utility:delete" alternative-text="Delete" 
+                                                data-index={index} onclick={handleDelete}>
+                                            </lightning-button-icon>
+                                        </template>
+                                    </lightning-layout-item>
+                                </template>
                                 
                         </lightning-layout>
                         </div>
                     </template>
-                    <lightning-layout horizontal-align="center" class="add-row-container">
-                        <lightning-layout-item padding="around-small" size="12">
-                            <div class="slds-grid slds-gutters slds-align-middle">
-                                <div class="slds-col">
-                                    <lightning-combobox 
-                                        variant="label-hidden" 
-                                        value={newGuestType} 
-                                        options={guestTypeOptions} 
-                                        onchange={handleGuestTypeChange}>
-                                    </lightning-combobox>
-                                </div>
-                                <div class="slds-col">
-                                    <lightning-button label="Add Row" class="encalmbg" variant="brand" onclick={handleAddGuest}></lightning-button>
-                                </div>
-                            </div>
+                    <lightning-layout horizontal-align="start">
+                        <lightning-layout-item padding="around-small">
+                            <lightning-textarea
+                                class="input-field large-textarea"
+                                label="Comments"
+                                value={comment}
+                                onchange={handleChangeComment}>
+                            </lightning-textarea>
                         </lightning-layout-item>
                     </lightning-layout>
+                    <template if:true={isEditing}>
+                        <lightning-layout horizontal-align="center" class="add-row-container">
+                            <lightning-layout-item padding="around-small" size="12">
+                                <div class="slds-grid slds-gutters slds-align-middle">
+                                    <div class="slds-col">
+                                        <lightning-combobox 
+                                            variant="label-hidden" 
+                                            value={newGuestType} 
+                                            options={guestTypeOptions} 
+                                            onchange={handleGuestTypeChange}>
+                                        </lightning-combobox>
+                                    </div>
+                                    <div class="slds-col">
+                                        <lightning-button label="Add Row" class="encalmbg" variant="brand" onclick={handleAddGuest}></lightning-button>
+                                    </div>
+                                </div>
+                            </lightning-layout-item>
+                        </lightning-layout>
+                    </template>
                 </lightning-card>
                 <lightning-card title="Placard Details">
                     <template if:true={selectedPassenger}>
@@ -399,7 +408,7 @@
                             <lightning-input class="input-field" type ="text" name="First_Name__c" pattern="[a-zA-Z\s]*" label="First Name" value={selectedPassenger.firstname} onchange={handleFirstNameChange}></lightning-input>
                             
                             <!-- Last Name field -->
-                            <lightning-input class="input-field" type ="text" name="Last_Name__c"  pattern="[a-zA-Z\s]*" label="Last name" value={selectedPassenger.lastname} onchange={handleLastNameChange}></lightning-input>
+                            <lightning-input class="input-field" type ="text" name="Last_Name__c"  pattern="[a-zA-Z\s.]*" label="Last name" value={selectedPassenger.lastname} onchange={handleLastNameChange}></lightning-input>
                                                                 
                             <!-- Mobile field -->
                             <lightning-input class="input-field" type ="text" name="Mobile__c"  pattern="^[\+\-]?[0-9]+$" label="Mobile" value={selectedPassenger.phone} onchange={handleMobChange}></lightning-input>
@@ -407,19 +416,6 @@
                         </div> 
                     </template>          
                 </lightning-card>
-                <!--<template if:true={surchargeApplicable}>
-                    <lightning-card title="Surcharge Details">
-                        <div class="guest-rows">
-                            <lightning-layout-item padding="around-small" size="auto"  >
-                                            <lightning-input type="checkbox" label="Surcharge Waive Off" class="input-field"
-                                            value = {checkSurcharge}
-                                            checked={surcharge}
-                                            onchange={handleSurcharge}>
-                                            </lightning-input>
-                            </lightning-layout-item>
-                        </div>
-                    </lightning-card>
-                </template>-->
 
                 <template if:false={isEditing}>
                     <footer class="slds-modal__footer">
@@ -601,6 +597,17 @@
                                         <lightning-input class="input-field" disabled data-index={index} label="Phone" value={guest.phone} onchange={handleChange}></lightning-input>
                                     </lightning-layout-item>
                             </lightning-layout>
+                            <lightning-layout horizontal-align="start">
+                                <lightning-layout-item padding="around-small">
+                                    <lightning-textarea
+                                        class="input-field large-textarea"
+                                        label="Comments"
+                                        value={comment}
+                                        onchange={handleChangeComment}
+                                        disabled>
+                                    </lightning-textarea>
+                                </lightning-layout-item>
+                            </lightning-layout>
                             </div>
                         </template>
                     </lightning-card>
@@ -638,29 +645,39 @@
                         </div>
                     </lightning-card>
                     </template>
-                    <!--<template if:true={surchargeApplicable}>
-                        <lightning-card title="Surcharge Details">
-                            <div class="guest-rows">
-                                <lightning-layout-item padding="around-small" size="auto"  >
-                                                <lightning-input type="radio" label="Surcharge Waive Off" class="input-field"
-                                                value = {checkSurcharge}
-                                                checked={surcharge}
-                                                onchange={handleSurcharge} disabled>
-                                                </lightning-input>
-                                </lightning-layout-item>
-                            </div>
-                        </lightning-card>
-                    </template>-->
                     <template if:false={isQuotationSent}>
-                        <footer class="slds-modal__footer">
-                            <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
-                            <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button>
-                            <lightning-button label="Confirm Booking" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
-                        </footer>
+                        <template if:false={isEditing}>
+                            <footer class="slds-modal__footer">
+                                    <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button> 
+                                <template if:false = {disableConfirmBooking}>                               
+                                    <lightning-button label="Confirm Booking" class="encalmbg" variant="brand" onclick={generatePdfAndSendMail} style="margin-right: 10px;"></lightning-button>
+                                </template>
+                                <template if:true={disableConfirmBooking}>
+                                    <lightning-button label="Surcharge Request Pending" disabled class="encalmbg" variant="brand"  style="margin-right: 10px;"></lightning-button>
+                                </template>
+                            </footer>
+                        </template>
+                        <template if:true={isEditing}>
+                            <footer class="slds-modal__footer">
+                                <template if:false = {disableConfirmBooking}>
+                                    <lightning-button label="Cancel" class="encalmbg" variant="brand" onclick={openModal} style="margin-right: 10px;"></lightning-button>
+                                    <lightning-button label="Previous" class="encalmbg" variant="brand" onclick={openPassengerDetailPage} style="margin-right: 10px;"></lightning-button>
+                                    <lightning-button label="Confirm Booking" class="encalmbg" variant="brand" onclick={generatePdf} style="margin-right: 10px;"></lightning-button>
+                                </template>
+                                <template if:true={disableConfirmBooking}>
+                                    <lightning-button label="Surcharge Request Pending" disabled class="encalmbg" variant="brand"  style="margin-right: 10px;"></lightning-button>
+                                </template>
+                            </footer>
+                        </template>
                     </template>
                     <template if:true={isQuotationSent}>
                         <footer class="slds-modal__footer">
-                            <lightning-button label="Edit" class="encalmbg" variant="brand" onclick={editBooking} style="margin-right: 10px;"></lightning-button>
+                            <template if:false = {disableConfirmBooking}>
+                                <lightning-button label="Edit" class="encalmbg" variant="brand" onclick={editBooking} style="margin-right: 10px;"></lightning-button>
+                            </template>
+                            <template if:true={disableConfirmBooking}>
+                                    <lightning-button label="Surcharge Request Pending" disabled class="encalmbg" variant="brand"  style="margin-right: 10px;"></lightning-button>
+                            </template>
                         </footer>
                     </template>
                 

@@ -69,16 +69,16 @@
                         <valueListItems>
                             <value>Lead.Send_Shopping_Email</value>
                             <visibilityRule>
-                                <booleanFilter>1 OR 2</booleanFilter>
+                                <booleanFilter>1 AND 2</booleanFilter>
                                 <criteria>
                                     <leftValue>{!Record.Status}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Open</rightValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Lead Lost</rightValue>
                                 </criteria>
                                 <criteria>
                                     <leftValue>{!Record.Status}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Customer Responded</rightValue>
+                                    <operator>NE</operator>
+                                    <rightValue>Lead Won</rightValue>
                                 </criteria>
                             </visibilityRule>
                         </valueListItems>

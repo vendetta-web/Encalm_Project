@@ -6,9 +6,9 @@ import saveData from '@salesforce/apex/FlightPreview.saveData';
 export default class FlightBookingPreview extends NavigationMixin(LightningElement) {
     @api opp;
     @api editing;
-    @track adultCount = 1;
-    @track childCount = 0;
-    @track infantCount = 0;
+    @api adultcounts = 1;
+    @api childcounts;
+    @api infantcounts;
     @track previousAdultCount = 1;
     @track previousChildCount = 0;
     @track previousInfantCount = 0;
@@ -28,19 +28,21 @@ export default class FlightBookingPreview extends NavigationMixin(LightningEleme
         window.scrollTo({top: 0, behavior:'smooth'});
     }
 
-    loadBookingData() {
+    loadBookingData() {          
         getOpportunityDetails({opportunityId: this.opp})
         .then((result) => {
             this.bookingData = result;
-            this.adultCount = this.previousAdultCount = result.NoOfAdult;
-            this.childCount = this.previousChildCount = result.NoOfChild;
-            this.infantCount = this.previousInfantCount = result.NoOfInfant;
             if(this.bookingData.serviceType == 'Arrival') {
                 this.isArrival = true;
             } else if(this.bookingData.serviceType == 'Departure') {
                 this.isDeparture = true;
             }else if(this.bookingData.serviceType == 'Transit') {
                 this.isTransit = true;
+            }
+            if (!this.editing) {                    
+                this.adultcounts = this.previousAdultCount = result.NoOfAdult;
+                this.childcounts = this.previousChildCount = result.NoOfChild;
+                this.infantcounts = this.previousInfantCount = result.NoOfInfant;
             }
         })
         .catch((error) => {
@@ -49,32 +51,32 @@ export default class FlightBookingPreview extends NavigationMixin(LightningEleme
     }
 
     incrementAdult() {
-        this.adultCount += 1;
+        this.adultcounts += 1;
     }
 
     decrementAdult() {
-        if (this.adultCount > 1) {
-            this.adultCount -= 1;
+        if (this.adultcounts > 1) {
+            this.adultcounts -= 1;
         }
     }
 
     incrementChild() {
-        this.childCount += 1;
+        this.childcounts += 1;
     }
 
     decrementChild() {
-        if (this.childCount > 0) {
-            this.childCount -= 1;
+        if (this.childcounts > 0) {
+            this.childcounts -= 1;
         }
     }
 
     incrementInfant() {
-        this.infantCount += 1;
+        this.infantcounts += 1;
     }
 
     decrementInfant() {
-        if (this.infantCount > 0) {
-            this.infantCount -= 1;
+        if (this.infantcounts > 0) {
+            this.infantcounts -= 1;
         }
     }
 
@@ -84,12 +86,39 @@ export default class FlightBookingPreview extends NavigationMixin(LightningEleme
                 detail: { message: 'No changes done' }
             });
             this.dispatchEvent(event);
-        } else {            
+        } if (!this.editing) {
+            
+            this.opportunityFieldValues['Number_of_Adults__c'] = this.adultcounts;
+            this.opportunityFieldValues['Number_of_Children__c'] = this.childcounts;
+            this.opportunityFieldValues['Number_of_Infants__c'] = this.infantcounts;
+
+            saveData({ oppId: this.opp, opportunityFieldValues: this.opportunityFieldValues })
+                .then(() => {
+                })
+                .catch((error) => {
+                    console.log('error->>>>>>>' + JSON.stringify(error));
+                });
+
+                const guestUpdateEvent = new CustomEvent('buttonclick', {
+                    detail: {
+                        adultCount: this.adultcounts,
+                        childCount: this.childcounts,
+                        infantCount: this.infantcounts,
+                        isEditing: false
+                    },
+                    bubbles: true,
+                    composed: true
+                });
+            
+                this.dispatchEvent(guestUpdateEvent);
+        } 
+        else {            
                 const guestUpdateEvent = new CustomEvent('buttonclick', {
                 detail: {
-                    adultCount: this.adultCount,
-                    childCount: this.childCount,
-                    infantCount: this.infantCount
+                    adultCount: this.adultcounts,
+                    childCount: this.childcounts,
+                    infantCount: this.infantcounts,
+                    isEditing: true
                 },
                 bubbles: true,
                 composed: true
@@ -102,9 +131,9 @@ export default class FlightBookingPreview extends NavigationMixin(LightningEleme
 
     hasDataChanged() {
         return (
-            this.adultCount !== this.previousAdultCount ||
-            this.childCount !== this.previousChildCount ||
-            this.infantCount !== this.previousInfantCount
+            this.adultcounts !== this.previousAdultCount ||
+            this.childcounts !== this.previousChildCount ||
+            this.infantcounts !== this.previousInfantCount
         );
     }
 

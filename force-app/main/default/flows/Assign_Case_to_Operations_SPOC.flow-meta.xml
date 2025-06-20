@@ -3,8 +3,8 @@
     <actionCalls>
         <name>Case_Assignment_Notification_Email</name>
         <label>Case Assignment Notification Email</label>
-        <locationX>176</locationX>
-        <locationY>458</locationY>
+        <locationX>446</locationX>
+        <locationY>758</locationY>
         <actionName>Case.Email_Alert_Query_Feedback_Case_Assignment_Notification</actionName>
         <actionType>emailAlert</actionType>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
@@ -18,6 +18,61 @@
         <offset>0</offset>
     </actionCalls>
     <apiVersion>63.0</apiVersion>
+    <decisions>
+        <name>Check_Case_Location</name>
+        <label>Check Case Location</label>
+        <locationX>446</locationX>
+        <locationY>350</locationY>
+        <defaultConnector>
+            <targetReference>Error</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>DEL</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Case_Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Delhi</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_OPS_SPOC_User_DEL</targetReference>
+            </connector>
+            <label>DEL</label>
+        </rules>
+        <rules>
+            <name>GOA</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Case_Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Goa</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_OPS_SPOC_User_GOA</targetReference>
+            </connector>
+            <label>GOA</label>
+        </rules>
+        <rules>
+            <name>HYD</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Case_Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Hyderabad</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_OPS_SPOC_User_HYD</targetReference>
+            </connector>
+            <label>HYD</label>
+        </rules>
+    </decisions>
     <environments>Default</environments>
     <interviewLabel>Assign Case to Operations SPOC {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Assign Case to Operations SPOC</label>
@@ -41,38 +96,94 @@
     </processMetadataValues>
     <processType>Flow</processType>
     <recordLookups>
-        <name>Get_Operations_SPOC_queue</name>
-        <label>Get Operations SPOC queue</label>
-        <locationX>176</locationX>
+        <name>Get_Case_Record</name>
+        <label>Get Case Record</label>
+        <locationX>446</locationX>
         <locationY>242</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Update_Case_Owner_to_Operations_SPOC</targetReference>
+            <targetReference>Check_Case_Location</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>Type</field>
+            <field>Id</field>
             <operator>EqualTo</operator>
             <value>
-                <stringValue>Queue</stringValue>
-            </value>
-        </filters>
-        <filters>
-            <field>DeveloperName</field>
-            <operator>EqualTo</operator>
-            <value>
-                <stringValue>Operations_SPOC</stringValue>
+                <elementReference>recordId</elementReference>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>
-        <object>Group</object>
+        <object>Case</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_OPS_SPOC_User_DEL</name>
+        <label>Get OPS SPOC User - DEL</label>
+        <locationX>50</locationX>
+        <locationY>458</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Update_Case_Owner_to_OPS_SPOC_DEL</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Label.OPS_SPOC_Manager_DEL</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_OPS_SPOC_User_GOA</name>
+        <label>Get OPS SPOC User - GOA</label>
+        <locationX>314</locationX>
+        <locationY>458</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Update_Case_Owner_to_OPS_SPOC_GOA</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Label.OPS_SPOC_Manager_GOA</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Get_OPS_SPOC_User_HYD</name>
+        <label>Get OPS SPOC User - HYD</label>
+        <locationX>578</locationX>
+        <locationY>458</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Update_Case_Owner_to_OPS_SPOC_HYD</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Label.OPS_SPOC_Manager_HYD</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>User</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
     <recordUpdates>
-        <name>Update_Case_Owner_to_Operations_SPOC</name>
-        <label>Update Case Owner to Operations SPOC</label>
-        <locationX>176</locationX>
-        <locationY>350</locationY>
+        <name>Update_Case_Owner_to_OPS_SPOC_DEL</name>
+        <label>Update Case Owner to OPS SPOC - DEL</label>
+        <locationX>50</locationX>
+        <locationY>566</locationY>
         <connector>
             <targetReference>Case_Assignment_Notification_Email</targetReference>
         </connector>
@@ -87,7 +198,67 @@
         <inputAssignments>
             <field>OwnerId</field>
             <value>
-                <elementReference>Get_Operations_SPOC_queue.Id</elementReference>
+                <elementReference>Get_OPS_SPOC_User_DEL.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Case</object>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Case_Owner_to_OPS_SPOC_GOA</name>
+        <label>Update Case Owner to OPS SPOC - GOA</label>
+        <locationX>314</locationX>
+        <locationY>566</locationY>
+        <connector>
+            <targetReference>Case_Assignment_Notification_Email</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>Get_OPS_SPOC_User_GOA.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Case</object>
+    </recordUpdates>
+    <recordUpdates>
+        <name>Update_Case_Owner_to_OPS_SPOC_HYD</name>
+        <label>Update Case Owner to OPS SPOC - HYD</label>
+        <locationX>578</locationX>
+        <locationY>566</locationY>
+        <connector>
+            <targetReference>Case_Assignment_Notification_Email</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>OwnerId</field>
+            <value>
+                <elementReference>Get_OPS_SPOC_User_HYD.Id</elementReference>
             </value>
         </inputAssignments>
         <inputAssignments>
@@ -101,13 +272,13 @@
     <screens>
         <name>Case_Assignment_Confirmation</name>
         <label>Case Assignment Confirmation</label>
-        <locationX>176</locationX>
+        <locationX>446</locationX>
         <locationY>134</locationY>
         <allowBack>false</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>false</allowPause>
         <connector>
-            <targetReference>Get_Operations_SPOC_queue</targetReference>
+            <targetReference>Get_Case_Record</targetReference>
         </connector>
         <fields>
             <name>confirmation_text</name>
@@ -118,14 +289,31 @@
         <showFooter>true</showFooter>
         <showHeader>true</showHeader>
     </screens>
+    <screens>
+        <name>Error</name>
+        <label>Error</label>
+        <locationX>842</locationX>
+        <locationY>458</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>Error_Msg</name>
+            <fieldText>&lt;p&gt;Please select the Location before assigning to Operations SPOC&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <nextOrFinishButtonLabel>Ok</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+    </screens>
     <start>
-        <locationX>50</locationX>
+        <locationX>320</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Case_Assignment_Confirmation</targetReference>
         </connector>
     </start>
-    <status>Active</status>
+    <status>Obsolete</status>
     <variables>
         <name>recordId</name>
         <dataType>String</dataType>

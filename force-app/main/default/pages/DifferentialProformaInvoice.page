@@ -1,0 +1,266 @@
+<apex:page controller="Differential_PI_Controller" applyHtmlTag="false" renderAs="pdf" applyBodyTag="false" showHeader="false" sidebar="false">
+    <html>
+        <head>
+            <style type="text/css" media="print">
+                /* 🔹 Fix the header and footer positions */
+                @page {
+                size: A4;
+                margin-top: 7cm; 
+                margin-bottom: 5cm;
+                
+                @top-center {
+                content: element(header);
+                }
+                @bottom-center {
+                content: element(footer);
+                }
+                }
+                
+                /* 🔹 Header Styling */
+                div.header {
+                position: running(header);
+                height: 7cm;
+                }
+                
+                /* 🔹 Footer Styling */
+                div.footer {
+                position: running(footer);
+                height: 5cm;
+                }
+                
+                .page-break {
+                page-break-after: always;
+                }
+                
+                .custom-table {
+                width: 100%;
+                table-layout: auto; 
+                border-collapse: collapse;
+                border:  solid #e0e0e0;
+                }
+                .custom-table th, .custom-table td {
+                border:  solid #e0e0e0;; 
+                padding: 8px;
+                text-align: left;
+                word-wrap: break-word; /* Allows wrapping for long content */
+                overflow-wrap: break-word; /* Forces text to break inside the cell.*/
+                white-space: normal;
+                max-width: 50px;
+                page-break-inside: avoid;
+                }
+                .custom-table tr {
+                page-break-inside: avoid;
+                }
+                body, p, td {
+                line-height: 1.0; /* Or even 1.0 for tighter spacing */
+                }
+                
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <table>
+                    <tr>
+                        <td width="30%"  style="text-align: center;"></td>
+                        <td width="30%" style="text-align: center;">
+                            <apex:image url="{!$Resource.Encalm_Logo}" width="100" height="100"/>
+                        </td>
+                        <td width="40%">
+                            <h2>Proforma Invoice</h2>
+                            <p>ENCALM HOSPITALITY PRIVATE LIMITED</p>
+                            <p>B1/H3, MATHURA ROAD, MOHAN CO-OPERATIVE INDUSTRIAL AREA, NEW DELHI-110044, INDIA</p>
+                            <p>GST - 07AAGCE6783M1ZZ</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <hr style="border: 1px solid black; margin: 10px 0;"/> <br/><br/>
+            </div>
+            
+            <!-- 🔹 Footer Section -->
+            <div class="footer">
+                <hr/>
+                <p style="text-align: center;">Registered Address: Tag Tower, Plot No. 17-18, Phase IV, Udyog Vihar, Sector 18, Gurugram, Haryana 122015</p> 
+                <p style="text-align: center;">Terms and Condition of Services as provided on <a href="https://encalm.com/termsandconditions">www.encalm.com/termsandconditions</a> shall apply</p>
+                <p style="text-align: center;">For all booking query please feel free to write us on <a href="guest.services@encalm.com">guest.services@encalm.com</a></p>                
+            </div>
+            
+            <div class="content">
+                <table>
+                    <tr>
+                        <td width="60%" style="text-align: left;">
+                            <p><b>BILLED TO: </b>{!opp.Account.Name}</p>
+                            <p>{!opp.Account.BillingState} </p>
+                            <p>{!opp.Account.BillingCountry}</p>  
+                            <p><b>State Code: </b>{!stateCode}</p>
+                            <p><b>Place Of Supply: </b>{!opp.Service_Airport__c}</p>
+                            <p><b>GSTIN: </b>{!opp.Account.GST__c}</p>
+                        </td>
+                        
+                        <td width="40%">
+                            <p><b>PI No: </b>{!opp.Name}</p>
+                            <p><b>PI Date: </b>{!formattedTodayDate}</p>
+                            <p><b>Whether the tax is payable on Reverse Charge Basis ?: </b> NO</p>
+                        </td>
+                    </tr>
+                </table>
+                <br/><br/>
+                <table class="custom-table" border="1p">
+                    <tr>
+                        <!--<th>Source</th>-->
+                        <th>Sr.No</th>
+                        <th>Description</th>
+                        <th>HSN/HAC</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Taxes</th>
+                        <th style="{!discountColumnStyle}">Discount Amount</th>
+                        <th>Amount</th>
+                    </tr>
+                    <apex:repeat value="{!orderRequestRecords}" var="item">
+                        <tr>
+                            <td>{!item.SrNo}</td>
+                            <td>{!item.serviceType}</td>
+                            <td>{!item.hsn_hac}</td>
+                            <td>{!item.quantity}</td>
+                            <td>{!item.invoiceAmt}</td>
+                            <td>GST 18%</td>
+                            <td style="{!discountColumnStyle}">{!item.discountAmt}</td>
+                            <td>{!item.unitPrice}</td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+                <br/>
+                
+                <div style="display: flex; width: 100%;">
+                    <div style="margin-left: auto; width: 30%;">
+                        <table style="border-collapse: collapse; width: 100%; border: 1px solid lightgray;">
+                            <tr>
+                                <td style="text-align: left; width: 70%">Net Amount</td>
+                                <td style="text-align: right; width: 30%; padding-right: 10px;">{!taxableAmount}</td>
+                            </tr>
+                            
+                            <apex:outputPanel rendered="{!isIntraStateTax}" layout="none">
+                                <tr>
+                                    <td style="text-align: left; width: 90%">SGST (9%)</td>
+                                    <td style="text-align: right; padding-right: 10px;">{!totalSGST}</td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: left;">CGST (9%)</td>
+                                    <td style="text-align: right; padding-right: 10px;">{!totalCGST}</td>
+                                </tr>
+                            </apex:outputPanel>
+                            
+                            <apex:outputPanel rendered="{!isInterStateTax}" layout="none">
+                                <tr>
+                                    <td style="text-align: left; width: 70%">IGST (18%)</td>
+                                    <td style="text-align: right; width: 30%; padding-right: 10px;">{!totalIGST}</td>
+                                </tr>
+                            </apex:outputPanel>
+                            
+                            <tr>
+                                <td style="text-align: left; width: 70%;"><b>Total Amount</b></td>
+                                <td style="text-align: right; width: 30%; padding-right: 10px;"><b>{!totalAmount}</b></td>
+                            </tr>
+                            <apex:outputPanel rendered="{!paidAmount != 0}" layout="none">
+                                <tr>
+                                    <td style="text-align: left; width: 70%;">Paid Amount</td>
+                                    <td style="text-align: right; width: 30%; padding-right: 10px;">{!paidAmount}</td>
+                                </tr>
+                                
+                                <tr>
+                                    <td style="text-align: left; width: 70%;"><b>Due Amount</b></td>
+                                    <td style="text-align: right; width: 30%; padding-right: 10px;"><b>{!dueAmount}</b></td>
+                                </tr>
+                            </apex:outputPanel>
+                        </table>
+                    </div>
+                </div>
+                
+                
+                
+                <div>
+                    <p class="total-words">
+                        <b>Total Due (In Words):</b> {!totalAmountInWords}
+                    </p>
+                    
+                    <p class="terms">
+                        <b>Terms &amp; Conditions:</b> 1. Payment under this PI should be made through Electronic Fund Transfer (NEFT/RTGS):-
+                        Account No.: - 57500000786110 &nbsp; IFSC: HDFC0000572 2. For All Payments Effected, kindly forward the following details to: 
+                        accounts@encalm.com a) PI No: &nbsp; b) TDS Deduction: &nbsp; c) Any Other Deduction (with reasons) &nbsp; d) Net Amount Paid
+                    </p>
+                    
+                </div>
+                
+                <!--<apex:outputPanel rendered="{!NOT(ISNULL(passengerRecords)) && passengerRecords.size > 0}">-->
+                <div class="page-break"></div>
+                
+                <table class="custom-table" border="1p">
+                    <tr>
+                        <th colspan="7"  style="text-align: center;">Annexure 1: Service Details ({!opp.Name})</th>
+                    </tr>
+                    <tr>
+                        <th>Confirmation No:</th><th>Service Date &amp; Time</th><th>Booking Date &amp; Time</th><th>Service Airport</th><th>Sector of Travel</th><th>From Airport</th><th>To Airport</th>
+                    </tr>
+                    <tr>
+                        <td>{!opp.Name}</td>
+                        <td>{!serviceDetails.serviceDateTime}</td>
+                        <td>{!serviceDetails.bookingDateTime}</td>
+                        <td>{!serviceDetails.serviceAirport}</td>
+                        <td>{!serviceDetails.sectorOfTravel}</td>
+                        <td>{!serviceDetails.fromAirport}</td>
+                        <td>{!serviceDetails.toAirport}</td>
+                    </tr>
+                </table>
+                <br/><br/>
+                <apex:outputPanel rendered="{!NOT(ISNULL(passengerRecords)) && passengerRecords.size > 0}">
+                    <table class="custom-table" border="1p">
+                        <tr>
+                            <th colspan="5" style="text-align: center;">Annexure 2: Guest Details ({!opp.Name})</th>
+                        </tr>
+                        <tr>
+                            <!--<th>Source</th>-->
+                            <th>Sr. No</th>
+                            <th>Guest Name</th>
+                            <th>Travel Class</th>
+                            <th>Age</th>
+                            <th>PNR No.</th>
+                        </tr>
+                        <apex:repeat value="{!passengers}" var="passenger">
+                            <tr>
+                                <!-- <td>{!opp.Name}</td>-->
+                                <td>{!passenger.SrNo}</td>
+                                <td>{!passenger.Passenger.Name}</td>
+                                <td>{!passenger.Passenger.Travel_Class__c}</td>
+                                <td>{!passenger.Passenger.Age__c}</td>
+                                <td>{!passenger.Passenger.Travel_PNR_No__c}</td>
+                            </tr>
+                        </apex:repeat>
+                    </table>
+                </apex:outputPanel>
+                <br/><br/>
+                
+                <table class="custom-table" border="1p">
+                    <tr>
+                        <th colspan="7" style="text-align: center;">Annexure 3: Flight Details ({!opp.Name})</th>
+                    </tr>
+                    <tr><!--<th>Source</th>--><th>Flight Info</th><th>Airlines</th><th>Flight No</th><th>Flight Date &amp; Time</th><th>Terminal</th><th>Payment Method</th><th>Payment Info</th></tr>
+                    <apex:repeat value="{!flightDetails}" var="flightItem">
+                        <tr>
+                            <!--<td>{!opp.Name}</td>-->
+                            <td>{!flightItem.flightNo}</td>
+                            <td>{!flightItem.airline}</td>
+                            <td>{!flightItem.flightNo}</td>
+                            <td>{!flightItem.flightDateTime}</td>
+                            <td>{!flightItem.terminal}</td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </apex:repeat>
+                </table>
+                <!--</apex:outputPanel>-->
+            </div>
+            
+        </body>
+    </html>
+</apex:page>

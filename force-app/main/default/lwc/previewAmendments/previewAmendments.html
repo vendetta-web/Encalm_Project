@@ -1,0 +1,49 @@
+<template>
+    <template if:true={showPassenger}>
+        <lightning-card title="Guest Details">
+            <template for:each={guestRows} for:item="guest">
+                <div key={guest.id} class="guest-rows slds-p-around_small">
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Passenger" value={guest.type} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Title" value={guest.title} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="First Name" value={guest.firstname} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Last Name" value={guest.lastname} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Gender" value={guest.gender} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Age" value={guest.age} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Designation" value={guest.designation} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Travel Class" value={guest.travelclass} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Travel PNR No" value={guest.travelpnrno} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Nationality" value={guest.nationality} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Passport Number" value={guest.passportnumber} disabled></lightning-input>
+                        </lightning-layout-item>
+                        <lightning-layout-item size="3" padding="horizontal-small">
+                            <lightning-input label="Phone" value={guest.phone} disabled></lightning-input>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </div>
+            </template>
+        </lightning-card>
+    </template>
+    
+</template>

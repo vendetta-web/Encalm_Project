@@ -1,0 +1,39 @@
+<template>
+    <lightning-card >
+        <div class="slds-p-around_medium">
+            <lightning-file-upload 
+                label="Attachments" 
+                name="fileUploader"
+                accept={acceptedFormats} 
+                record-id={recordId} 
+                multiple = 'true'
+                onuploadfinished={handleUploadFinished}>
+            </lightning-file-upload>
+        </div>
+
+        <!-- Show Table & Remove Button Only When Files Exist -->
+        <template if:true={hasFiles}>
+            <div class="slds-p-around_medium">
+                <lightning-datatable 
+                    key-field="id" 
+                    data={files} 
+                    columns={columns}
+                    hide-checkbox-column="false"
+                    selected-rows={selectedFiles}
+                    onrowselection={handleSelection}
+                    onrowaction={handleRowAction}>
+                </lightning-datatable>
+            </div>
+
+            <!--<div class="slds-p-around_medium">
+                <lightning-button 
+                    label="Remove Selected Files" 
+                    onclick={handleRemoveFiles} 
+                    variant="destructive"
+                    class="slds-m-top_small">
+                </lightning-button>
+            </div>-->
+        </template>
+
+    </lightning-card>
+</template>

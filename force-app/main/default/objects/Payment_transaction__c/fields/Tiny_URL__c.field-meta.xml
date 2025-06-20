@@ -3,6 +3,7 @@
     <fullName>Tiny_URL__c</fullName>
     <label>Tiny URL</label>
     <required>false</required>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Url</type>
 </CustomField>

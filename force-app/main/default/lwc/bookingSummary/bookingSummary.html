@@ -44,6 +44,18 @@
                                     <div class="price-label">{value.name}</div>
                                     <div class="price-value">&#8377; {value.amount}</div>
                                 </div>
+                                <div key={value} class="price-label">
+                                            <template if:true={value.isSurcharge}>
+                                                <div class="surcharge-checkbox-row">
+                                                    <label class="custom-surcharge-label">Do you Want to Waive Off Surcharge</label>
+                                                    <lightning-input type="checkbox"
+                                                        value={surchrgeCheckbox}
+                                                        checked={surchrgeCheckbox}
+                                                        disabled >
+                                                    </lightning-input> 
+                                                </div>
+                                            </template>
+                                        </div>
                             </template>
                             <div class="section-divider"></div>
                             <div class="net-amount-section">
@@ -165,4 +177,87 @@
             </lightning-card>
         
     </template>
+    <template if:true={refreshing}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+    
+    <!--Show Order Requests-->
+    <template if:true={showOrders}>
+        <lightning-card title="Order Requests">
+            <div class="slds-m-around_medium">
+                <lightning-button
+                    label="Refresh"
+                    icon-name="utility:refresh"
+                    onclick={handleRefresh}
+                    class="slds-m-bottom_small"
+                ></lightning-button>
+                <lightning-datatable
+                    key-field="Id"
+                    data={data}
+                    columns={columns}
+                    onrowaction={handleRowAction}
+                    hide-checkbox-column="true"
+                ></lightning-datatable>
+            </div>
+    
+            <template if:true={showOrderPreview}>
+                <section role="dialog" class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <h2 class="slds-modal__title">Preview Request</h2>
+                        </header>
+                        <div class="slds-modal__content">
+                            <pre>{previewData}</pre>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button label="Close" onclick={closePreview}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+        </lightning-card>
+    </template>
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <!-- Modal/Confirmation Header -->
+                <header class="slds-modal__header">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={closePopupModal}>
+                    <lightning-icon icon-name="utility:close" size="small" alternative-text="close" class="slds-button__icon slds-button__icon_small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                    <h2 class="slds-text-heading_medium">{header}</h2>
+                </header>
+                
+                <template if:false={isAmend}>
+                <!-- Modal Body -->
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <c-reschedule-bookings
+                        order-id={selectedRecordId}
+                        opp-id={recordId}
+                        mode={selectedMode}
+                        onclose={handleClose}
+                    ></c-reschedule-bookings>
+                    </div>
+                </template>
+                <template if:true={isAmend}>
+                    <!-- Modal Body -->
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <c-preview-amendments
+                            order-id={selectedRecordId}
+                            opp-id={recordId}
+                            mode={selectedMode}
+                            onclose={handleClose}
+                        ></c-preview-amendments>
+                        </div>
+                    </template>
+            </div>
+        </section>
+
+        <!-- Backdrop for Modal -->
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    
 </template>

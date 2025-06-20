@@ -1,7 +1,7 @@
 public with sharing class BookingEmailHandler {
     
     @AuraEnabled
-    public static void sendEmailWithAttachment(String opportunityId, String actionType) {
+    public static void sendEmailWithAttachment(String opportunityId, String actionType, String paymentURL) {
         try {
             // Fetch Opportunity, Account, and Contact
             Opportunity opp = [SELECT Id, AccountId,Service_Airport_Id__r.Name,Service_Airport__c,Date_of_Arrival__c,Date_of_Departure__c FROM Opportunity WHERE Id = :opportunityId LIMIT 1];
@@ -19,6 +19,10 @@ public with sharing class BookingEmailHandler {
                 journeyDate = opp.Date_of_Arrival__c;
             } else if (opp.Date_of_Departure__c !=null) {
                 journeyDate = opp.Date_of_Departure__c;
+            }
+            String paymentLinkHtml = '';
+            if (String.isNotEmpty(paymentURL)) {
+                paymentLinkHtml = '<p><strong> Payment Link - </strong><a href="' + paymentURL + '" target="_blank">' + paymentURL + '</a></p>';
             }
             
 
@@ -88,6 +92,7 @@ public with sharing class BookingEmailHandler {
                 + '            <p>Thank you for selecting Atithya - Welcome & Assist Services for your upcoming travel at <strong>' + AirportName + '</strong>. Please find attached the Performa Invoice.</p>'
                 + '            <p>We look forward to serving you at <strong>' + AirportName + '</strong>.</p>'
                 + '            <p>Feel free to call us for any query regarding the service.</p>'
+                + paymentLinkHtml
                 + '        </div>'
                 + '        <div class="footer">'
                 + '            <p>Warm Regards,<br/>'
@@ -106,7 +111,7 @@ public with sharing class BookingEmailHandler {
             email.setToAddresses(new String[] { contactEmail });
             email.setSubject(subject);
             email.setHtmlBody(htmlBody);
-            
+            //email.setReplyTo(System.Label.DefaultReplyToAddress);
             // Attach the file
             Messaging.EmailFileAttachment attachment = new Messaging.EmailFileAttachment();
             attachment.setFileName(cv.Title + '.pdf');
@@ -116,7 +121,7 @@ public with sharing class BookingEmailHandler {
             // Send the email
             Messaging.sendEmail(new Messaging.SingleEmailMessage[] { email });
             if(!Test.IsRunningTest()){
-            	getSWIFTTokenFuture(opportunityId, actionType); //MDEN_SWIFT.getAccessToken(opportunityId,actionType);
+            	//getSWIFTTokenFuture(opportunityId, actionType); //MDEN_SWIFT.getAccessToken(opportunityId,actionType);
             }
         }  catch (Exception e) {
             system.debug('Exception in BookingEmailHandler===>'+ e.getMessage());
@@ -124,8 +129,8 @@ public with sharing class BookingEmailHandler {
         }      
     }
     
-    @future(callout=true)
+   /* @future(callout=true)
     public static void getSWIFTTokenFuture(String opportunityId, String actionType) {
         MDEN_SWIFT.getAccessToken(opportunityId, actionType);
-    }
+    }*/
 }

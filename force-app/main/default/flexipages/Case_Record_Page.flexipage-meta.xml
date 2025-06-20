@@ -67,32 +67,6 @@
                             </visibilityRule>
                         </valueListItems>
                         <valueListItems>
-                            <value>Case.Assign_to_Manager_Queue</value>
-                            <visibilityRule>
-                                <booleanFilter>1 AND 2 AND 3 AND 4</booleanFilter>
-                                <criteria>
-                                    <leftValue>{!Record.Inquiry_Sub_Type__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Operations</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.Operations_Query__c}</leftValue>
-                                    <operator>NE</operator>
-                                    <rightValue>Atithya</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.Owner_s_Role__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>Operations_SPOC</rightValue>
-                                </criteria>
-                                <criteria>
-                                    <leftValue>{!Record.Is_Owner_Current_User__c}</leftValue>
-                                    <operator>EQUAL</operator>
-                                    <rightValue>true</rightValue>
-                                </criteria>
-                            </visibilityRule>
-                        </valueListItems>
-                        <valueListItems>
                             <value>Case.Assign_to_CS_Team</value>
                             <visibilityRule>
                                 <booleanFilter>(1 AND 2 AND 8) OR ( 3 AND 4 AND 5 AND 8) OR (6 AND 7 AND 8 )</booleanFilter>
@@ -267,6 +241,26 @@
                 <identifier>RecordResolution_Notes_cField</identifier>
             </fieldInstance>
         </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Services_Vesta__c</fieldItem>
+                <identifier>RecordServices_Vesta__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.Location_Vesta__c</fieldItem>
+                <identifier>RecordLocation_Vesta__cField</identifier>
+            </fieldInstance>
+        </itemInstances>
         <name>Facet-0f45841b-c20e-4911-849d-cfe2ca41aeb1</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -308,16 +302,10 @@
                 <fieldItem>Record.OwnerId</fieldItem>
                 <identifier>RecordOwnerIdField</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 AND 2</booleanFilter>
                     <criteria>
                         <leftValue>{!$User.Profile.Name}</leftValue>
                         <operator>NE</operator>
                         <rightValue>Reservation</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!$User.Profile.Name}</leftValue>
-                        <operator>NE</operator>
-                        <rightValue>Operations</rightValue>
                     </criteria>
                 </visibilityRule>
             </fieldInstance>
@@ -331,16 +319,10 @@
                 <fieldItem>Record.Owner__c</fieldItem>
                 <identifier>RecordOwner_cField</identifier>
                 <visibilityRule>
-                    <booleanFilter>1 OR 2</booleanFilter>
                     <criteria>
                         <leftValue>{!$User.Profile.Name}</leftValue>
                         <operator>EQUAL</operator>
                         <rightValue>Reservation</rightValue>
-                    </criteria>
-                    <criteria>
-                        <leftValue>{!$User.Profile.Name}</leftValue>
-                        <operator>EQUAL</operator>
-                        <rightValue>Operations</rightValue>
                     </criteria>
                 </visibilityRule>
             </fieldInstance>
@@ -373,6 +355,16 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.AccountId</fieldItem>
                 <identifier>RecordAccountIdField</identifier>
+            </fieldInstance>
+        </itemInstances>
+        <itemInstances>
+            <fieldInstance>
+                <fieldInstanceProperties>
+                    <name>uiBehavior</name>
+                    <value>none</value>
+                </fieldInstanceProperties>
+                <fieldItem>Record.NewLocation__c</fieldItem>
+                <identifier>RecordNewLocation_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>
@@ -616,16 +608,6 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Services__c</fieldItem>
                 <identifier>RecordServices_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>required</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.Location__c</fieldItem>
-                <identifier>RecordLocation__cField</identifier>
             </fieldInstance>
         </itemInstances>
         <itemInstances>

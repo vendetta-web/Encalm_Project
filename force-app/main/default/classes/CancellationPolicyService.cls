@@ -169,7 +169,7 @@ public class CancellationPolicyService {
             LIMIT 1
         ];
 
-        Decimal gstRate = 0.18;  // 18% GST
+        Decimal gstRate = 18;  // 18% GST
         String billingState = opp.Account.BillingState;
         String serviceAirportState = opp.Service_Airport_Id__c !=null ? opp.Service_Airport_Id__r.State__c : '';
         Boolean isNotIgst =false;
@@ -222,17 +222,20 @@ public class CancellationPolicyService {
                 }
                 packageName = oli.Product2.Family;
                 bookingAmount += oli.UnitPrice; 
-                decimal refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, requestDateTime, oli.UnitPrice, packageName); 
-                refundAmountPerOli =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmountPerOli);
-                refundAmount += refundAmountPerOli;
+                decimal refundAmountPerOli ;
+                if (oli.Product2.Family != 'Surcharge') { 
+                    refundAmountPerOli = getCancellationPolicyAmount(serviceDateTime, requestDateTime, oli.UnitPrice, packageName); 
+                    refundAmountPerOli =  getGeneralCancellationPolicyAmount(serviceDateTime, requestDateTime, refundAmountPerOli);
+                    refundAmount += refundAmountPerOli;
+                }
                 // to create final cancellation records
                 if(submit) {
                     oli.Status__c = 'Fully Cancelled';
-                    oli.Refund_Amount__c = refundAmountPerOli;
-                    oli.Amount_Deducted__c= oli.UnitPrice-refundAmountPerOli;
+                    oli.Refund_Amount__c = refundAmountPerOli != null ? refundAmountPerOli : 0;
+                    oli.Amount_Deducted__c= oli.UnitPrice-(refundAmountPerOli != null ? refundAmountPerOli : 0);
                     //Logic for GST calculation
-                    Decimal totalGST = oli.Amount_Deducted__c * gstRate; // Total GST
-                    Decimal invoiceAmount = oli.Amount_Deducted__c - totalGST; // Invoice amount (after GST)
+                    Decimal invoiceAmount = oli.Amount_Deducted__c / (1 + (gstRate / 100)); // Invoice amount (after GST)
+                    Decimal totalGST = oli.Amount_Deducted__c - invoiceAmount; // Total GST
 
                     // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
                     Decimal sgstAmount = 0;
@@ -257,6 +260,7 @@ public class CancellationPolicyService {
                     oli.IGST__c = igstAmount;
                     oliList.add(oli);
                     //update opportunity fields
+                    opp.StageName = 'Cancelled';
                     opp.Number_of_Adults__c=0;
                     opp.Number_of_Children__c=0;
                     opp.Number_of_Infants__c=0;
@@ -335,8 +339,8 @@ public class CancellationPolicyService {
                     oli.Refund_Amount__c = refundAmountPerOli;
                     oli.Amount_Deducted__c= perUnitPrice -  refundAmountPerOli;
                     //Logic for GST calculation
-                    Decimal totalGST = oli.Amount_Deducted__c * gstRate; // Total GST
-                    Decimal invoiceAmount = oli.Amount_Deducted__c - totalGST; // Invoice amount (after GST)
+                    Decimal invoiceAmount = oli.Amount_Deducted__c / (1 + (gstRate / 100)); // Invoice amount (after GST)
+                    Decimal totalGST = oli.Amount_Deducted__c - invoiceAmount; // Total GST
 
                     // Intra-State or Inter-State logic based on Account's Billing State and Service Airport's State
                     Decimal sgstAmount = 0;
@@ -400,10 +404,13 @@ public class CancellationPolicyService {
                     }
                 }*/
 
+                List<String> statusList = new List<String>{'Active', 'Rescheduled'};
                 List<Passenger_Details__c> updatePaxList = [
                 SELECT Id,Passenger_Type__c FROM Passenger_Details__c 
                 WHERE Opportunity_ID__c =:opportunityId 
-                AND Individual_Booking_Details__c NOT IN: cancelledOli];
+                AND Individual_Booking_Details__r.Status__c IN: statusList];
+                //AND Individual_Booking_Details__c. IN: cancelledOli];
+                system.debug('updatePaxList>>>>'+updatePaxList);
 
                 Decimal adultCount = 0;
                 Decimal childCount = 0;
@@ -477,7 +484,7 @@ public class CancellationPolicyService {
 
         List<OpportunityLineItem> oliAddOnList = [SELECT Id,Product2.Family,PricebookEntryId,Status__c,Product2.Name,UnitPrice,Quantity
                                             FROM OpportunityLineItem
-                                            WHERE Status__c = 'Active' AND Product2.Family='Add Ons' AND OpportunityId=:opportunityId];
+                                            WHERE (Status__c = 'Active' OR Status__c = 'Rescheduled') AND Product2.Family='Add Ons' AND OpportunityId=:opportunityId];
         if (oliAddOnList != null) {
             for (OpportunityLineItem oli: oliAddOnList) {
                 passengerDetailsWrapper wrap = new passengerDetailsWrapper();

@@ -48,8 +48,8 @@
                     <lightning-layout-item size="4" class="slds-p-around_small">
                         <div class="counter">
                             <span>Adult</span>
-                            <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
-                            <span class="count">{adultCount}</span>
+                            <button disabled={editing} data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                            <span class="count">{adultcounts}</span>
                             <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
                             <span class="age-range">12 years & above</span>
                         </div>
@@ -57,8 +57,8 @@
                     <lightning-layout-item size="4" class="slds-p-around_small">
                         <div class="counter">
                             <span>Child</span>
-                            <button onclick={decrementChild} class="btn minus">-</button>
-                            <span class="count">{childCount}</span>
+                            <button disabled={editing} onclick={decrementChild} class="btn minus">-</button>
+                            <span class="count">{childcounts}</span>
                             <button onclick={incrementChild} class="btn plus">+</button>
                             <span class="age-range">2-11 years</span>
                         </div>
@@ -66,8 +66,8 @@
                     <lightning-layout-item size="4" class="slds-p-around_small">
                         <div class="counter">
                             <span>Infant</span>
-                            <button onclick={decrementInfant} class="btn minus">-</button>
-                            <span class="count">{infantCount}</span>
+                            <button disabled={editing} onclick={decrementInfant} class="btn minus">-</button>
+                            <span class="count">{infantcounts}</span>
                             <button onclick={incrementInfant} class="btn plus">+</button>
                             <span class="age-range">Below 2 years</span>
                         </div>
@@ -134,8 +134,8 @@
             <lightning-layout-item size="4" class="slds-p-around_small">
                 <div class="counter">
                     <span>Adult</span>
-                    <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
-                    <span class="count">{adultCount}</span>
+                    <button disabled={editing} data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                    <span class="count">{adultcounts}</span>
                     <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
                     <span class="age-range">12 years & above</span>
                 </div>
@@ -143,8 +143,8 @@
             <lightning-layout-item size="4" class="slds-p-around_small">
                 <div class="counter">
                     <span>Child</span>
-                    <button onclick={decrementChild} class="btn minus">-</button>
-                    <span class="count">{childCount}</span>
+                    <button disabled={editing} onclick={decrementChild} class="btn minus">-</button>
+                    <span class="count">{childcounts}</span>
                     <button onclick={incrementChild} class="btn plus">+</button>
                     <span class="age-range">2-11 years</span>
                 </div>
@@ -152,8 +152,8 @@
             <lightning-layout-item size="4" class="slds-p-around_small">
                 <div class="counter">
                     <span>Infant</span>
-                    <button onclick={decrementInfant} class="btn minus">-</button>
-                    <span class="count">{infantCount}</span>
+                    <button disabled={editing} onclick={decrementInfant} class="btn minus">-</button>
+                    <span class="count">{infantcounts}</span>
                     <button onclick={incrementInfant} class="btn plus">+</button>
                     <span class="age-range">Below 2 years</span>
                 </div>
@@ -236,8 +236,8 @@
                     <lightning-layout-item size="4" class="slds-p-around_small">
                         <div class="counter">
                             <span>Adult</span>
-                            <button data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
-                            <span class="count">{adultCount}</span>
+                            <button disabled={editing} data-id="decrementAdult"   onclick={decrementAdult} class="btn minus">-</button>
+                            <span class="count">{adultcounts}</span>
                             <button data-id="incrementAdult" onclick={incrementAdult} class="btn plus">+</button>
                             <span class="age-range">12 years & above</span>
                         </div>
@@ -245,8 +245,8 @@
                     <lightning-layout-item size="4" class="slds-p-around_small">
                         <div class="counter">
                             <span>Child</span>
-                            <button onclick={decrementChild} class="btn minus">-</button>
-                            <span class="count">{childCount}</span>
+                            <button disabled={editing} onclick={decrementChild} class="btn minus">-</button>
+                            <span class="count">{childcounts}</span>
                             <button onclick={incrementChild} class="btn plus">+</button>
                             <span class="age-range">2-11 years</span>
                         </div>
@@ -254,8 +254,8 @@
                     <lightning-layout-item size="4" class="slds-p-around_small">
                         <div class="counter">
                             <span>Infant</span>
-                            <button onclick={decrementInfant} class="btn minus">-</button>
-                            <span class="count">{infantCount}</span>
+                            <button disabled={editing} onclick={decrementInfant} class="btn minus">-</button>
+                            <span class="count">{infantcounts}</span>
                             <button onclick={incrementInfant} class="btn plus">+</button>
                             <span class="age-range">Below 2 years</span>
                         </div>

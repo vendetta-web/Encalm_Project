@@ -5,28 +5,39 @@ import getPackageDetails from '@salesforce/apex/PackageSelectionController.getPa
 import getCurrentPackageDetails from '@salesforce/apex/AmendmentBookingController.getExistingPackage';
 import upgradePackage from '@salesforce/apex/AmendmentBookingController.upgradePackage';
 import getPicklistValues from '@salesforce/apex/CustomPicklistController.getNationalityPicklistValues';
-import createOpportunityLineItems from '@salesforce/apex/AmendmentBookingController.createOpportunityLineItems';
+import createOrderRequests from '@salesforce/apex/AmendmentBookingController.createOrderRequests';
 import savePassengerDetails from '@salesforce/apex/AmendmentBookingController.savePassengerDetails';
+import createAddonsOrderRequest from '@salesforce/apex/AmendmentBookingController.createAddonsOrderRequest';
 import getTerminalInfo from '@salesforce/apex/PackageSelectionController.getTerminalInfo';
 import getAddOnDetails from '@salesforce/apex/PackageSelectionController.getAddons';
 import getOpportunityDetails from '@salesforce/apex/PackageSelectionController.getOpportunityDetails';
 import sendEmailWithAttachment from '@salesforce/apex/BookingEmailHandler.sendEmailWithAttachment';
-import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
+import generatePaymentLink from '@salesforce/apex/OrderRequestController.generatePaymentLink';
+import generateAndSavePDF from '@salesforce/apex/Differential_PI_Controller.generateAndSavePDF';
+import hasOpenRequest from '@salesforce/apex/OrderRequestController.hasOpenRequest';
 import { RefreshEvent } from 'lightning/refresh';
 import { CloseActionScreenEvent } from 'lightning/actions';
-import { updateRecord } from 'lightning/uiRecordApi';
-import NUMBER_OF_ADULTS_FIELD from '@salesforce/schema/Opportunity.Number_of_Adults__c';
-import NUMBER_OF_CHILD_FIELD from '@salesforce/schema/Opportunity.Number_of_Children__c';
-import NUMBER_OF_INFANTS_FIELD from '@salesforce/schema/Opportunity.Number_of_Infants__c';
+import updateDataFromOrderRequest from '@salesforce/apex/OrderRequestController.updateDataFromOrderRequest';
 
 export default class AmendmentBooking extends NavigationMixin(LightningElement) {
-    options = [
+    baseOptions = [
         { label: 'Add Passengers', value: 'addPassengers' },
         { label: 'Upgrade Package', value: 'upgradePackage' },
         { label: 'Add Add-Ons', value: 'addAddOns' },
         { label: 'All', value: 'all' }
     ];
-    @api recordId;
+
+    options = [];
+    @api
+    get recordId() {
+        return this._recordId;
+    }
+    set recordId(value) {
+        if (value) {
+            this._recordId = value;
+            this.loadOpportunityData(); // Load only when value is non-null
+        }
+    }
     adultCount = 0;
     childCount = 0;
     infantCount = 0;
@@ -45,21 +56,23 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
     isUpgradePackage = false;
     isAddAddOns = false;
     isAll = false;
-    showOptions = true;
+    showOptions = false;
     passengerDetailPage = false;
     confirmAmendment = false;
     openPassengerPage = false;
     showGst = false;
     showCgst =false;
     showIgst =false;
-    isLoading=false;
+    isLoading=true;
     isPaxAll=false;
     isPckUpgradeAll=false;
     isAddOnAll=false;
     showPaidAmount = false;
+    hasPendingReq=false;
     confirmMessage ='';
     upgradeMessage = '';
     //Individual Passenger Details
+    @track orderRequestFieldValues = {};
     @track guestRows = [];
     @track guestRowsAll = [];
     @track orderSummary=[];
@@ -91,6 +104,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
     selectedPackage = '';
     selectedAmount ='';
     flightType ='Domestic';
+    @track serviceAirport = '';
+    @track serviceType = '';
 
     genderOptions = [
         { label: 'Male', value: 'Male' },
@@ -112,6 +127,18 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
         { label: 'Prof.', value: 'Prof.' },
         { label: 'Other', value: 'Other' }
     ];
+
+    @wire(hasOpenRequest, { opportunityId: '$recordId' })
+    wiredRequest({ error, data }) {
+        if (data !== undefined) {
+            this.hasPendingReq = data;
+            this.showOptions = !data;
+            this.isLoading= false;
+        } else if (error) {
+            this.isLoading= false;
+            console.error("Error fetching order requests:", error);
+        }
+    }
 
     @wire(getPicklistValues)
         wiredPicklistValues({ error, data }) {
@@ -147,6 +174,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
         }
     }
 
+    @track isTransit = false;
     loadOpportunityData() {
         getOpportunityDetails({opportunityId: this.recordId})
         .then((result) => {
@@ -162,7 +190,15 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
             this.numberOfAdultsAll = result.NoOfAdult; 
             this.numberOfChildrenAll = result.NoOfChild;
             this.numberOfInfantsAll = result.NoOfInfant;
-        })
+            this.isTransit = result.isServiceType;
+            this.serviceType = result.serviceType;
+            this.serviceAirport = result.serviceAirport;
+
+            // Dynamically filter options
+            this.options = this.isTransit
+                ? this.baseOptions.filter(opt => opt.value !== 'upgradePackage')
+                : [...this.baseOptions];
+            })
         .catch((error) => {
             console.error(error);
         });
@@ -326,13 +362,14 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
     //update number of new passengers added on opportunity
     handleFieldUpdate(guestList,orderList, adultCount,childCount,infantCount) {
         this.isLoading= true;
-        const fields = {};
+         /* const fields = {};
         fields.Id = this.recordId;
-        fields[NUMBER_OF_ADULTS_FIELD.fieldApiName] = adultCount;
-        fields[NUMBER_OF_CHILD_FIELD.fieldApiName] = childCount;
-        fields[NUMBER_OF_INFANTS_FIELD.fieldApiName] = infantCount;
-        const recordInput = { fields };
+        //fields[NUMBER_OF_ADULTS_FIELD.fieldApiName] = adultCount;
+        //fields[NUMBER_OF_CHILD_FIELD.fieldApiName] = childCount;
+        //fields[NUMBER_OF_INFANTS_FIELD.fieldApiName] = infantCount;
+        //const recordInput = { fields };
         // Call updateRecord to save the updated values to Salesforce
+       
         updateRecord(recordInput)
             .then(() => {
                 this.createOliAndPassengerRecords(guestList,orderList);
@@ -341,15 +378,30 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                 console.error('Error in handleFieldUpdate method->> ',error);
                 this.isLoading= false;
             });
+        */
+        //order summary changes
+        let serializedData = JSON.stringify(orderList); // Safe even if unknown keys
+        this.orderRequestFieldValues['Booking__c'] = this.recordId;
+        this.orderRequestFieldValues['Change_Type__c'] = 'Amendment';
+        this.orderRequestFieldValues['Status__c'] = 'Pending';
+        this.orderRequestFieldValues['Number_of_Adults__c'] = adultCount;
+        this.orderRequestFieldValues['Number_of_Children__c'] = childCount;
+        this.orderRequestFieldValues['Number_of_Infants__c'] = infantCount;
+        this.orderRequestFieldValues['Serialized_Data__c'] = serializedData;
+        this.createOliAndPassengerRecords(guestList,orderList);
     }
 
     createOliAndPassengerRecords(guestList,orderList) {
-        createOpportunityLineItems({ opportunityId: this.recordId, productDetails: orderList, amount: this.totalAmount })
+        createOrderRequests({ opportunityId: this.recordId,
+             orderRequestDetails: orderList,
+             OrderChangeRequest: this.orderRequestFieldValues })
             .then(result => {
                 this.savePassengerData(guestList);
+                
             })
             .catch(error => {
                 console.error('Error creating Opportunity Line Items: ', error);
+                this.isLoading= false;
             });
 
         
@@ -357,6 +409,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
     savePassengerData(guestList) {
         savePassengerDetails({ passengerData: guestList, opportunityId: this.recordId })
             .then(() => {                
+                //this.generatePdf();
+                this.isLoading= false;
                 this.generatePdf();
             })
             .catch(error => {
@@ -370,7 +424,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
     //upgrade the package
     handlePackageUpgrade(orderSummaryDetails) {
         this.isLoading= true;
-        upgradePackage({ opportunityId: this.recordId, productDetails: orderSummaryDetails})
+        upgradePackage({ opportunityId: this.recordId, productDetails: orderSummaryDetails, primaryPackage : this.selectedPackage})
             .then(result => {
                 this.generatePdf();
             })
@@ -383,7 +437,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
     //upgrade the package for all scenario
     handlePackageUpgradeAndSavePax(orderSummaryDetails,guestList) {
         this.isLoading= true;
-        upgradePackage({ opportunityId: this.recordId, productDetails: orderSummaryDetails})
+        upgradePackage({ opportunityId: this.recordId, productDetails: orderSummaryDetails, primaryPackage : this.selectedPackage})
             .then(result => {
                 this.savePassengerData(guestList);
             })
@@ -395,12 +449,22 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
 
     createOlisAddons() {
         this.isLoading= true;
-        createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummaryAddon, amount: this.totalAddonAmount })
+        let serializedData = JSON.stringify(this.orderSummaryAddon); // Safe even if unknown keys
+        this.orderRequestFieldValues['Booking__c'] = this.recordId;
+        this.orderRequestFieldValues['Change_Type__c'] = 'Amendment';
+        this.orderRequestFieldValues['Status__c'] = 'Pending';
+        this.orderRequestFieldValues['Serialized_Data__c'] = serializedData;
+        createAddonsOrderRequest({  opportunityId: this.recordId,
+            productDetails: this.orderSummaryAddon,
+            OrderChangeRequest: this.orderRequestFieldValues
+        })
             .then(result => {  
+                this.isLoading= false;
+                // Dispatch an event to close the LWC component
                 this.generatePdf();
             })
             .catch(error => {
-                console.error('Error creating Opportunity Line Items: ', error);
+                console.error('Error in adding Add-Ons: ', error);
                 this.isLoading= false;
             });
     }
@@ -502,8 +566,14 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
     }
 
     //check for nationality only if international
-    get isNationalityRequired() {
+    /*get isNationalityRequired() {
         return this.flightType?.toLowerCase().includes("international");
+    }*/
+    get isNationalityRequired() {
+        if (this.flightType?.toLowerCase().includes("international") && this.serviceAirport === 'DEL' && this.serviceType === 'Arrival') {
+            return true;
+        }
+        return false;
     }
     //check for domestic and international
     handleNationalityCheck(event){
@@ -1115,6 +1185,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
         this.orderSummaryPackage = this.filteredPackages
         .filter(wrapper => wrapper.buttonLabel === 'Selected') // Filter condition
         .map(wrapper => {
+            console.log('wrapper+++', wrapper);
             const numberOfRecords = this.numberOfAdults > this.numberOfChildren ? this.numberOfAdults : this.numberOfChildren; // or any other condition to determine number of records
             // Create an array of records based on the number of adults
             const records = [];
@@ -1133,7 +1204,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                     isChild: false,
                     isInfant: false,
                     discountValue:0 ,
-                    type: 'Adult' //to create infant oli records
+                    type: 'Adult', //to create infant oli records
+                    family : wrapper.packageFamily
                 });
                 if (this.numberOfChildren > 0) {             
                     records.push({
@@ -1151,7 +1223,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                         isChild: true,
                         childCount: this.numberOfChildren,  //to create child oli records
                         type: 'Child',
-                        discountValue:0 
+                        discountValue:0,
+                        family : wrapper.packageFamily 
                     });
                 } 
                 if (this.numberOfInfants > 0) {             
@@ -1171,7 +1244,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                         isChild: false,
                         infantCount: this.numberOfInfants,  //to create infant oli records,
                         type: 'Infant',
-                        discountValue:0 
+                        discountValue:0,
+                        family : wrapper.packageFamily 
                     });
                 }            
 
@@ -1205,6 +1279,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
 
     // Handle row selection for package upgrade in all option
     handlePackageSelect(event) {
+        debugger;
         const index = event.target.dataset.index;  // Get the index of the clicked row
         //this.handleUnselect(event);
         this.selectedRowIndex = index;  // Update selected row
@@ -1239,6 +1314,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
         this.orderSummaryPackageAll = this.filteredPackagesAll
         .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
         .map(wrapper => {
+            console.log('wrapper+++', wrapper);
             const numberOfRecords = this.numberOfAdultsAll > this.numberOfChildrenAll ? this.numberOfAdultsAll : this.numberOfChildrenAll; // or any other condition to determine number of records
             // Create an array of records based on the number of adults
             const records = [];
@@ -1257,7 +1333,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                     isChild: false,
                     isInfant: false,
                     type: 'Adult',
-                    discountValue:0 
+                    discountValue:0 ,
+                    family : wrapper.packageFamily
                 });
                 if (this.numberOfChildrenAll > 0) {             
                     records.push({
@@ -1275,7 +1352,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                         isChild: true,
                         discountValue:0,
                         type: 'Child',
-                        childCount: this.numberOfChildrenAll  //to create child oli records
+                        childCount: this.numberOfChildrenAll,  //to create child oli records
+                        family : wrapper.packageFamily
                     });
                 } 
                 if (this.numberOfInfantsAll > 0) {             
@@ -1295,7 +1373,8 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                         isChild: false,
                         type: 'Infant',
                         discountValue:0,
-                        infantCount: this.numberOfInfantsAll  //to create infant oli records
+                        infantCount: this.numberOfInfantsAll,  //to create infant oli records
+                        family : wrapper.packageFamily
                     });
                 }            
 
@@ -1303,6 +1382,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
         })
         .flat(); // Flatten the array to combine all the records into a single array
         this.orderSummaryPackageUpgradeAll = [...this.orderSummaryPackageAll, ...this.orderSummaryAddon];
+        console.log('orderSummaryPackageUpgradeAll>>>' , orderSummaryPackageUpgradeAll);
         this.calculateTotalPackageAll();
         
     }
@@ -1559,7 +1639,11 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
             this.orderSummaryPackageUpgradeAll = [];
             this.showGst = false;
             this.totalAmountAll = 0;
-            this.isPckUpgradeAll = true;
+            if(!this.isTransit){
+                this.isPckUpgradeAll = true;
+            }else{
+                this.isAddOnAll = true;
+            }
         }
     }
 
@@ -1573,13 +1657,21 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
             var errorMessage = 'Please resolve all the required checks.'
             if(this.validatePassengersDataAll()) {
                 this.openPassengerPage=false;
-                this.isPckUpgradeAll = true;
+                if(!this.isTransit){
+                    this.isPckUpgradeAll = true;
+                }else{
+                    this.isAddOnAll = true;
+                }
             } else {
                 this.showToast('Error', errorMessage, 'error');
             }
         } else {            
             this.openPassengerPage=false;
-            this.isPckUpgradeAll = true;
+            if(!this.isTransit){
+                    this.isPckUpgradeAll = true;
+                }else{
+                    this.isAddOnAll = true;
+                }
         }
     }
 
@@ -1599,7 +1691,15 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
 
     returnToPackageUpgrade() {
         this.isAddOnAll = false;
-        this.isPckUpgradeAll = true;
+        if(!this.isTransit){
+            this.isPckUpgradeAll = true;
+        }else{
+            if (this.guestRowsAll.length > 0)  { 
+                this.openPassengerPage = true;
+            } else {
+                this.isPaxAll = true;
+            }
+        }
     }
 
     openSubmitConfirmation() {
@@ -1612,7 +1712,7 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
         }
     }
 
-    generatePdf() {
+    /*generatePdf() {
         // Call Apex method to generate and save PDF with the current record
         generateAndSavePDF({ recordId: this.recordId})
             .then((result) => {
@@ -1625,14 +1725,15 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
                 console.error(error);
                 this.isLoading= false;
             });
-    }
+    }*/
     
     handleSendEmail() {
-        sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Modified/Rescheduled' })
+        sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Modified/Rescheduled', paymentURL: '' })
             .then(() => {
-                this.showToast('Success', 'Email sent successfully!', 'success');
+                //this.showToast('Success', 'Email sent successfully!', 'success');
                 this.isLoading= false;
                 // Dispatch an event to close the LWC component
+                this.dispatchEvent(new RefreshEvent());
                 this.dispatchEvent(new CloseActionScreenEvent());
                 this.handleCloseComponent();
             })
@@ -1650,5 +1751,65 @@ export default class AmendmentBooking extends NavigationMixin(LightningElement) 
             }
         });
     }
+    generatePdf() {
+        // Call Apex method to generate and save PDF with the current record
+        generateAndSavePDF({ recordId: this.recordId})
+            .then((result) => {
+                this.isLoading = false;                
+                this.showToast('Success', 'Booking Voucher created successfully', 'success');
+                //if amount is 0 update the order request directly with no payment link sent
+                if (this.selectedOption === 'addPassengers' && this.totalAmount < 1) {
+                    this.completeOrderRequestHandler();                   
+                } else {
+                    this.paymentLinkHandler();
+                } 
+            })
+            .catch((error) => {
+                this.showToast('Error', 'Error while generating Voucher', 'error');
+                console.error(error);
+                this.isLoading = false;
+                this.closeModal();
+            });
+    }
+    /*
+    async handleSendEmail() {
+        await sendEmailWithAttachment({ opportunityId: this.recordId, actionType: 'Modified/Rescheduled',   })
+            .then(() => {
+                this.showToast('Success', 'Email sent successfully!', 'success');
+                this.isLoading = false;
+                this.closeModal();
+                this.handleCloseComponent();
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+                this.closeModal();
+            });
+    }*/
 
+    paymentLinkHandler() {
+        generatePaymentLink({ oppId: this.recordId})
+            .then(() => {
+                this.showToast('Success', 'Email sent successfully!', 'success');
+                this.dispatchEvent(new RefreshEvent());
+                this.dispatchEvent(new CloseActionScreenEvent());
+                this.handleCloseComponent();
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+                this.closeModal();
+            });
+    }
+
+    completeOrderRequestHandler() {
+        updateDataFromOrderRequest({ opportunityIds: [this.recordId]})
+            .then(() => {                
+                this.handleSendEmail(); 
+            })
+            .catch(error => {
+                this.showToast('Error', error.body.message, 'error');
+                this.isLoading = false;
+            });
+    }
 }

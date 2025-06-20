@@ -167,7 +167,7 @@
             <label>Not Existing Account</label>
         </rules>
     </decisions>
-    <description>Update by Abhishek_25 April</description>
+    <description>Update by Abhishek_2nd June</description>
     <environments>Default</environments>
     <formulas>
         <name>IS_NEW</name>
@@ -182,7 +182,7 @@
     <formulas>
         <name>setTimeReminder</name>
         <dataType>DateTime</dataType>
-        <expression>DATETIMEVALUE({!$Record.Set_Follow_up_Date_and_Time__c} - (15 / 1440))</expression>
+        <expression>DATETIMEVALUE({!$Record.Set_Follow_up_Date_and_Time__c})</expression>
     </formulas>
     <interviewLabel>Lead Create | Update After Flow {!$Flow.CurrentDateTime}</interviewLabel>
     <label>Lead Create | Update After Flow</label>

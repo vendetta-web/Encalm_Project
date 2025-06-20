@@ -30,8 +30,8 @@ global class MDEN_Vesta {
                    
                   
                 }else{
-                      caseRec.Location__c  = requestMap.location;
-                caseRec.Services__c = requestMap.services;
+                      caseRec.Location_Vesta__c  = requestMap.location;
+                caseRec.Services_Vesta__c = requestMap.services;
                 caseRec.Rating__c = requestMap.rating;
                 caseRec.Issue__c = requestMap.issue;
                 caseRec.Issue_Time__c = requestMap.issue_time;

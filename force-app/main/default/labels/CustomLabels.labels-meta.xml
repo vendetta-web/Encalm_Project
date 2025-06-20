@@ -22,6 +22,13 @@
         <value>supriya.bassi@maxify.digital</value>
     </labels>
     <labels>
+        <fullName>EmailToLeadReplyOrgAddress</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>EmailToLeadReplyOrgAddress</shortDescription>
+        <value>abhishek.gautam1110@gmail.com</value>
+    </labels>
+    <labels>
         <fullName>Encalm_Logo</fullName>
         <language>en_US</language>
         <protected>false</protected>
@@ -42,6 +49,27 @@
         <protected>false</protected>
         <shortDescription>Error Email</shortDescription>
         <value>prateek.arya@maxify.digital</value>
+    </labels>
+    <labels>
+        <fullName>OPS_SPOC_Manager_DEL</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Name of the Operations SPOC Manager of Delhi location</shortDescription>
+        <value>Operations SPOC user</value>
+    </labels>
+    <labels>
+        <fullName>OPS_SPOC_Manager_GOA</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Name of the Operations SPOC Manager of Goa location</shortDescription>
+        <value>Operations SPOC user</value>
+    </labels>
+    <labels>
+        <fullName>OPS_SPOC_Manager_HYD</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>User Name of the Operations SPOC Manager of Hyderabad location</shortDescription>
+        <value>Operations SPOC user</value>
     </labels>
     <labels>
         <fullName>OrgWideEmailAddress</fullName>

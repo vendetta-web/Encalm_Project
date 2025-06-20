@@ -162,7 +162,7 @@
         <connector>
             <targetReference>Get_Email_Message_record_from_Case</targetReference>
         </connector>
-        <filterLogic>1 AND (2 OR 3)</filterLogic>
+        <filterLogic>and</filterLogic>
         <filters>
             <field>Id</field>
             <operator>EqualTo</operator>
@@ -172,16 +172,16 @@
         </filters>
         <filters>
             <field>Status</field>
-            <operator>EqualTo</operator>
+            <operator>NotEqualTo</operator>
             <value>
-                <stringValue>Open</stringValue>
+                <stringValue>Lead Lost</stringValue>
             </value>
         </filters>
         <filters>
             <field>Status</field>
-            <operator>EqualTo</operator>
+            <operator>NotEqualTo</operator>
             <value>
-                <stringValue>Customer Responded</stringValue>
+                <stringValue>Lead Won</stringValue>
             </value>
         </filters>
         <getFirstRecordOnly>true</getFirstRecordOnly>

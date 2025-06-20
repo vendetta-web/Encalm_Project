@@ -30,8 +30,8 @@ public class CaseTriggerHandler {
                     //Decimal tatInHours = (nowTime.getTime() - oldCase.TAT_Start__c.getTime()) / (1000 * 60 * 60);
                     //c.TAT_Hours__c = tatInHours.setScale(2);
                     Decimal tatInMinutes = (nowTime.getTime() - oldCase.TAT_Start__c.getTime()) / (1000 * 60);
-					c.TAT_Hours__c = tatInMinutes.setScale(2); 
-
+                    c.TAT_Hours__c = tatInMinutes.setScale(2); 
+                    
                 } else {
                     c.TAT_Hours__c = 0;
                 }
@@ -119,7 +119,7 @@ public class CaseTriggerHandler {
         System.debug('CaseId '+ caseId);
         try {
             Case caseRecord = [SELECT Subject, Description, SuppliedPhone, SuppliedEmail, SuppliedName, caseNumber, origin FROM Case WHERE Id = :caseId LIMIT 1];
-           System.debug('--------------------origin--------->'+caseRecord.origin);
+            System.debug('--------------------origin--------->'+caseRecord.origin);
             return caseRecord;
         } catch (Exception e) {
             System.debug('Error fetching case fields: ' + e.getMessage());
@@ -128,106 +128,47 @@ public class CaseTriggerHandler {
     }
     public static void handlePostEscalationDML(List<Case> newCases, Map<Id, Case> oldCasesMap) {
         List<Case> casesToUpdate = new List<Case>();
-
+        
         for (Case c : newCases) {
             Case oldCase = oldCasesMap.get(c.Id);
-
+            
             if (oldCase != null && c.Status == 'Escalated') {
                 // DML-safe dummy update
                 c.Description = c.Description;
                 casesToUpdate.add(c);
             }
         }
-
+        
         if (!casesToUpdate.isEmpty()) {
             update casesToUpdate;
         }
     }
     
-    // Method to send and process service emails
-    /* public static void processCaseInsert(List<Case> newCases) {
-try{
-if (newCases.isEmpty()) return;  // Avoid unnecessary execution
+    public static void handleBeforeUpdate(Map<Id, Case> oldMap, List<Case> newList) {
+        Set<Id> newOwnerIds = new Set<Id>();
 
-// Collect selected services from cases
-Set<String> selectedServices = new Set<String>();
+        for (Case cs : newList) {
+            Case oldCase = oldMap.get(cs.Id);
+            if (cs.OwnerId != oldCase.OwnerId) {
+                system.debug('cs.OwnerId>>>'+cs.OwnerId);
+                newOwnerIds.add(cs.OwnerId);
+            }
+        }
 
-for (Case c : newCases) {
-if (String.isNotBlank(c.Services__c)) { 
-selectedServices.addAll(c.Services__c.split(';')); // Handle multi-select picklist
-}
-}
+        Map<Id, Boolean> eligibilityMap = new Map<Id, Boolean>();
+        for (Id userId : newOwnerIds) {
+            eligibilityMap.put(userId, OmniChannelAssignmentEnforcer.isAgentEligibleCase(userId));
+        }
 
-// Send emails if services are selected
-if (!selectedServices.isEmpty()) {
-System.debug('Sending emails for selected services: ' + selectedServices);
-sendServiceEmails(new List<String>(selectedServices));
-}
-} catch (Exception e) {
-}
-}
-
-public static void sendServiceEmails(List<String> selectedServices) {
-System.debug('#### sendServiceEmails Method Called ####');
-System.debug('Selected Services: ' + selectedServices);
-try{
-
-if (selectedServices.isEmpty()) {
-System.debug('No services selected. Throwing exception.');
-throw new AuraHandledException('No services selected.');
-}
-
-// Fetch custom metadata records where Type = 'Service'
-System.debug('Fetching metadata records from Keyword__mdt for selected services...');
-List<Keyword__mdt> serviceMetadata = [
-SELECT MasterLabel, Service_Email__c 
-FROM Keyword__mdt 
-WHERE Type__c = 'Service' 
-AND MasterLabel IN :selectedServices
-];
-System.debug('Fetched metadata records count: ' + serviceMetadata.size());
-
-List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
-
-for (Keyword__mdt service : serviceMetadata) {
-System.debug('Processing service: ' + service.MasterLabel);
-
-if (String.isNotBlank(service.Service_Email__c)) {
-System.debug('Found valid email for service: ' + service.MasterLabel + ' | Email: ' + service.Service_Email__c);
-
-// Construct email
-Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-
-// Set recipient
-List<String> recipients = new List<String>{service.Service_Email__c};
-email.setToAddresses(recipients);
-System.debug('Email To Addresses: ' + recipients);
-
-// Set subject
-String emailSubject = 'Notification for ' + service.MasterLabel;
-email.setSubject(emailSubject);
-System.debug('Email Subject: ' + emailSubject);
-
-// Set body
-String emailBody = 'Hello,\n\nThis is an automated email for ' + service.MasterLabel + '.\n\nThank you!';
-email.setPlainTextBody(emailBody);
-System.debug('Email Body: ' + emailBody);
-
-emails.add(email);
-System.debug('Email added to list for: ' + service.MasterLabel);
-} else {
-System.debug('No valid email found for service: ' + service.MasterLabel);
-}
-}
-
-// Send emails
-System.debug('===emails================>'+emails);
-if (!emails.isEmpty()) {
-System.debug('Preparing to send ' + emails.size() + ' emails...');
-Messaging.sendEmail(emails);
-System.debug('Emails sent successfully.');
-} } 
-catch (Exception e) {
-}
-} */
+        for (Case cs : newList) {
+            system.debug('cs>>>'+cs);
+            Case oldCase = oldMap.get(cs.Id);
+            if (cs.OwnerId != oldCase.OwnerId && !eligibilityMap.get(cs.OwnerId)) {
+                cs.OwnerId = oldCase.OwnerId;
+                cs.addError('Agent already has 10 open Cases. Assignment not allowed.');
+            }
+        }
+    }
+       
+    
 }

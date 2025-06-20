@@ -32,6 +32,8 @@ public with sharing class BookingSummaryController {
         public String flightDate;
         @AuraEnabled
         public String flightType;
+        @AuraEnabled
+        public Boolean surcharge;
     }
 
     public class PlacardWrapper {
@@ -51,6 +53,7 @@ public with sharing class BookingSummaryController {
         @AuraEnabled public Decimal sgstAmount;
         @AuraEnabled public Decimal igstAmount;
         @AuraEnabled public Decimal discount;
+        @AuraEnabled public Boolean isSurcharge;
     }
 
     public class FullOpportunityData {
@@ -71,7 +74,7 @@ public with sharing class BookingSummaryController {
                    Product2.Family, Product2.Package_Is_For__c, Product2.Name
             FROM OpportunityLineItem
             WHERE OpportunityId = :opportunityId
-            AND (Status__c = 'Active' OR Status__c = 'Rescheduled')
+            AND (Status__c = 'Active' OR Status__c = 'Rescheduled') AND UnitPrice >= 0
             ORDER BY CreatedDate
         ];
 
@@ -115,6 +118,7 @@ public with sharing class BookingSummaryController {
             existingWrapper.sgstAmount += oli.SGST__c !=null ? oli.SGST__c : 0;
             existingWrapper.igstAmount += oli.IGST__c !=null ? oli.IGST__c : 0;
             existingWrapper.discount += (oli.Discount_Amount__c != null ? oli.Discount_Amount__c : 0);
+            existingWrapper.isSurcharge = packageName == 'Surcharge' ? true : false;
         }
 
         // **Update the formatted name to reflect total count**
@@ -175,7 +179,7 @@ public with sharing class BookingSummaryController {
         Flight_Number_Arrival__c,
         Service_Type__c,
         Flight_Type__c,
-        StageName,
+        StageName,Surcharge_Waive_Off__c,
         Flight_Number_Departure__c,(SELECT Id FROM OpportunityLineItems)
         FROM Opportunity 
         WHERE Id = :opportunityId 
@@ -194,6 +198,7 @@ public with sharing class BookingSummaryController {
                         opp.Date_of_Arrival__c : 
                         opp.Date_of_Departure__c != null ?
                         opp.Date_of_Departure__c : '';
+        pasWrp.surcharge = opp.Surcharge_Waive_Off__c;
         data.flightDetails = pasWrp;
 
         //Show placard only if booking has an active passengers

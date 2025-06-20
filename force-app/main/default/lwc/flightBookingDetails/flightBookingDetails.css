@@ -505,6 +505,9 @@ span {
 .service-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Automatically adjusts */
+    position: relative; 		
+    overflow: visible;  		
+    z-index: 1;
     gap: 16px;
 }
 
@@ -513,7 +516,9 @@ span {
     background-color: #f5f0e8; /* Light beige background */
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative; 
     overflow: visible; /* Prevents dropdown options from being hidden */
+    z-index: 1;
     flex: 1 1 auto; /* Makes items expand and adjust */
     max-width: 100%; /* Allows up to 4 in a row */
 }
@@ -609,9 +614,10 @@ lightning-combobox {
 /* Service controls container */
 .service-controls {
     display: flex;
-    align-items: center;
-    position: relative;
-    padding-right: 120px; /* Make room for the price */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding-right: 0;
     padding-top: 10px;
 }
 
@@ -619,7 +625,8 @@ lightning-combobox {
 .quantity-section {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 3px; /* or whatever spacing works for your layout */
 }
 
 /* Quantity buttons styling */
@@ -691,7 +698,12 @@ lightning-combobox {
     align-items: center;
     gap: 6px;
     transition: background-color 0.2s;
-    margin-left: 10px;
+}
+
+@media (min-width: 1024px) {
+    .add-to-cart-btn-addon {
+        margin-left: auto;
+    }
 }
 
 .add-to-cart-btn:hover {
@@ -751,11 +763,12 @@ lightning-combobox {
     .drop-terminal-container {
         position: relative;
         z-index: 1000; /* Ensures dropdown appears above other elements */
+        overflow: visible;
     }
 }
-    .service-card.focused-card {
-        z-index: 9999; /* Bring this card above adjacent ones */
-    }
+    /*.service-card.focused-card {
+        z-index: 9999; 
+    }*/
 
     .combobox-wrapper {
         position: relative;
@@ -827,13 +840,22 @@ lightning-combobox {
         padding: 5px 0;
         transform: rotate(-2deg); /* Slight rotation for a more handwritten appearance */
     }
+    .radio-indent {		    
+	margin-left: 2 rem;
+    }
     .surcharge-checkbox-row {
     display: flex;
     align-items: center;
     gap: 10px; /* spacing between label and checkbox */
     margin-top: 5px; /* space from the content above */
 }
+.large-textarea {
+    width: 400px;
+}
 
+.large-textarea textarea {
+    min-height: 300px;
+}
 .custom-surcharge-label {
     font-weight: 500;
     color: white;

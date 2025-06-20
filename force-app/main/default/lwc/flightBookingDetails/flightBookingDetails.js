@@ -25,11 +25,22 @@ import getPicklistValues from '@salesforce/apex/CustomPicklistController.getNati
 import generateAndSavePDF from '@salesforce/apex/MDEN_PdfAttachmentController.generateAndSavePDF';
 import submitForSurchargeApproval from '@salesforce/apex/PackageSelectionController.submitForSurchargeApproval';
 import loadSurcharge from '@salesforce/apex/PackageSelectionController.loadSurcharge';
+import approvalPending from '@salesforce/apex/PackageSelectionController.isApprovalPending';
 import saveData from '@salesforce/apex/FlightPreview.saveData';
+import updateOpportunityStageName from '@salesforce/apex/PackageSelectionController.updateOpportunityStageName';
+import updateCommentsOnOpportunity from '@salesforce/apex/PackageSelectionController.updateCommentsOnOpportunity';
+import { subscribe, unsubscribe, onError } from 'lightning/empApi';
+import { getRecordNotifyChange } from 'lightning/uiRecordApi';
 
 export default class FlightBookingDetails extends NavigationMixin(LightningElement) {
     @api recordId; // Opportunity record ID
     @track editSurcharge = ''
+    @track disableConfirmBooking = false;
+
+    channelName = '/event/Approval_Process_Event__e';
+    subscription = null;
+    eventMessage = 'No event received yet.';
+
     showModal = false;
     showHeader = true;
     showChild = false;
@@ -146,13 +157,37 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     locationBeforeEdit;
     @track disableSurchargeWaiveOffInput = false;
     @track checkSurcharge = false;
+    @track commentsBeforeEdit = '';
     connectedCallback() {        
         this.loadPackageData();
         this.loadAddonData();
         this.loadPassengerData();
-        //this.fetchProcessState();
+        this.subscribeToEvent();
+        this.fetchProcessState();
+    }
+    @track statusPlatform ;
+    subscribeToEvent() {
+        subscribe(this.channelName, -1, (response) => {
+            const payload = response.data.payload;
+            const status = payload.Status__c;
+            this.statusPlatform = payload.Status__c;
+            if(status === 'Approved' || status === 'Rejected'){
+                console.log('this.reocrdId>>>>++',this.recordId);
+                this.disableConfirmBooking = false;
+                this.generatePdfAndSendMail();
+            }else if(status === 'Recalled'){
+                this.disableConfirmBooking = false;
+            }
+            console.log('Platform Event received: ', response);
+        }).then(response => {
+            console.log('Subscription request sent: ', response);
+            this.subscription = response;
+        });
     }
 
+    @track waiveOff = false
+    @track surchargeRequest = '';    
+    @track showConfirmBookingPopup = false;
     @wire(getPicklistValues)
     wiredPicklistValues({ error, data }) {
         if (data) {
@@ -165,7 +200,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             console.error('Error fetching picklist values: ', error);
         }
     }
-
+    
     fetchProcessState() {
         getProcessState({ opportunityId: this.recordId })
             .then((result) => {
@@ -179,7 +214,29 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 console.error('Error fetching process state:', error);
             });
     }
+    
+    handleFocusDropdown(event) {
+        debugger;
+        const index = event.target.dataset.index;
+        const dropdowns = this.template.querySelectorAll('.combobox-wrapper');
 
+        dropdowns.forEach((wrapper) => {
+            if (wrapper.dataset.index === index) {
+                wrapper.classList.add('focused-combobox');
+            } else {
+                wrapper.classList.remove('focused-combobox');
+            }
+        });
+    }
+
+    handleBlurDropdown(event) {
+        const index = event.target.dataset.index;
+        const dropdown = this.template.querySelector(`.combobox-wrapper[data-index="${index}"]`);
+        
+        if (dropdown) {
+            dropdown.classList.remove('focused-combobox');
+        }
+    }
     // Update the process state when the user moves to the next screen
     updateProcesses() {
         updateAddonsOrderSummaryState({ opportunityId: this.recordId, 
@@ -198,6 +255,10 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.showChild = false;
     }
 
+    @track comment;
+    handleChangeComment(event) {
+            this.comment = event.target.value;
+    }
     // Handle the UI elements based on the current state
     handleUIBasedOnState() {
         if (this.processState === '') {            
@@ -210,6 +271,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showChild = false;
             this.showPackageSelection();  
             this.calculateTotalPackage(); 
+            console.log('216');
             this.getSavedPassengerData();
             this.getSavedPlacardData();
             this.showSavedDiscountAndGst();
@@ -217,6 +279,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             // package selection was completed
             this.showPackageSelection(); 
             this.calculateTotalPackage();
+            console.log('224');
             this.showModal=false;
             this.passengerDetailPage = true;
             this.showSavedDiscountAndGst();
@@ -224,6 +287,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             // Passenget details were filled
             this.showPackageSelection();   
             this.calculateTotalPackage();
+            console.log('232');
             this.getSavedPassengerData();
             this.getSavedPlacardData();
             this.showPreview = true;
@@ -234,6 +298,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             // Preview screen was viewed
             this.showPackageSelection();  
             this.calculateTotalPackage(); 
+            console.log('243');
             this.getSavedPassengerData();
             this.getSavedPlacardData();
             this.showPreview = true;
@@ -263,13 +328,31 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     loadDetailsAfterUpdate(event) {
-        this.isPaxIncreased =true;
-        this.numberOfAdults = event.detail.adultCount;
-        this.numberOfChildren = event.detail.childCount;
-        this.numberOfInfants = event.detail.infantCount;
-        this.loadPackageData();
-        this.loadAddonData();
-        this.loadPassengerData();
+        debugger;
+        if(event.detail.isEditing) {  
+            if(event.detail.adultCount - this.numberOfAdults > 0) {
+                this.addGuestRows('Adult', event.detail.adultCount - this.numberOfAdults);
+            }if(event.detail.childCount - this.numberOfChildren > 0) {
+                this.addGuestRows('Child', event.detail.childCount - this.numberOfChildren);
+            }if(event.detail.infantCount - this.numberOfInfants > 0) {
+                this.addGuestRows('Infant', event.detail.infantCount - this.numberOfInfants);
+            }         
+            this.numberOfAdults = event.detail.adultCount;
+            this.numberOfChildren = event.detail.childCount;
+            this.numberOfInfants = event.detail.infantCount;
+            this.showModal = true;
+            this.showHeader = true;
+            this.showChild = false;
+            this.showPackageSelection();
+        } else {            
+            this.isPaxIncreased =true;
+            this.numberOfAdults = event.detail.adultCount;
+            this.numberOfChildren = event.detail.childCount;
+            this.numberOfInfants = event.detail.infantCount;
+            //this.loadPackageData();
+            //this.loadAddonData();
+            this.loadPassengerData();
+        }
     }
     getTerminals() {
         getTerminalInfo({oppId: this.recordId})
@@ -310,6 +393,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             });
         }
     loadPackageData() {
+        debugger;
         getPackageDetails({oppId: this.recordId})
         .then((result) => {
             this.isLoading = true;
@@ -337,6 +421,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     loadAddonData() {
+        debugger;
         getAddOnDetails({ oppId: this.recordId })
         .then((result) => {
             this.isLoading = true;
@@ -426,6 +511,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
     // Handle row selection
     handleSelect(eventOrIndex) {
+        debugger;
         const index = typeof eventOrIndex === 'number' ? eventOrIndex : eventOrIndex.target.dataset.index;  
         this.selectedRowIndex = index;
         //this.handleUnselect(event);
@@ -453,7 +539,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                     count: this.numberOfAdults, // Set the count, potentially modify later based on adults
                     discountValue: this.calculateDiscount(wrapper.priceTag * this.numberOfAdults, wrapper.discountValue, wrapper.isDiscountInPercent),
                     isChild: false,
-                    isInfant: false
+                    isInfant: false,
+                    family : wrapper.packageFamily
                 });
                 if (this.numberOfChildren > 0) {             
                     records.push({
@@ -470,7 +557,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         count: 1, // Set the count, potentially modify later based on children
                         discountValue: this.calculateDiscount( wrapper.childPackageWrapper[wrapper.packageFamily].price * this.numberOfChildren, wrapper.discountValue, wrapper.isDiscountInPercent),
                         isChild: true,
-                        childCount: this.numberOfChildren  //to create child oli records
+                        childCount: this.numberOfChildren,  //to create child oli records
+                        family : wrapper.packageFamily
                     });
                 } 
                 if (this.numberOfInfants > 0) {             
@@ -489,7 +577,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                         discountValue: 0,
                         isInfant: true,
                         isChild: false,
-                        infantCount: this.numberOfInfants  //to create infant oli records
+                        infantCount: this.numberOfInfants,  //to create infant oli records
+                        family : wrapper.packageFamily
                     });
                 }            
 
@@ -520,6 +609,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             }
             this.orderSummary = [...this.orderSummaryPackage, ...this.orderSummaryAddon];
             this.calculateTotalPackage();
+            console.log('530');
             console.log('orderSummary inside --->>> ',JSON.stringify(this.orderSummary));
         //this.orderSummary = [...this.orderSummary, (this.selectedPackage + ' '+ this.selectedAmount)];
         
@@ -689,16 +779,17 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         let totalCgstAmount = 0;
         let totalSgstAmount = 0;
         let totalIgstAmount = 0;
+        console.log('this.orderSummary>>>>++++',this.orderSummary);
         this.orderSummary.forEach(item => {
             totalNetAmount += item.netAmount || 0;
             totalCgstAmount += item.cgstAmount || 0;
             totalSgstAmount += item.sgstAmount || 0;
             totalIgstAmount += item.igstAmount || 0;
         });
-        this.totalNetAmount = totalNetAmount;
-        this.totalCgstAmount = totalCgstAmount;
-        this.totalSgstAmount = totalSgstAmount;
-        this.totalIgstAmount = totalIgstAmount;
+        this.totalNetAmount = totalNetAmount.toFixed(2);
+        this.totalCgstAmount = totalCgstAmount.toFixed(2);
+        this.totalSgstAmount = totalSgstAmount.toFixed(2);
+        this.totalIgstAmount = totalIgstAmount.toFixed(2);
         if (this.totalCgstAmount !=0 && this.totalSgstAmount!=0) {
             this.showGst = true;
             this.showCgst =true;
@@ -708,6 +799,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         }
     }
     async openPassengerPage() {
+        debugger;
         let matchFound = false;
         let buttonLabel = 'buttonLabel';
         for (let item of this.getPackage) {
@@ -717,14 +809,27 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 break;  // Exit loop after finding the match
             }
         }
+        //this.getSavedPassengerData();
+        let typeCounts = { 'Adult': 0, 'Child': 0, 'Infant': 0 };
+                this.guestRows.forEach(guest => {
+                    if (typeCounts.hasOwnProperty(guest.type)) {
+                        typeCounts[guest.type]++;
+                    }
+        });
+        console.log('typeCounts>>>>',typeCounts);
+        this.addGuestRows('Adult', this.numberOfAdults - typeCounts['Adult']);
+        this.addGuestRows('Child', this.numberOfChildren - typeCounts['Child']);
+        this.addGuestRows('Infant', this.numberOfInfants - typeCounts['Infant']);
         if (matchFound && this.processState != 'Preview') {            
             await this.createOLIs();
+            console.log('731');
             this.showModal=false;
             this.passengerDetailPage = true;
             this.updateBookingCurrentState('Package Selection');
             window.scrollTo({top: 0, behavior:'smooth'});            
             this.updateProcesses();
         } else if (matchFound && this.processState == 'Preview') { //scenario for edit button
+            console.log('738');
             this.showModal=false;
             this.passengerDetailPage = true;            
             this.addnewPassengerOnUpdate();
@@ -746,7 +851,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
 
     // Method to call Apex and create Opportunity Line Items
     async createOLIs() {
-        await createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount })
+        console.log('this.orderSummary??????'+this.orderSummary);
+        await createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount, primaryPackage : this.selectedPackage })
             .then(result => {
             })
             .catch(error => {
@@ -756,6 +862,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     loadPassengerData() {
+        debugger;
         getOpportunityDetails({opportunityId: this.recordId})
         .then((result) => {
             this.isLoading = true;
@@ -770,8 +877,15 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.checkSurcharge = result.checkSurcharge;
             this.surcharge = result.checkSurcharge;
             this.editSurcharge = result.surchargeRequestStatus;
-            if(this.surcharge)
-            this.disableSurchargeWaiveOffInput = true;
+            this.comment = result.comment;
+            if(this.editSurcharge == 'Approved')
+            {
+                this.disableSurchargeWaiveOffInput = this.surcharge  = true;
+            }else if(this.editSurcharge == 'Pending'){
+                this.disableSurchargeWaiveOffInput = this.surcharge = this.disableConfirmBooking = true;
+            }else{
+                this.disableSurchargeWaiveOffInput = this.disableConfirmBooking = false;
+            }
             //Added by Abhishek
             this.booker = result.booker;
             this.location = result.location;
@@ -784,13 +898,6 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.addGuestRows('Infant', this.numberOfInfants);
             this.fetchProcessState();
 
-            /*const created = new Date(result.createdDate);
-            const service = new Date(result.serviceDateTime);
-            const diffMs = service.getTime() - created.getTime(); // difference in milliseconds
-            const twelveHoursInMs = 12 * 60 * 60 * 1000;
-            if (diffMs < twelveHoursInMs) {
-                this.surchargeApplicable = true;
-            }*/
             this.surchargeDataLoad();
             this.isLoading = false;
         })
@@ -821,11 +928,19 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     handleDelete(event) {
         if (this.guestRows.length > 1) {
             const index = event.target.dataset.index;
-            this.guestRows.splice(index, 1);
-            this.guestRows = [...this.guestRows]; // Ensures reactivity
-        }        
-        // Recalculate counts based on the updated guestRows array
-        this.updateGuestCounts();
+            const filteredAdults = this.guestRows.filter(guest => guest.type === 'Adult');
+    
+            // Ensure at least one Adult remains
+            if (filteredAdults.length > 1 || this.guestRows[index].type !== 'Adult') {
+                this.guestRows.splice(index, 1);
+                this.guestRows = [...this.guestRows]; // Ensures reactivity
+    
+                // Recalculate counts based on the updated guestRows array
+                this.updateGuestCounts();
+            }else{
+                    this.showToast('Error', 'Cannot delete the last Adult in the Booking', 'error');
+            }
+        }
     }
     //to select new row for passenger
     handleGuestTypeChange(event) {
@@ -858,6 +973,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
      // Add rows for a specific type of guest (Adult/Child/Infant)
     addGuestRows(type, count) {
+        const isPlacardAlreadySet = this.guestRows.some(guest => guest.type === type && guest.isPlacard);
         for (let i = 0; i < count; i++) {
             this.guestRows.push({
                 id: `${type}-${i}`,
@@ -875,7 +991,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 passportnumber: '',
                 phone: '',
                 showDropdown: false,
-                isPlacard: i==0 && type == 'Adult' ? true : false
+                isPlacard: !isPlacardAlreadySet && i==0 && type == 'Adult' ? true : false
+                //isPlacard: i==0 && type == 'Adult' ? true : false
             });
         }
         if (type == 'Adult') {
@@ -1027,6 +1144,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
     @track showConfirmationPopup = false
     handleSurcharge(event) {
+        
         //this.surcharge = event.target.checked; // This will be true when selected
         //this.updateSurchargeOnBooking();
         if( event.target.checked){
@@ -1034,16 +1152,17 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         event.target.checked = false;
         }
     }
+    @track surchargeCheck = false;
     confirmSurcharge(){
-        /*const checkbox = this.template.querySelector('lightning-input[type="checkbox"]');
-        if (checkbox) {
-            checkbox.checked = true;
-        }*/
         this.surcharge = true; 
+        this.surchargeCheck = true;
         this.updateSurchargeOnBooking();
         this.disableSurchargeWaiveOffInput = true;
         this.showConfirmationPopup = false;
-        this.showToast('Success', 'Surcharge Waive off request submitted successfully', 'success');
+        //this.showToast('Success', 'Surcharge Waive off request submitted successfully', 'success');
+        this.waiveOff = true;
+        this.disableConfirmBooking = true;
+        //this.fetchApprocessStatus();
     }
     closePopup(){
         //this.surcharge = false;
@@ -1099,15 +1218,14 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
 
      // Handle the Save action
      handleSave() {
+        debugger;
+        this.fetchApprocessStatus();
         if (!this.hasDataChanged()) {
             this.showPreview = true;
             this.passengerDetailPage = false;
             this.isQuotationSent = true;
-            this.disableSurchargeWaiveOffInput = true;
-        } else {
-            this.showPackageSelection();   
-            this.disableSurchargeWaiveOffInput = this.editSurcharge == 'Approved' ? true :false;
-            this.surcharge = this.editSurcharge == 'Approved' ? true :false; 
+        } else if (!this.isEditing) {
+            this.showPackageSelection();  
             const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
                 .reduce((validSoFar, input_Field_Reference) => {
                     input_Field_Reference.reportValidity();
@@ -1130,28 +1248,44 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                 console.log('guests->>> ',JSON.stringify(this.guestRows));
                 setTimeout(() => {
                     console.log('orderSummary->>> ',JSON.stringify(this.orderSummary));
-                createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount })
+                createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount, primaryPackage : this.selectedPackage })
                 .then(result => {
+                    this.savePassengers();
+                })
+                .catch(error => {
+                    console.error('Error creating Opportunity Line Items: ', error);
+                    this.showToast('Error', error, 'error');
+                }); 
+                }, 2000); // Simulate processing delay
+                updateCommentsOnOpportunity({ opportunityId: this.recordId, comments: this.comment })
+                .then(result => {
+                    
                 })
                 .catch(error => {
                     console.error('Error creating Opportunity Line Items: ', error);
                     this.showToast('Error', error, 'error');
                 });
-                savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
-                .then(() => {
-                    this.showPreview = true;
-                    this.passengerDetailPage = false;
-                    this.updateBookingCurrentState('Passenger Details');
-                    //this.updateSurchargeOnBooking();
-                    this.handlePlacardDetails();// save placard details
-                })
-                .catch(error => {
-                    // Handle error
-                    console.error('Error saving passenger details:', error);
-                    this.showToast('Error', 'Error saving Passenger details', 'error');
-                });  
-                }, 2000); // Simulate processing delay
                           
+            }
+            else {
+                this.showToast('Error', errorMessage, 'error');
+            }
+        } else {
+            const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
+                .reduce((validSoFar, input_Field_Reference) => {
+                    input_Field_Reference.reportValidity();
+                    return validSoFar && input_Field_Reference.checkValidity();
+                }, true);
+            const All_Compobox_Valid = [...this.template.querySelectorAll('lightning-combobox')]
+            .reduce((validSoFar, input_Field_Reference) => {
+                input_Field_Reference.reportValidity();
+                return validSoFar && input_Field_Reference.checkValidity();
+            }, true);
+            var errorMessage = 'Please resolve all the required checks.'
+            if(All_Input_Valid && All_Compobox_Valid && !this.showPhoneErrorMessage) {
+                //this.showPackageSelection();
+                this.passengerDetailPage = false;
+                this.showPreview = true;
             }
             else {
                 this.showToast('Error', errorMessage, 'error');
@@ -1159,10 +1293,67 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         }
         
     }
+    fetchApprocessStatus(){
+        debugger;
+        approvalPending({ opportunityId: this.recordId })
+            .then(result => {
+                console.log('result>>', result);
+                if(result == 'Approved'){
+                    this.disableSurchargeWaiveOffInput = this.surcharge = true;
+                } else if(result == 'Pending'){
+                    this.disableSurchargeWaiveOffInput = this.surcharge = this.disableConfirmBooking = true;
+                }else if(result == 'Rejected' || result == 'Removed'){
+                    this.disableSurchargeWaiveOffInput = this.surcharge = this.disableConfirmBooking = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching Status ', error);
+            });
+    }
+
+    savePassengers(){
+        debugger;
+        savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
+            .then(() => {
+                this.showPreview = true;
+                this.passengerDetailPage = false;
+                this.updateBookingCurrentState('Passenger Details');
+                //this.updateSurchargeOnBooking();
+                this.handlePlacardDetails();// save placard details
+            })
+            .catch(error => {
+                // Handle error
+                console.error('Error saving passenger details:', error);
+                this.showToast('Error', 'Error saving Passenger details', 'error');
+            }); 
+    }
+
+    savePassengersAfterEdit(){
+        debugger;
+        savePassengerDetails({ passengerData: this.guestRows, opportunityId: this.recordId })
+            .then(() => {
+                this.showPreview = true;
+                this.passengerDetailPage = false;
+                
+                this.handlePlacardDetailsEdit();// save placard details
+                
+            })
+            .catch(error => {
+                // Handle error
+                console.error('Error saving passenger details:', error);
+                this.showToast('Error', 'Error saving Passenger details', 'error');
+            }); 
+    }
     updateSurchargeOnBooking(){
             submitForSurchargeApproval({ surcharge : this.surcharge, opportunityId: this.recordId })
-                .then(() => {
-                    
+                .then((result) => {
+                    console.log('result>>>>',result);
+                    this.surchargeRequest = result;  
+                    if(result === 'Pending'){
+                        console.log('1296');
+                        this.disableConfirmBooking = true
+                    }
+                    this.showToast('Success', 'Surcharge Waive off request submitted successfully', 'success');                   
                 })
                 .catch(error => {
                     // Handle error
@@ -1253,10 +1444,50 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             this.showToast('Error', 'No passenger selected to save', 'error');
         }
     }
+
+    handlePlacardDetailsEdit() {
+        if (this.selectedPassenger) {
+            // Serialize the single passenger object and wrap it into an array
+            const serializedPassenger = JSON.parse(JSON.stringify([this.selectedPassenger])); // Wrap in []
+    
+            savePlacardDetails({ placardData: serializedPassenger, opportunityId: this.recordId })
+                .then(() => {
+                    // Call Apex method to generate and save PDF with the current record
+                generateAndSavePDF({ recordId: this.recordId})
+                .then((result) => {
+                    if (result == 'Quotation Sent') {
+                        this.isQuotationSent = true;
+                    }
+                    
+                    //this.disableSurchargeWaiveOffInput = true;
+                    this.showToast('Success', 'Booking Voucher created successfully', 'success');
+                    this.dispatchEvent(new RefreshEvent());
+                    this.handleSendEmail();
+                    this.updateBookingCurrentState('Preview');
+                })
+                .catch((error) => {
+                    this.showToast('Error', 'Error while generating Voucher', 'error');
+                    console.error(error);
+                });
+                    
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('Error saving placard details:', error);
+                    this.showToast('Error', 'Error saving placard details', 'error');
+                });
+        } else {
+            this.showToast('Error', 'No passenger selected to save', 'error');
+        }
+    }
     openDetailPage(){
         window.scrollTo({top: 0, behavior:'smooth'});
         this.showModal=true;
         this.passengerDetailPage = false;
+        if(this.isEditing) {
+            this.showPackageSelection();
+        }
+        //this.loadPassengerData();
 
     }
     // Open the modal
@@ -1292,24 +1523,124 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.showPreview = false;
     }
 
-    generatePdf() {
+    generatePdfAndSendMail() {
         // Call Apex method to generate and save PDF with the current record
+            generateAndSavePDF({ recordId: this.recordId})
+                .then((result) => {
+                    
+                    this.updateOpportunity();               
+                    //this.dispatchEvent(new RefreshEvent());
+                    this.disableSurchargeWaiveOffInput = this.statusPlatform == 'Approved' ? true : false;
+                    if(this.statusPlatform != 'Recalled'){
+                        this.showToast('Success', 'Booking Voucher created successfully', 'success');
+                        this.updateBookingCurrentState('Preview');
+                        this.handleSendEmail();
+                    }
+                    if(this.statusPlatform == 'Recalled'){
+                        this.disableConfirmBooking = false;
+                    }
+                    
+                    this.refreshOpportunity();
+                })
+                .catch((error) => {
+                    this.showToast('Error', 'Error while generating Voucher', 'error');
+                    console.error(error);
+                });
+    }
+    updateOpportunity() {
+        updateOpportunityStageName({ recordId: this.recordId }) 
+            .then((result) => {
+                if (result === 'Quotation Sent') {
+                    this.isQuotationSent = true;
+                }
+            getRecordNotifyChange([{ recordId: this.recordId }]);
+        });
+    }
+
+    refreshOpportunity() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: this.recordId,
+                actionName: 'view'
+            }
+        });
+    }
+
+    generatePdf() {
+        if (this.isEditing) {
+            //this.showPackageSelection();   
+            this.disableSurchargeWaiveOffInput = this.editSurcharge == 'Approved' ? true :false;
+            this.surcharge = this.editSurcharge == 'Approved' ? true :false; 
+            const All_Input_Valid = [...this.template.querySelectorAll('lightning-input')]
+                .reduce((validSoFar, input_Field_Reference) => {
+                    input_Field_Reference.reportValidity();
+                    return validSoFar && input_Field_Reference.checkValidity();
+                }, true);
+            const All_Compobox_Valid = [...this.template.querySelectorAll('lightning-combobox')]
+            .reduce((validSoFar, input_Field_Reference) => {
+                input_Field_Reference.reportValidity();
+                return validSoFar && input_Field_Reference.checkValidity();
+            }, true);
+            var errorMessage = 'Please resolve all the required checks.'
+            //var validationMessage = this.guestRows.length < 2 ? 'Please enter the contact number' : 'Please enter phone number of minimum 1 adult passenger';
+            
+            if(All_Input_Valid && All_Compobox_Valid && !this.showPhoneErrorMessage) {
+                // if (this.processState == 'Preview') {
+                //     this.createOLIs();
+                // }
+                
+                this.handleUpdatedGUestRows();
+                console.log('guests->>> ',JSON.stringify(this.guestRows));
+                setTimeout(() => {
+                    console.log('orderSummary->>> ',JSON.stringify(this.orderSummary));
+                createOpportunityLineItems({ opportunityId: this.recordId, productDetails: this.orderSummary, amount: this.totalAmountAfterDiscount,primaryPackage : this.selectedPackage })
+                .then(result => {
+                    this.savePassengersAfterEdit();
+                    
+                    
+                })
+                .catch(error => {
+                    console.error('Error creating Opportunity Line Items: ', error);
+                    this.showToast('Error', error, 'error');
+                }); 
+                }, 2000); // Simulate processing delay
+                updateCommentsOnOpportunity({ opportunityId: this.recordId, comments: this.comment })
+                .then(result => {
+                    
+                })
+                .catch(error => {
+                    console.error('Error creating Opportunity Line Items: ', error);
+                    this.showToast('Error', error, 'error');
+                });
+                          
+            }
+            else {
+                this.showToast('Error', errorMessage, 'error');
+            }
+        }
+    }
+    /*confirmBooking(){
         generateAndSavePDF({ recordId: this.recordId})
             .then((result) => {
                 if (result == 'Quotation Sent') {
                     this.isQuotationSent = true;
                 }
+                
+                //this.disableSurchargeWaiveOffInput = true;
                 this.showToast('Success', 'Booking Voucher created successfully', 'success');
                 this.dispatchEvent(new RefreshEvent());
 				this.handleSendEmail();
                 this.updateBookingCurrentState('Preview');
-                this.disableSurchargeWaiveOffInput = true;
             })
             .catch((error) => {
                 this.showToast('Error', 'Error while generating Voucher', 'error');
                 console.error(error);
             });
     }
+    closeConfirmBookingPopup(){
+        this.showConfirmBookingPopup = false;
+    }*/
 
     // Helper function to convert ArrayBuffer to Base64
     arrayBufferToBase64(buffer) {
@@ -1326,7 +1657,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 	
 	handleSendEmail() {
-        sendEmailWithAttachment({ opportunityId: this.recordId , actionType: '' })
+        debugger;
+        sendEmailWithAttachment({ opportunityId: this.recordId , actionType: '', paymentURL: '' })
             .then(() => {
                 this.showToast('Success', 'Email sent successfully!', 'success');
             })
@@ -1337,12 +1669,13 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     
     // logic to maintain the state of the selected packages
     showPackageSelection() {
+        debugger;
         getCurrentPackageDetails({opportunityId: this.recordId})
         .then((result) => {
             this.selectedPackage = result.packageName; 
             this.currentTotalPackageAmount = result.totalBookingAmount;
             const index = this.updateButtonLabels();
-            
+            console.log('index>>>>',index);
             if (index !== -1) {
                 this.handleSelect(index); // Use it with your existing methods
             } else {
@@ -1372,7 +1705,8 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     }
 
     showSelectedAddons() {
-        if(this.getAddonDetail) {            
+        if(this.getAddonDetail) {     
+            console.log('this.getAddonDetail+++++???',this.getAddonDetail)       
             this.orderSummaryAddon = this.getAddonDetail
             .filter(wrapper => wrapper.buttonLabel === 'Remove') // Filter condition
             .map(wrapper => {
@@ -1380,6 +1714,11 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
                     name: wrapper.addOnName + ' ' + wrapper.adddOnCount + ' Qty',
                     amount: wrapper.addOnTag * wrapper.adddOnCount,
                     totalAmount: wrapper.addOnTag * wrapper.adddOnCount,
+                    //added by Abhishek
+                    netAmount: wrapper.priceTagBeforeTax * wrapper.adddOnCount,
+                    cgstAmount: wrapper.cgst * wrapper.adddOnCount,
+                    sgstAmount: wrapper.sgst * wrapper.adddOnCount,
+                    igstAmount: wrapper.igst * wrapper.adddOnCount,
                     button: true,
                     productId: wrapper.productId,
                     pricebookEntryId: wrapper.pricebookEntryId,
@@ -1449,11 +1788,13 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
     //edit booking 
     editBooking() {
         this.copyDataBeforeEdit();
-        this.showModal = true;
+        //this.showModal = true;
+        this.showModal = false;
         this.showHeader = true;
         this.showChild = false;
         this.showPreview = false;
-        this.passengerDetailPage = false;
+        //this.passengerDetailPage = false;
+        this.passengerDetailPage = true;
         this.isQuotationSent = false;
         this.isEditing = true;
         this.disableSurchargeWaiveOffInput = false;
@@ -1469,6 +1810,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
         this.numberOfAdultsBeforeUpdate = this.numberOfAdults;
         this.numberOfChildrenBeforeUpdate = this.numberOfChildren;
         this.numberOfInfantsBeforeUpdate = this.numberOfInfants;
+        this.commentsBeforeEdit = this.comment;
     }
 
     hasDataChanged() {
@@ -1477,7 +1819,7 @@ export default class FlightBookingDetails extends NavigationMixin(LightningEleme
             JSON.stringify(this.guestRowsBeforeEdit) !== JSON.stringify(this.guestRows) ||
             JSON.stringify(this.selectedPassengerBeforeEdit) !== JSON.stringify(this.selectedPassenger) ||
             this.locationBeforeEdit !== this.location ||
-            this.bookerBeforeEdit !== this.booker
+            this.bookerBeforeEdit !== this.booker || this.commentsBeforeEdit != this.comment
         );
     }
 

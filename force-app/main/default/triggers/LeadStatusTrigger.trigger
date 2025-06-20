@@ -4,6 +4,7 @@ trigger LeadStatusTrigger on Lead (before update, before insert, after insert,af
             LeadStatusHelper.handleBeforeUpdate(Trigger.new, Trigger.oldMap);
             LeadStatusHelper.beforeUpdateLeadEscalation(Trigger.new, Trigger.oldMap); // Sidhant
             LeadStatusHelper.updateOwnerChangedDate(Trigger.new, Trigger.oldMap);
+            //LeadStatusHelper.handleOmniChannelAssignment(Trigger.oldMap, Trigger.new);
         }
         if (Trigger.isInsert) {
            LeadStatusHelper.handleBeforeInsert(Trigger.new);

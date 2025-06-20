@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>GOA</label>
+    <protected>false</protected>
+    <values>
+        <field>Address__c</field>
+        <value xsi:type="xsd:string">1, INTERNATIONAL GREENFIELD AIRPORT, MOPA, DSL1 DOMESTIC DEPARTURE AND ISL 1 INTERNATIONAL DEPARTURE, PERNEM, North Goa, Goa (IN) 403512</value>
+    </values>
+    <values>
+        <field>GSTIN__c</field>
+        <value xsi:type="xsd:string">07AAFCD5862R007</value>
+    </values>
+    <values>
+        <field>Legal_Name__c</field>
+        <value xsi:type="xsd:string">ENCALM HOSPITALITY PRIVATE LIMITED</value>
+    </values>
+    <values>
+        <field>Pin_Code__c</field>
+        <value xsi:type="xsd:double">403512.0</value>
+    </values>
+    <values>
+        <field>State__c</field>
+        <value xsi:type="xsd:string">Goa</value>
+    </values>
+</CustomMetadata>

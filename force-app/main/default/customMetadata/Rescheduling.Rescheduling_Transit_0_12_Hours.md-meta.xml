@@ -36,7 +36,7 @@
     </values>
     <values>
         <field>Policy_Applied__c</field>
-        <value xsi:type="xsd:string">100% of the booking amount applicable for rescheduling within 0-12 hours of service time</value>
+        <value xsi:type="xsd:string">https://encalm.com/termsandconditions</value>
     </values>
     <values>
         <field>Time_Frame__c</field>

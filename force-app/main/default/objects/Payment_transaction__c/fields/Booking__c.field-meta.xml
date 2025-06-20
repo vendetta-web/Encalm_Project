@@ -4,9 +4,9 @@
     <deleteConstraint>SetNull</deleteConstraint>
     <label>Booking</label>
     <referenceTo>Opportunity</referenceTo>
-    <relationshipLabel>payment transactions</relationshipLabel>
     <relationshipName>payment_transactions</relationshipName>
     <required>false</required>
+    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

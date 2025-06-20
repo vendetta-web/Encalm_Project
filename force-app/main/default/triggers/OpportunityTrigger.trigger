@@ -32,12 +32,13 @@ trigger OpportunityTrigger on Opportunity (before insert, before update,after up
             List<Opportunity> approvedOpps = new List<Opportunity>();
             for (Opportunity opp : Trigger.new) {
                 Opportunity oldOpp = Trigger.oldMap.get(opp.Id);
-                if (oldOpp.Surcharge_WaiveOff_Request__c != 'Approved' && opp.Surcharge_WaiveOff_Request__c == 'Approved') {
+                if (oldOpp.Surcharge_WaiveOff_Request__c != opp.Surcharge_WaiveOff_Request__c && (opp.Surcharge_WaiveOff_Request__c == 'Approved' || opp.Surcharge_WaiveOff_Request__c == 'Rejected' || opp.Surcharge_WaiveOff_Request__c == 'Recalled')) {
                     approvedOpps.add(opp);
                 }
             }
             if (!approvedOpps.isEmpty()) {
-                SurchargeWaiveoffHandler.createOpportunityLineItem(approvedOpps);
+                SurchargeWaiveoffHandler.createOpportunityLineItemSurchargeWaiveOff(approvedOpps);
+                SurchargeWaiveoffHandler.approvalPlatformEvent(approvedOpps);
             }
             SurchargeWaiveoffHandler.isTriggerRunning = false;
         }

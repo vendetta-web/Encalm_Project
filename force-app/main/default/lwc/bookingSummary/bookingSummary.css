@@ -466,7 +466,18 @@ span {
     width: 100%;
     max-width: 800px;
 }
+.surcharge-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* spacing between label and checkbox */
+    margin-top: 5px; /* space from the content above */
+}
 
+.custom-surcharge-label {
+    font-weight: 500;
+    color: white;
+    font-size: 14px;
+}
 
 /* Responsive adjustments */
 @media (max-width: 480px) {

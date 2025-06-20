@@ -28,10 +28,70 @@
         </assignmentItems>
     </assignments>
     <assignments>
+        <name>Copy_1_of_Owner_to_Atithya_DEL</name>
+        <label>Copy 1 of Owner to Atithya DEL</label>
+        <locationX>3570</locationX>
+        <locationY>935</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Atithya_DEL_Queue.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Status</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Copy_1_of_Owner_to_Atithya_GOA</name>
+        <label>Copy 1 of Owner to Atithya GOA</label>
+        <locationX>4098</locationX>
+        <locationY>935</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Atithya_GOA_Queue.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Status</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
+        <name>Copy_1_of_Owner_to_Atithya_HYD</name>
+        <label>Copy 1 of Owner to Atithya HYD</label>
+        <locationX>3834</locationX>
+        <locationY>935</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.OwnerId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>Get_Atithya_HYD_Queue.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>$Record.Status</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Assigned to the Department</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+    <assignments>
         <name>Owner_to_Atithya_DEL</name>
         <label>Owner to Atithya DEL</label>
-        <locationX>2338</locationX>
-        <locationY>935</locationY>
+        <locationX>1106</locationX>
+        <locationY>1259</locationY>
         <assignmentItems>
             <assignToReference>$Record.OwnerId</assignToReference>
             <operator>Assign</operator>
@@ -50,8 +110,8 @@
     <assignments>
         <name>Owner_to_Atithya_GOA</name>
         <label>Owner to Atithya GOA</label>
-        <locationX>2866</locationX>
-        <locationY>935</locationY>
+        <locationX>1634</locationX>
+        <locationY>1259</locationY>
         <assignmentItems>
             <assignToReference>$Record.OwnerId</assignToReference>
             <operator>Assign</operator>
@@ -70,8 +130,8 @@
     <assignments>
         <name>Owner_to_Atithya_HYD</name>
         <label>Owner to Atithya HYD</label>
-        <locationX>2602</locationX>
-        <locationY>935</locationY>
+        <locationX>1370</locationX>
+        <locationY>1259</locationY>
         <assignmentItems>
             <assignToReference>$Record.OwnerId</assignToReference>
             <operator>Assign</operator>
@@ -90,7 +150,7 @@
     <assignments>
         <name>Update_RecordType_to_Booking_Lead</name>
         <label>Update RecordType to Booking/Lead</label>
-        <locationX>754</locationX>
+        <locationX>842</locationX>
         <locationY>827</locationY>
         <assignmentItems>
             <assignToReference>$Record.RecordTypeId</assignToReference>
@@ -103,7 +163,7 @@
     <assignments>
         <name>Update_RecordType_to_Query_Feedback</name>
         <label>Update RecordType to Query/Feedback</label>
-        <locationX>1018</locationX>
+        <locationX>1832</locationX>
         <locationY>827</locationY>
         <assignmentItems>
             <assignToReference>$Record.RecordTypeId</assignToReference>
@@ -112,11 +172,14 @@
                 <elementReference>Get_Query_Feedback_Record_Type.Id</elementReference>
             </value>
         </assignmentItems>
+        <connector>
+            <targetReference>Is_atithya_Operations_Case</targetReference>
+        </connector>
     </assignments>
     <customErrors>
         <name>Show_Error</name>
         <label>Show Error</label>
-        <locationX>1898</locationX>
+        <locationX>3130</locationX>
         <locationY>1043</locationY>
         <customErrorMessages>
             <errorMessage>Cannot close the case until all child cases are closed.</errorMessage>
@@ -126,7 +189,7 @@
     <customErrors>
         <name>Show_Reservation_Operation_Query_error</name>
         <label>Show Reservation/Operation Query error</label>
-        <locationX>2074</locationX>
+        <locationX>3306</locationX>
         <locationY>719</locationY>
         <customErrorMessages>
             <errorMessage>As status is &apos;Resolved by Department&apos; you cannot update Reservations Query/ Operations Query/Feedback fields</errorMessage>
@@ -136,7 +199,7 @@
     <decisions>
         <name>Check_child_case_status</name>
         <label>Check child case status</label>
-        <locationX>2030</locationX>
+        <locationX>3262</locationX>
         <locationY>935</locationY>
         <defaultConnector>
             <targetReference>loop_through_child_cases</targetReference>
@@ -161,7 +224,7 @@
     <decisions>
         <name>Check_field_updates</name>
         <label>Check field updates</label>
-        <locationX>2206</locationX>
+        <locationX>3130</locationX>
         <locationY>611</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -276,7 +339,7 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>check_location</targetReference>
+                <targetReference>Copy_1_of_check_location</targetReference>
             </connector>
             <label>Is Atithya Operations?</label>
         </rules>
@@ -328,14 +391,14 @@
     <decisions>
         <name>check_location</name>
         <label>check location</label>
-        <locationX>2734</locationX>
-        <locationY>719</locationY>
+        <locationX>1502</locationX>
+        <locationY>1043</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
             <name>DEL</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>$Record.Location__c</leftValueReference>
+                <leftValueReference>$Record.NewLocation__c</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
                     <stringValue>Delhi</stringValue>
@@ -350,7 +413,7 @@
             <name>HYD</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>$Record.Location__c</leftValueReference>
+                <leftValueReference>$Record.NewLocation__c</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
                     <stringValue>Hyderabad</stringValue>
@@ -365,7 +428,7 @@
             <name>GOA</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>$Record.Location__c</leftValueReference>
+                <leftValueReference>$Record.NewLocation__c</leftValueReference>
                 <operator>EqualTo</operator>
                 <rightValue>
                     <stringValue>Goa</stringValue>
@@ -380,7 +443,7 @@
     <decisions>
         <name>Check_Updated_Inquiry_Type</name>
         <label>Check Updated Inquiry Type</label>
-        <locationX>1018</locationX>
+        <locationX>1634</locationX>
         <locationY>719</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -422,9 +485,97 @@
         </rules>
     </decisions>
     <decisions>
+        <name>Copy_1_of_check_location</name>
+        <label>Copy 1 of check location</label>
+        <locationX>3966</locationX>
+        <locationY>719</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Copy_1_of_DEL</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Delhi</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Copy_1_of_Get_Atithya_DEL_Queue</targetReference>
+            </connector>
+            <label>Copy 1 of DEL</label>
+        </rules>
+        <rules>
+            <name>Copy_1_of_HYD</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Hyderabad</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Copy_1_of_Get_Atithya_HYD_Queue</targetReference>
+            </connector>
+            <label>Copy 1 of HYD</label>
+        </rules>
+        <rules>
+            <name>Copy_1_of_GOA</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Goa</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Copy_1_of_Get_Atithya_GOA_Queue</targetReference>
+            </connector>
+            <label>Copy 1 of GOA</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>Is_atithya_Operations_Case</name>
+        <label>Is atithya Operations Case?</label>
+        <locationX>1832</locationX>
+        <locationY>935</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Yes1</name>
+            <conditionLogic>(1 AND 2) OR (2 AND 3)</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record__Prior.Operations_Query__c</leftValueReference>
+                <operator>NotEqualTo</operator>
+                <rightValue>
+                    <stringValue>Atithya</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Operations_Query__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Atithya</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Location__c</leftValueReference>
+                <operator>IsChanged</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>check_location</targetReference>
+            </connector>
+            <label>Yes</label>
+        </rules>
+    </decisions>
+    <decisions>
         <name>Is_New_Record</name>
         <label>Is New Record ?</label>
-        <locationX>1986</locationX>
+        <locationX>2602</locationX>
         <locationY>503</locationY>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
@@ -469,7 +620,7 @@
     <loops>
         <name>loop_through_child_cases</name>
         <label>loop through child cases</label>
-        <locationX>1810</locationX>
+        <locationX>3042</locationX>
         <locationY>827</locationY>
         <collectionReference>Get_Child_Cases</collectionReference>
         <iterationOrder>Asc</iterationOrder>
@@ -497,10 +648,94 @@
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <recordLookups>
+        <name>Copy_1_of_Get_Atithya_DEL_Queue</name>
+        <label>Copy 1 of Get Atithya DEL Queue</label>
+        <locationX>3570</locationX>
+        <locationY>827</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Copy_1_of_Owner_to_Atithya_DEL</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Atithya_Manager_Queue_DEL</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Copy_1_of_Get_Atithya_GOA_Queue</name>
+        <label>Copy 1 of Get Atithya GOA Queue</label>
+        <locationX>4098</locationX>
+        <locationY>827</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Copy_1_of_Owner_to_Atithya_GOA</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Atithya_Manager_Queue_GOA</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <name>Copy_1_of_Get_Atithya_HYD_Queue</name>
+        <label>Copy 1 of Get Atithya HYD Queue</label>
+        <locationX>3834</locationX>
+        <locationY>827</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Copy_1_of_Owner_to_Atithya_HYD</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Type</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Queue</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>DeveloperName</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Atithya_Manager_Queue_HYD</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Group</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
         <name>Get_Atithya_DEL_Queue</name>
         <label>Get Atithya DEL Queue</label>
-        <locationX>2338</locationX>
-        <locationY>827</locationY>
+        <locationX>1106</locationX>
+        <locationY>1151</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Owner_to_Atithya_DEL</targetReference>
@@ -527,8 +762,8 @@
     <recordLookups>
         <name>Get_Atithya_GOA_Queue</name>
         <label>Get Atithya GOA Queue</label>
-        <locationX>2866</locationX>
-        <locationY>827</locationY>
+        <locationX>1634</locationX>
+        <locationY>1151</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Owner_to_Atithya_GOA</targetReference>
@@ -555,8 +790,8 @@
     <recordLookups>
         <name>Get_Atithya_HYD_Queue</name>
         <label>Get Atithya HYD Queue</label>
-        <locationX>2602</locationX>
-        <locationY>827</locationY>
+        <locationX>1370</locationX>
+        <locationY>1151</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
             <targetReference>Owner_to_Atithya_HYD</targetReference>
@@ -583,7 +818,7 @@
     <recordLookups>
         <name>Get_Booking_Lead_Record_Type</name>
         <label>Get Booking/Lead Record Type</label>
-        <locationX>1986</locationX>
+        <locationX>2602</locationX>
         <locationY>287</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -611,7 +846,7 @@
     <recordLookups>
         <name>Get_Child_Cases</name>
         <label>Get Child Cases</label>
-        <locationX>1810</locationX>
+        <locationX>3042</locationX>
         <locationY>719</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -632,7 +867,7 @@
     <recordLookups>
         <name>Get_Query_Feedback_Record_Type</name>
         <label>Get Query/Feedback Record Type</label>
-        <locationX>1986</locationX>
+        <locationX>2602</locationX>
         <locationY>395</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
@@ -658,7 +893,7 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
     <start>
-        <locationX>1860</locationX>
+        <locationX>2476</locationX>
         <locationY>0</locationY>
         <connector>
             <targetReference>Get_Booking_Lead_Record_Type</targetReference>

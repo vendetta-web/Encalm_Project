@@ -26,7 +26,7 @@ global class MDEN_GetAirportTerminalByAirport {
             system.debug('requestMap==>'+requestMap.get('airport_code'));
             
             //Fetch all the Terminals of a particular airport
-            List<Terminal__c> terminals = [select name, Airport__r.name, Code__c from Terminal__c Where Name =:airportCode];
+            List<Terminal__c> terminals = [select name, Airport__r.name, Code__c from Terminal__c Where Airport__r.airport_code__c =:airportCode];
             system.debug('terminals==>'+terminals);
             
             //Null check

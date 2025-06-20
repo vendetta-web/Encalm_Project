@@ -157,10 +157,16 @@ sectorOption = [
     checkAccountType() {
         isBusinessAccount({ accountId: this.accountId })
             .then(result => {
-                console.log()
                 this.showFields = result; // true if Business Account, false otherwise
+                console.log('result>>>>',result);
+
+                if(result){
+                    this.fetchAccountLocation();
+                }else{
+                    this.fetchAccountRelatedContacts(this.accountId);
+                }
                 console.log('Is Business Account:', result);
-                this.fetchAccountLocation();
+                
             })
             .catch(error => {
                 this.error = error.body ? error.body.message : error.message;
@@ -201,7 +207,7 @@ sectorOption = [
                 if (this.bookers.length === 1) {
                 this.value2 = this.bookers[0].value; // auto-select contact if only one
                 this.contact = this.value2;
-                console.log('this.contact++++',this.contact);
+                console.log('this.contact+++++++',this.contact);
             }
                 this.error = undefined;
             })
@@ -560,7 +566,39 @@ handleTabChange(event) {
             this.showToast('Error', errorMessage, 'error');
             return;
         }else {
-            this.handleBooking();
+            if (this.isTabThree) {
+                const departureDateTime = this.combineDateTime(this.departureDate, this.depServiceTime);
+                const arrivalDateTime = this.combineDateTime(this.arrivalDate, this.staTime);
+
+                const differenceMs = Math.abs(arrivalDateTime - departureDateTime);
+                const differenceHours = differenceMs / (1000 * 60 * 60);
+
+                if (differenceHours > 8) {
+                    this.showToast('Error', 'Difference should be less than 8 hours', 'error');
+                } else {
+                    this.handleBooking();
+                }
+            } else {
+                this.handleBooking();
+            }            
+        }
+    }
+    combineDateTime(dateStr, timeStr) {
+        try {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            if (isNaN(hours) || isNaN(minutes)) {
+                throw new Error('Invalid time format');
+            }
+
+            const date = new Date(dateStr);
+            date.setHours(hours);
+            date.setMinutes(minutes);
+            date.setSeconds(0);
+            date.setMilliseconds(0);
+            return date;
+        } catch (e) {
+            console.error('Invalid time format:', timeStr);
+            return new Date(); // Fallback to current date/time (NOT recommended for production)
         }
     }
 
@@ -978,8 +1016,9 @@ handleBooking() {
     this.opportunityFieldValues['Number_of_Infants__c'] = this.infantCount;
     if(this.showFields){
         this.opportunityFieldValues['Location__c'] = this.location;
-        this.opportunityFieldValues['Booker__c'] = this.contact;
     }
+    console.log('this.contact>>>',this.contact);
+    this.opportunityFieldValues['Booker__c'] = this.contact;
     this.isLoading = true;
     //this.opportunityFieldValues[''] = this.flightSchedule;
     processBooking({ recId: this.recordId, accId: this.accountId, opportunityFieldValues: this.opportunityFieldValues })
